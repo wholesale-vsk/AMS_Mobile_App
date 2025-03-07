@@ -1,0 +1,1 @@
+enum EnvironmentType { PRODUCTION, TESTING, DEVELOPMENT ,}

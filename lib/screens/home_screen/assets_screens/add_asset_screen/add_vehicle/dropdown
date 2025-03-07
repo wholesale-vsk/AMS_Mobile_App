@@ -1,0 +1,48 @@
+  Widget _buildDropdownField(
+      String label, List<String> options, TextEditingController controller) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8.0),
+      child: DropdownButtonFormField<String>(
+        dropdownColor: themeManager.primaryWhite,
+        value: selectedVehicleModel,
+        items: options.map((String value) {
+          return DropdownMenuItem<String>(
+            value: value,
+            child: SizedBox(
+              // width: double.infinity, // Ensure full width for dropdown items
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 0.0),
+                // Left & right padding
+                child: Text(
+                  value,
+                  style: TextStyle(
+                    color: themeManager.primaryColor,
+                    fontSize: FontSizes.small,
+                  ),
+                ),
+              ),
+            ),
+          );
+        }).toList(),
+        onChanged: (newValue) {
+          selectedVehicleModel = newValue!;
+        },
+        decoration: InputDecoration(
+          labelText: label,
+          labelStyle: TextStyle(
+            color: themeManager.primaryColor,
+            fontSize: FontSizes.small,
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(16),
+            borderSide: BorderSide(color: themeManager.primaryColor, width: 2),
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(16),
+            borderSide: BorderSide(color: themeManager.primaryColor),
+          ),
+        ),
+        alignment: Alignment.centerLeft, // Align dropdown items properly
+      ),
+    );
+  }
