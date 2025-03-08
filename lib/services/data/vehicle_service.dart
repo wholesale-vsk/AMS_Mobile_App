@@ -10,7 +10,7 @@ class VehicleService {
 
   /// **Update Vehicle Details**
   Future<ApiResponse> updateVehicle({
-    required String vehicleId, // ✅ Added vehicle ID for updates
+
     required String registrationNumber,
     required String vehicleType,
     required String vehicleModel,
@@ -18,9 +18,12 @@ class VehicleService {
     required String ownerName,
     required String motValue,
     required String motDate,
+    required String milage,
     required String motExpiredDate,
     required String purchaseDate,
     required String purchasePrice,
+    required String insuranceValue,
+    required String insuranceDate,
     required String vehicleImage,
   }) async {
     try {
@@ -42,6 +45,9 @@ class VehicleService {
         "imageURL": vehicleImage,
         "motValue": motValue,
         "motDate": motDate,
+        "milage": milage,
+        "insuranceValue": insuranceValue,
+        "insuranceDate": insuranceDate,
         "motExpiredDate": motExpiredDate,
         "imageURL": vehicleImage.isNotEmpty ? vehicleImage : null, // ✅ P
       };
@@ -89,10 +95,14 @@ class VehicleService {
     required String ownerName,
     required String motValue,
     required String motDate,
+    required String milage,
     required String motExpiredDate,
     required String purchaseDate,
     required String purchasePrice,
+    required String insuranceValue,
+    required String insuranceDate,
     required String vehicleImage,
+
   }) async {
     try {
       String? accessToken = await _secureStorage.read(key: 'access_token');
@@ -114,6 +124,9 @@ class VehicleService {
           "imageURL": vehicleImage,
           "motValue": motValue,
           "motDate": motDate,
+          "milage": milage,
+          "insuranceValue": insuranceValue,
+          "insuranceDate": insuranceDate,
           "motExpiredDate": motExpiredDate,
           "imageURL": vehicleImage.isNotEmpty ? vehicleImage : null, // ✅ P
         },

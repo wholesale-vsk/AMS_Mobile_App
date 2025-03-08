@@ -22,6 +22,11 @@ class BuildingService {
     required String constructionCost,
     required String constructionDate,
     required String buildingImage,
+    required String purposeOfUse,
+    required String councilTax,
+    required String councilTaxDate,
+    required String councilTaxValue,
+    required String buildingValue,
   }) async {
     dio.options.contentType = Headers.jsonContentType;
 
@@ -50,10 +55,15 @@ class BuildingService {
         "constructionCost": constructionCost,
         "constructionDate": constructionDate,
         "buildingImage": buildingImage.isNotEmpty ? buildingImage : null, // ✅ Prevents empty image from being sent
+        "purposeOfUse": purposeOfUse,
+        "councilTax": councilTax,
+        "councilTaxDate": councilTaxDate,
+        "councilTaxValue": councilTaxValue,
+        "buildingValue": buildingValue,
       };
 
       final response = await dio.put(
-        '/asset/assets/$buildingId', // ✅ Corrected to use PUT request
+        '/asset/assets/$buildingId',
         data: updateData,
         options: Options(
           headers: {
@@ -101,9 +111,23 @@ class BuildingService {
     required String constructionCost,
     required String constructionDate,
     required String buildingImage,
+    required String purposeOfUse,
+    required String councilTax,
+    required String councilTaxDate,
+    required String councilTaxValue,
+    required String buildingValue,
+    required String vehicleImage,
+    required String image,
+    required String leaseValue,
+    required String leaseDate,
+    required String leaseDatePicke,
+    required String purchaseDate,
+    required String purchasePrice,
+
+
   }) async {
     print(
-        'Building Details: $buildingName, $buildingType, $numberOfFloors, $totalArea, $buildingAddress, $buildingCity, $buildingProvince, $ownerName, $constructionType, $constructionDate');
+        'Building Details: $buildingName, $buildingType, $numberOfFloors, $totalArea, $buildingAddress, $buildingCity, $buildingProvince, $ownerName, $constructionType, $constructionDate, $purposeOfUse, $councilTax, $councilTaxDate, $councilTaxValue, $buildingValue');
 
     String? accessToken = await _secureStorage.read(key: 'access_token');
     if (accessToken == null) {
@@ -116,7 +140,7 @@ class BuildingService {
 
     try {
       final response = await dio.post(
-        '/asset/assets', // ✅ Corrected API endpoint
+        'https://api.ams.hexalyte.com/asset/assets',
         data: {
           "buildingId": buildingId,
           "name": buildingName,
@@ -130,7 +154,15 @@ class BuildingService {
           "constructionType": constructionType,
           "purchasePrice": constructionCost,
           "purchaseDate": constructionDate,
-          "imageURL": buildingImage.isNotEmpty ? buildingImage : null, // ✅ Prevents empty image from being sent
+          "imageURL": buildingImage.isNotEmpty ? buildingImage : null,
+          "purposeOfUse": purposeOfUse,
+          "councilTax": councilTax,
+          "councilTaxDate": councilTaxDate,
+          "councilTaxValue": councilTaxValue,
+          "buildingValue": buildingValue,
+          "leaseDate": leaseDate,
+          "leaseValue": leaseValue
+
         },
         options: Options(
           headers: {
@@ -154,52 +186,6 @@ class BuildingService {
       );
     } catch (e, stackTrace) {
       print("Exception in addBuilding: $e");
-      print("StackTrace: $stackTrace");
-
-      return ApiResponse(
-        isSuccess: false,
-        statusCode: 500,
-        message: 'Unexpected error occurred',
-      );
-    }
-  }
-
-  /// **Fetch All Buildings**
-  Future<ApiResponse> fetchBuildings() async {
-    String? accessToken = await _secureStorage.read(key: 'access_token');
-    if (accessToken == null) {
-      return ApiResponse(
-        isSuccess: false,
-        statusCode: 401,
-        message: 'Unauthorized: No access token found',
-      );
-    }
-
-    try {
-      final response = await dio.get(
-        '/asset/assets', // ✅ Correct API endpoint
-        options: Options(
-          headers: {
-            'Authorization': 'Bearer $accessToken',
-          },
-        ),
-      );
-
-      return ApiResponse(
-        isSuccess: true,
-        statusCode: response.statusCode,
-        message: 'Buildings fetched successfully!',
-        data: response.data,
-      );
-    } on DioException catch (e) {
-      print("DioException in fetchBuildings: ${e.response?.data}");
-      return ApiResponse(
-        isSuccess: false,
-        statusCode: e.response?.statusCode ?? 500,
-        message: e.response?.data?['error_description'] ?? 'An error occurred',
-      );
-    } catch (e, stackTrace) {
-      print("Exception in fetchBuildings: $e");
       print("StackTrace: $stackTrace");
 
       return ApiResponse(

@@ -13,114 +13,108 @@ class AddVehicleScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return WillPopScope(
-      onWillPop: () async {
-        bool? confirmExit = await _showExitConfirmation(context);
-        return confirmExit ?? false;
-      },
-      child: Scaffold(
+    return Scaffold(
+      backgroundColor: Colors.white,
+      appBar: AppBar(
         backgroundColor: Colors.white,
-        appBar: AppBar(
-          backgroundColor: Colors.white,
-          elevation: 0,
-          leading: IconButton(
-            icon: const Icon(Icons.arrow_back, color: Colors.black),
-            onPressed: () async {
-              bool? confirmExit = await _showExitConfirmation(context);
-              if (confirmExit == true) Get.back();
-            },
-          ),
-          title: const Text(
-            'Add Vehicle',
-            style: TextStyle(
-              color: Colors.black,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          centerTitle: true,
+        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: Colors.black),
+          onPressed: () {
+            Get.back(); // Directly go back without confirmation
+          },
         ),
-        body: SingleChildScrollView(
-          padding: const EdgeInsets.all(16.0),
-          child: Form(
-            key: vehicleController.vehicleFormKey,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
+        title: const Text(
+          'Add Vehicle',
+          style: TextStyle(
+            color: Colors.black,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        centerTitle: true,
+      ),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(16.0),
+        child: Form(
+          key: vehicleController.vehicleFormKey,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              _buildTextField('Model', vehicleController.vehicleModelController),
+              _buildTextField('Brand', vehicleController.brandController),
+              _buildTextField('Vehicle Registration Number', vehicleController.registrationNumberController),
+              _buildTextField('Owner Name', vehicleController.ownerNameController),
 
-                _buildTextField('model', vehicleController.vehicleModelController), // ✅ Fixed Typo
-                CustomDropdown(
-                  label: 'Brand (Manufacturer)',
-                  options: const ['BMW', 'TOYOTA', 'NISSAN', 'HONDA', 'FORD'],
-                  controller: vehicleController.brandController,
-                  onChanged: (value) {
-                    if (value != null) {
-                      vehicleController.brandController.text = value;
-                    }
-                  }, selectedItem: '',
-                ),
+              const Text("Purchase Details", style: TextStyle(fontSize: 18, fontWeight: FontWeight.w500)),
+              _buildTextField('Purchase Price', vehicleController.purchasePriceController, isNumeric: true),
 
-                _buildTextField('Vehicle Registration Number', vehicleController.registrationNumberController),
-                _buildTextField('Owner Name', vehicleController.ownerNameController), // ✅ Fixed Typo
-                _buildTextField('Purchase Price', vehicleController.purchasePriceController, isNumeric: true),
+              CalendarField(
+                controller: vehicleController.purchaseDateController,
+                hintText: 'Purchase Date',
+                icon: Icons.calendar_month,
+              ),
 
-                CalendarField(
-                  controller: vehicleController.purchaseDateController,
-                  hintText: 'Purchase Date',
-                  icon: Icons.calendar_month,
-                ),
+              _buildTextField('Mileage', vehicleController.mileageController, isNumeric: true),
 
-                CalendarField(
-                  controller: vehicleController.motDateController,
-                  hintText: 'MOT Date',
-                  icon: Icons.calendar_month,
-                ),
+              const Text("MOT Details", style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
+              CalendarField(
+                controller: vehicleController.motDateController,
+                hintText: 'MOT Date',
+                icon: Icons.calendar_month,
+              ),
 
-                CalendarField(
-                  controller: vehicleController.motExpiredDateController,
-                  hintText: 'MOT Expired Date',
-                  icon: Icons.calendar_month,
-                ),
+              _buildTextField('MOT Value', vehicleController.motValueController, isNumeric: true),
 
-                CalendarField(
-                  controller: vehicleController.serviceDateController,
-                  hintText: 'Last Service Date',
-                  icon: Icons.calendar_month,
-                ),
+              CalendarField(
+                controller: vehicleController.motExpiredDateController,
+                hintText: 'MOT Expired Date',
+                icon: Icons.calendar_month,
+              ),
 
-                _buildRepairsSection(),
+              const Text("Service Details", style: TextStyle(fontSize: 18, fontWeight: FontWeight.w500)),
+              CalendarField(
+                controller: vehicleController.serviceDateController,
+                hintText: 'Last Service Date',
+                icon: Icons.calendar_month,
+              ),
 
-                // ✅ Vehicle Image Field (Moved to Last & Optimized)
-                _buildImagePickerField(),
+              const Text("Insurance Details", style: TextStyle(fontSize: 18, fontWeight: FontWeight.w500)),
+              CalendarField(
+                controller: vehicleController.insuranceDateController,
+                hintText: 'Insurance Date',
+                icon: Icons.calendar_month,
+              ),
+              _buildTextField('Insurance Value', vehicleController.insuranceValueController, isNumeric: true),
 
-                const SizedBox(height: 20),
+              _buildImagePickerField(),
 
-                Obx(() => ElevatedButton(
-                  onPressed: vehicleController.isLoading.value
-                      ? null
-                      : () async {
-                    if (vehicleController.vehicleFormKey.currentState?.validate() ?? false) {
-                      await vehicleController.addVehicle();
-                    } else {
-                      Get.snackbar("Validation Error", "Please fill all required fields.");
-                    }
-                  },
-                  style: ElevatedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 15),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16),
-                    ),
+              const SizedBox(height: 20),
+
+              Obx(() => ElevatedButton(
+                onPressed: vehicleController.isLoading.value
+                    ? null
+                    : () async {
+                  if (vehicleController.vehicleFormKey.currentState?.validate() ?? false) {
+                    await vehicleController.addVehicle();
+                  } else {
+                    Get.snackbar("Validation Error", "Please fill all required fields.");
+                  }
+                },
+                style: ElevatedButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(vertical: 15),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
                   ),
-                  child: Text(vehicleController.isLoading.value ? 'Saving...' : 'Save Vehicle'),
-                )),
-              ],
-            ),
+                ),
+                child: Text(vehicleController.isLoading.value ? 'Saving...' : 'Save Vehicle'),
+              )),
+            ],
           ),
         ),
       ),
     );
   }
 
-  //:::::::::::::::::::::::::::::::::<< BUILD TEXT FIELD >>::::::::::::::::::::::::::::::::://
   Widget _buildTextField(String label, TextEditingController controller, {bool isNumeric = false}) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8.0),
@@ -149,17 +143,17 @@ class AddVehicleScreen extends StatelessWidget {
     );
   }
 
-  //:::::::::::::::::::::::::::::::::<< IMAGE PICKER FIELD >>::::::::::::::::::::::::::::::::://
   Widget _buildImagePickerField() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        const Text("Vehicle Image", style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
+        const Text("Vehicle Image", style: TextStyle(fontSize: 18, fontWeight: FontWeight.w500)),
         const SizedBox(height: 8),
-        GestureDetector(
+        InkWell(
           onTap: () async {
             await imagePickerController.pickImage(ImageSource.gallery);
           },
+          borderRadius: BorderRadius.circular(12),
           child: Obx(() {
             File? selectedImage = imagePickerController.selectedImage.value;
             return Container(
@@ -179,50 +173,6 @@ class AddVehicleScreen extends StatelessWidget {
           }),
         ),
       ],
-    );
-  }
-
-  //:::::::::::::::::::::::::::::::::<< REPAIRS SECTION >>::::::::::::::::::::::::::::::::://
-  Widget _buildRepairsSection() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        const Text("Repairs", style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
-        const SizedBox(height: 8),
-        _buildTextField("Repair Type", vehicleController.repairTypeController),
-        _buildTextField("Mileage at Repair", vehicleController.mileageAtRepairController, isNumeric: true),
-
-        ElevatedButton(
-          onPressed: vehicleController.addRepair,
-          child: const Text("Add Repair"),
-        ),
-
-        const SizedBox(height: 10),
-        Obx(() {
-          return ListView.builder(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            itemCount: vehicleController.repairs.length,
-            itemBuilder: (context, index) {
-              final repair = vehicleController.repairs[index];
-              return ListTile(
-                title: Text("Type: ${repair['type']}"),
-                subtitle: Text("Mileage: ${repair['mileage']} miles"),
-              );
-            },
-          );
-        }),
-      ],
-    );
-  }
-
-  Future<bool?> _showExitConfirmation(BuildContext context) async {
-    return Get.defaultDialog(
-      title: "Exit",
-      content: const Text("Are you sure you want to exit? Unsaved data will be lost."),
-      textConfirm: "Yes",
-      textCancel: "No",
-      onConfirm: () => Get.back(result: true),
     );
   }
 }

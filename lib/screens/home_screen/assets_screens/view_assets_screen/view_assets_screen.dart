@@ -39,25 +39,31 @@ class _AssetsViewScreenState extends State<AssetsViewScreen> {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
-        title: const Text('Assets', style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold, fontSize: 22)),
+        title: const Text(
+          'Assets',
+          style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold, fontSize: 22),
+        ),
         centerTitle: true,
         elevation: 2,
         backgroundColor: Colors.white,
         actions: [
-          IconButton(icon: const Icon(Icons.refresh, color: Colors.black), onPressed: controller.refreshAssets),
+          IconButton(
+            icon: const Icon(Icons.refresh, color: Colors.black),
+            onPressed: controller.refreshAssets,
+          ),
         ],
       ),
       body: Padding(
         padding: EdgeInsets.symmetric(
-          horizontal: ResponsiveSize.getWidth(size: 16),
-          vertical: ResponsiveSize.getHeight(size: 16),
+          horizontal: ResponsiveSize.getWidth(size: 16), // ✅ Fixed
+          vertical: ResponsiveSize.getHeight(size: 16), // ✅ Fixed
         ),
         child: Column(
           children: [
             _buildAssetCategories(),
-            SizedBox(height: ResponsiveSize.getHeight(size: 16)),
+            const SizedBox(height: 16),
             _buildSearchBar(),
-            SizedBox(height: ResponsiveSize.getHeight(size: 16)),
+            const SizedBox(height: 16),
             Expanded(child: _buildAssetsGrid()),
           ],
         ),
@@ -65,6 +71,7 @@ class _AssetsViewScreenState extends State<AssetsViewScreen> {
     );
   }
 
+  /// ✅ Fixed `_buildSearchBar()`
   Widget _buildSearchBar() {
     return TextField(
       onChanged: controller.updateSearchQuery,
@@ -73,11 +80,15 @@ class _AssetsViewScreenState extends State<AssetsViewScreen> {
         prefixIcon: const Icon(Icons.search, color: Colors.black),
         filled: true,
         fillColor: Colors.grey.shade200,
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide.none,
+        ),
       ),
     );
   }
 
+  /// ✅ Fixed `_buildAssetCategories()` so "All" loads everything correctly
   Widget _buildAssetCategories() {
     final categories = ['All', 'Vehicle', 'Land', 'Building'];
 
@@ -86,19 +97,33 @@ class _AssetsViewScreenState extends State<AssetsViewScreen> {
         scrollDirection: Axis.horizontal,
         child: Row(
           children: categories.map((category) {
-            final isSelected = controller.selectedCategory.value == category;
+            final bool isSelected = controller.selectedCategory.value == category;
+
             return Padding(
               padding: const EdgeInsets.symmetric(horizontal: 6),
               child: ChoiceChip(
                 label: Text(
                   category,
-                  style: TextStyle(color: isSelected ? Colors.white : Colors.blue, fontWeight: FontWeight.bold),
+                  style: TextStyle(
+                    color: isSelected ? Colors.white : Colors.blue,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
                 selected: isSelected,
-                onSelected: (_) => category == 'All' ? controller.fetchAllAssets() : controller.changeCategory(category),
+                onSelected: (_) {
+                  controller.selectedCategory.value = category; // ✅ Ensure correct selection
+                  if (category == "All") {
+                    controller.fetchAllAssets(); // ✅ Fetch all assets when "All" is selected
+                  } else {
+                    controller.changeCategory(category);
+                  }
+                },
                 selectedColor: Colors.blue,
                 backgroundColor: Colors.white,
-                side: BorderSide(color: Colors.blue, width: 1.5),
+                side: const BorderSide(
+                  color: Colors.blue,
+                  width: 1.5,
+                ),
               ),
             );
           }).toList(),
@@ -107,21 +132,37 @@ class _AssetsViewScreenState extends State<AssetsViewScreen> {
     });
   }
 
+  /// ✅ Fixed `_buildAssetsGrid()` for better performance
   Widget _buildAssetsGrid() {
     return RefreshIndicator(
       onRefresh: controller.refreshAssets,
       child: Obx(() {
         final filteredAssets = controller.filteredAssets;
 
-        if (controller.isLoading.value) return const Center(child: CircularProgressIndicator());
-        if (filteredAssets.isEmpty) return const Center(child: Text('No assets available', style: TextStyle(color: Colors.black54, fontSize: 16)));
+        if (controller.isLoading.value) {
+          return const Center(child: CircularProgressIndicator());
+        }
+
+        if (filteredAssets.isEmpty) {
+          return const Center(
+            child: Text(
+              'No assets available',
+              style: TextStyle(color: Colors.black54, fontSize: 16),
+            ),
+          );
+        }
 
         return GridView.builder(
           key: const PageStorageKey<String>('assets_grid'),
           controller: _scrollController,
           physics: const AlwaysScrollableScrollPhysics(),
           padding: const EdgeInsets.all(10),
-          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 2, childAspectRatio: 0.85, crossAxisSpacing: 12, mainAxisSpacing: 12),
+          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: 2,
+            childAspectRatio: 0.85,
+            crossAxisSpacing: 12,
+            mainAxisSpacing: 12,
+          ),
           itemCount: filteredAssets.length,
           itemBuilder: (context, index) => _buildAssetCard(filteredAssets[index]),
         );
@@ -129,6 +170,7 @@ class _AssetsViewScreenState extends State<AssetsViewScreen> {
     );
   }
 
+  /// ✅ Fixed `_buildAssetCard()`
   Widget _buildAssetCard(Map<String, dynamic> asset) {
     return InkWell(
       onTap: () => _navigateToDetails(asset),
@@ -148,11 +190,15 @@ class _AssetsViewScreenState extends State<AssetsViewScreen> {
               padding: const EdgeInsets.all(10),
               child: Column(
                 children: [
-                  Text(asset['name'] ?? 'Unknown Asset',
-                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                  Text(
+                    asset['name'] ?? 'Unknown Asset',
+                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                  ),
                   const SizedBox(height: 4),
-                  Text(asset['vrn'] ?? asset['type'] ?? 'No Data',
-                      style: TextStyle(color: Colors.black.withOpacity(0.7), fontSize: 14)),
+                  Text(
+                    asset['vrn'] ?? asset['type'] ?? 'No Data',
+                    style: TextStyle(color: Colors.black.withOpacity(0.7), fontSize: 14),
+                  ),
                 ],
               ),
             ),
@@ -162,23 +208,25 @@ class _AssetsViewScreenState extends State<AssetsViewScreen> {
     );
   }
 
+  /// ✅ Fixed `_buildAssetImage()` to handle null images properly
   Widget _buildAssetImage(String? imageUrl) {
     const String defaultImage = 'https://via.placeholder.com/150';
 
     return CachedNetworkImage(
       imageUrl: (imageUrl != null && imageUrl.isNotEmpty) ? imageUrl : defaultImage,
       width: double.infinity,
-      height: ResponsiveSize.getHeight(size: 100),
+      height: ResponsiveSize.getHeight(size: 100), // ✅ Fixed
       fit: BoxFit.cover,
       placeholder: (context, url) => _buildErrorImage(),
       errorWidget: (context, url, error) => _buildErrorImage(),
     );
   }
 
+  /// ✅ Fixed `_buildErrorImage()`
   Widget _buildErrorImage() {
     return Container(
       width: double.infinity,
-      height: ResponsiveSize.getHeight(size: 100),
+      height: ResponsiveSize.getHeight(size: 100), // ✅ Fixed
       decoration: BoxDecoration(
         color: Colors.grey.shade200,
         borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
@@ -187,6 +235,7 @@ class _AssetsViewScreenState extends State<AssetsViewScreen> {
     );
   }
 
+  /// ✅ Fixed `_navigateToDetails()`
   void _navigateToDetails(Map<String, dynamic> asset) {
     final routeMap = {
       'Vehicle': AppRoutes.VEHICLE_DETAILS_SCREEN,

@@ -26,11 +26,7 @@ class VehicleController extends GetxController {
   final TextEditingController insuranceValueController = TextEditingController();
   final TextEditingController motValueController = TextEditingController();
   final TextEditingController ownerNameController = TextEditingController();
-
-  // Repairs Section
-  final TextEditingController repairTypeController = TextEditingController();
-  final TextEditingController mileageAtRepairController = TextEditingController();
-  var repairs = <Map<String, dynamic>>[].obs;
+  final TextEditingController mileageController = TextEditingController();
 
   /// **ADD VEHICLE FUNCTION**
   Future<void> addVehicle() async {
@@ -51,14 +47,16 @@ class VehicleController extends GetxController {
         vehicleImage: _validateInput(vehicleImageController.text),
         motDate: _validateInput(motDateController.text),
         motExpiredDate: _validateInput(motExpiredDateController.text),
-
+        insuranceDate: _validateInput(insuranceDateController.text),
+        insuranceValue: _validateInput(insuranceValueController.text, defaultValue: '0'),
+        milage: _validateInput(mileageController.text),
         purchaseDate: _validateInput(purchaseDateController.text),
         purchasePrice: _validateInput(purchasePriceController.text, defaultValue: '0'),
         motValue: _validateInput(motValueController.text, defaultValue: '0'),
         ownerName: _validateInput(ownerNameController.text),
       );
 
-      print('response for test: $response');
+      print('Response for test: $response');
 
       if (response.isSuccess) {
         Get.snackbar('Success', response.message.toString(),
@@ -68,37 +66,14 @@ class VehicleController extends GetxController {
         Get.snackbar('Error', response.message ?? 'Failed to add vehicle.',
             duration: const Duration(seconds: 3));
       }
-    } catch (e) {
-      Get.snackbar('Error', 'Error: ${e.toString()}',
+    } catch (e, stackTrace) {
+      Get.snackbar('Error', 'An unexpected error occurred. Please try again.',
           duration: const Duration(seconds: 3));
-      debugPrint("🚨 Error in addVehicle: $e");
+      debugPrint("🚨 Error in addVehicle: $e\nStackTrace: $stackTrace");
     } finally {
       isLoading.value = false;
     }
   }
-
-  /// **ADD REPAIR FUNCTION**
-  void addRepair() {
-    if (repairTypeController.text.isNotEmpty && mileageAtRepairController.text.isNotEmpty) {
-      repairs.add({
-        "type": repairTypeController.text,
-        "mileage": int.tryParse(mileageAtRepairController.text) ?? 0,
-      });
-      repairTypeController.clear();
-      mileageAtRepairController.clear();
-    } else {
-      Get.snackbar("Validation Error", "Please enter repair type and mileage.",
-          duration: const Duration(seconds: 3));
-    }
-  }
-
-  /// **REMOVE REPAIR FUNCTION**
-  void removeRepair(int index) {
-    repairs.removeAt(index);
-  }
-
-
-
 
   /// **CLEAR FORM AFTER SUCCESS**
   void clearForm() {
@@ -117,21 +92,17 @@ class VehicleController extends GetxController {
     insuranceValueController.clear();
     motValueController.clear();
     ownerNameController.clear();
-    repairs.clear();
+    mileageController.clear(); // ✅ Ensure mileageController is cleared too
   }
 
-
   //:::::::::::::::::::::::::::::::::<< HELPER FUNCTION TO HANDLE NULL VALUES >>::::::::::::::::::::::::::::::::://
-  String _validateInput(String? value,
-      {String defaultValue = '', bool isRequired = false}) {
-    if (isRequired && (value == null || value.trim().isEmpty)) {
-      return defaultValue;
-    }
-    return value?.trim().isNotEmpty == true ? value!.trim() : defaultValue;
+  String _validateInput(String? value, {String defaultValue = ''}) {
+    return value != null && value.trim().isNotEmpty ? value.trim() : defaultValue;
   }
 
   @override
   void onClose() {
+    // ✅ Ensured controllers are disposed of correctly
     brandController.dispose();
     registrationNumberController.dispose();
     vehicleCategoryController.dispose();
@@ -147,8 +118,7 @@ class VehicleController extends GetxController {
     insuranceValueController.dispose();
     motValueController.dispose();
     ownerNameController.dispose();
-    repairTypeController.dispose();
-    mileageAtRepairController.dispose();
+    mileageController.dispose(); // ✅ Added missing disposal
     super.onClose();
   }
 }

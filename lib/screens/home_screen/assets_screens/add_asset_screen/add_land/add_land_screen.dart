@@ -37,6 +37,7 @@ class AddLandScreen extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
+              const Text("Lands  Deteails", style: TextStyle(fontSize: 20, fontWeight: FontWeight.w500)),
               _buildTextField('Land Name', landController.landNameController),
               CustomDropdown(
                 label: 'Land Type',
@@ -50,13 +51,33 @@ class AddLandScreen extends StatelessWidget {
               _buildTextField('Land Size (in sq. ft.)', landController.landSizeController, isNumeric: true),
               _buildTextField('Address', landController.landAddressController),
               _buildTextField('City', landController.landCityController),
-              _buildTextField('Province', landController.landProvinceController),
+
+              const Text("Purchase Deteails", style: TextStyle(fontSize: 18, fontWeight: FontWeight.w500)),
               CalendarField(
                 controller: landController.purchaseDateController,
                 hintText: 'Purchase Date',
                 icon: Icons.calendar_month,
               ),
-              _buildTextField('Purchase Price (LKR)', landController.purchasePriceController, isNumeric: true),
+              _buildTextField('Purchase Price (GBP)', landController.purchasePriceController, isNumeric: true),
+
+
+              const Text("Leaseing Deteails", style: TextStyle(fontSize: 20, fontWeight: FontWeight.w500)),
+              CalendarField(
+                controller: landController.leaseDateController,
+                hintText: 'Leaseing  Date',
+                icon: Icons.calendar_month,
+              ),
+              _buildTextField('Leaseing  Value (GBP)', landController.leaseValueController, isNumeric: true),
+
+
+              // const Text("Council Deteails", style: TextStyle(fontSize: 20, fontWeight: FontWeight.w500)),
+              // CalendarField(
+              //   controller: landController.councilTaxDateController,
+              //   hintText: 'Council Tax Date',
+              //   icon: Icons.calendar_month,
+              // ),
+              // _buildTextField('Council Tax Value (GBP)', landController.councilTaxValueController, isNumeric: true),
+
               _buildImagePickerField(),
               const SizedBox(height: 20),
               Obx(() => ElevatedButton(
@@ -108,7 +129,7 @@ class AddLandScreen extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        const Text("Land Image", style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
+        const Text("Land Image", style: TextStyle(fontSize: 20, fontWeight: FontWeight.w500)),
         const SizedBox(height: 8),
         GestureDetector(
           onTap: () async {

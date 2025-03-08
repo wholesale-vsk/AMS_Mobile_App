@@ -2,85 +2,98 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../../../controllers/assets_controllers/assets_controller.dart';
 import '../../../../services/local/pdf_service/pdf_generate_for_single_asset.dart';
-import '../../../../utils/theme/app_theme_management.dart';
-import '../../../../utils/theme/responsive_size.dart';
 import '../../../../utils/theme/font_size.dart';
 
 class VehicleReportScreen extends StatelessWidget {
   VehicleReportScreen({super.key});
 
-  final AppThemeManager themeManager = Get.find();
   final AssetController assetsController = Get.put(AssetController());
 
-  Widget buildTable({required String title, required List<String> headers, required List<List<String>> rows}) {
+  Future<void> _refreshData() async {
+    await assetsController.fetchAllAssets(); // Ensure accurate data refresh
+  }
+
+  Widget buildTable({
+    required String title,
+    required List<String> headers,
+    required List<List<String>> rows,
+  }) {
     return Card(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       elevation: 3,
-      margin: const EdgeInsets.symmetric(vertical: 10),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Table Title
-            Padding(
-              padding: const EdgeInsets.only(bottom: 10),
-              child: Text(
-                title,
-                style: TextStyle(
-                  fontSize: FontSizes.large,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.black,
-                ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Table Title
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: Colors.blue.shade700,
+              borderRadius: const BorderRadius.only(
+                topLeft: Radius.circular(12),
+                topRight: Radius.circular(12),
               ),
             ),
-            Divider(thickness: 1.2, color: Colors.grey.withOpacity(0.5)),
-            // Table Header
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: headers.map((header) {
-                return Expanded(
-                  child: Padding(
-                    padding: const EdgeInsets.all(8),
-                    child: Text(
-                      header,
-                      style: TextStyle(
-                        fontSize: FontSizes.medium,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.black87,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                  ),
-                );
-              }).toList(),
+            child: Text(
+              title,
+              style: TextStyle(
+                fontSize: FontSizes.large,
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+              ),
+              textAlign: TextAlign.center,
             ),
-            Divider(thickness: 1.2, color: Colors.grey.withOpacity(0.5)),
-            // Table Rows
-            ...rows.map((row) {
-              return Padding(
-                padding: const EdgeInsets.symmetric(vertical: 6),
-                child: Row(
-                  children: row.map((cell) {
-                    return Expanded(
-                      child: Padding(
-                        padding: const EdgeInsets.all(8),
+          ),
+          // Scrollable Table
+          SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: DataTable(
+              headingRowColor:
+              MaterialStateColor.resolveWith((states) => Colors.blue.shade200),
+              dataRowColor: MaterialStateColor.resolveWith((states) => Colors.white),
+              columnSpacing: 20,
+              columns: headers
+                  .map((header) => DataColumn(
+                label: Text(
+                  header,
+                  style: TextStyle(
+                    fontSize: FontSizes.medium,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black87,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+              ))
+                  .toList(),
+              rows: rows
+                  .map(
+                    (row) => DataRow(
+                  cells: row
+                      .map(
+                        (cell) => DataCell(
+                      SizedBox(
+                        width: 120, // Responsive width
                         child: Text(
                           cell,
                           style: TextStyle(
                             fontSize: FontSizes.small,
                             color: Colors.black.withOpacity(0.8),
                           ),
+                          overflow: TextOverflow.ellipsis,
+                          maxLines: 2,
                           textAlign: TextAlign.center,
                         ),
                       ),
-                    );
-                  }).toList(),
+                    ),
+                  )
+                      .toList(),
                 ),
-              );
-            }).toList(),
-          ],
-        ),
+              )
+                  .toList(),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -99,98 +112,106 @@ class VehicleReportScreen extends StatelessWidget {
             ),
           ),
           centerTitle: true,
-          elevation: 0,
-          backgroundColor: Colors.white, // ✅ No header color
-          automaticallyImplyLeading: false, // ✅ Removes back button
-        ),
-        body: Padding(
-          padding: EdgeInsets.symmetric(
-            horizontal: ResponsiveSize.getWidth(size: 18),
-            vertical: ResponsiveSize.getHeight(size: 10),
+          elevation: 2,
+          backgroundColor: Colors.white,
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back, color: Colors.black),
+            onPressed: () => Get.back(),
           ),
-          child: Obx(() {
-            if (assetsController.isLoading.value) {
-              return const Center(child: CircularProgressIndicator());
-            }
-
-            final vehicleAssets = assetsController.filteredAssets
-                .where((asset) => asset['category'] == 'Vehicle')
-                .toList();
-
-            if (vehicleAssets.isEmpty) {
-              return Center(
-                child: Text(
-                  'No Vehicles Available.',
-                  style: TextStyle(
-                    fontSize: ResponsiveSize.getHeight(size: 16),
-                    color: Colors.redAccent,
-                    fontWeight: FontWeight.bold,
-                  ),
+          actions: [
+            IconButton(
+              icon: const Icon(Icons.refresh, color: Colors.black),
+              onPressed: _refreshData,
+            ),
+          ],
+        ),
+        body: RefreshIndicator(
+          onRefresh: _refreshData,
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              return SingleChildScrollView(
+                padding: EdgeInsets.symmetric(
+                  horizontal: constraints.maxWidth * 0.05,
+                  vertical: constraints.maxHeight * 0.02,
                 ),
-              );
-            }
+                child: Obx(() {
+                  if (assetsController.isLoading.value) {
+                    return SizedBox(
+                      height: constraints.maxHeight * 0.7,
+                      child: const Center(child: CircularProgressIndicator()),
+                    );
+                  }
 
-            // 📌 Show Total Vehicles Count at the Top
-            final int totalVehicles = assetsController.totalVehicles.value;
+                  final vehicleAssets = assetsController.filteredAssets
+                      .where((asset) => asset['category'] == 'Vehicle')
+                      .toList();
 
-            // Prepare table data
-            final vehicleDetails = vehicleAssets.map((vehicle) {
-              return [
-                vehicle['vrn']?.toString() ?? 'N/A',
-                vehicle['vehicleCategory']?.toString() ?? 'N/A',
-                vehicle['model']?.toString() ?? 'N/A',
-              ];
-            }).toList();
-
-            final motDetails = vehicleAssets.map((vehicle) {
-              return [
-                vehicle['vrn']?.toString() ?? 'N/A',
-                vehicle['motValue']?.toString() ?? 'N/A',
-                vehicle['motDate']?.toString() ?? 'N/A',
-              ];
-            }).toList();
-
-            final insuranceDetails = vehicleAssets.map((vehicle) {
-              return [
-                vehicle['vrn']?.toString() ?? 'N/A',
-                vehicle['insuranceValue']?.toString() ?? 'N/A',
-                vehicle['insuranceDate']?.toString() ?? 'N/A',
-              ];
-            }).toList();
-
-            final financeDetails = vehicleAssets.map((vehicle) {
-              return [
-                vehicle['vrn']?.toString() ?? 'N/A',
-                vehicle['purchasePrice']?.toString() ?? 'N/A',
-                vehicle['purchaseDate']?.toString() ?? 'N/A',
-              ];
-            }).toList();
-
-            return Column(
-              children: [
-                // 📌 Total Count Widget
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 10),
-                  child: Card(
-                    elevation: 4,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
-                      child: Text(
-                        "Total Vehicles: $totalVehicles",
-                        style: TextStyle(
-                          fontSize: ResponsiveSize.getHeight(size: 18),
-                          fontWeight: FontWeight.bold,
-                          color: Colors.black,
+                  if (vehicleAssets.isEmpty) {
+                    return SizedBox(
+                      height: constraints.maxHeight * 0.7,
+                      child: Center(
+                        child: Text(
+                          'No Vehicles Available.',
+                          style: TextStyle(
+                            fontSize: FontSizes.medium,
+                            color: Colors.redAccent,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
-                        textAlign: TextAlign.center,
                       ),
-                    ),
-                  ),
-                ),
-                Expanded(
-                  child: ListView(
+                    );
+                  }
+
+                  final int totalVehicles = assetsController.totalVehicles.value;
+
+                  List<List<String>> vehicleDetails = [];
+                  List<List<String>> motDetails = [];
+                  List<List<String>> insuranceDetails = [];
+                  List<List<String>> financeDetails = [];
+
+                  for (var vehicle in vehicleAssets) {
+                    vehicleDetails.add([
+                      vehicle['vrn']?.toString() ?? 'N/A',
+                      vehicle['vehicleCategory']?.toString() ?? 'N/A',
+                      vehicle['model']?.toString() ?? 'N/A',
+                    ]);
+                    motDetails.add([
+                      vehicle['vrn']?.toString() ?? 'N/A',
+                      vehicle['motValue']?.toString() ?? 'N/A',
+                      vehicle['motDate']?.toString() ?? 'N/A',
+                    ]);
+                    insuranceDetails.add([
+                      vehicle['vrn']?.toString() ?? 'N/A',
+                      vehicle['insuranceValue']?.toString() ?? 'N/A',
+                      vehicle['insuranceDate']?.toString() ?? 'N/A',
+                    ]);
+                    financeDetails.add([
+                      vehicle['vrn']?.toString() ?? 'N/A',
+                      vehicle['purchasePrice']?.toString() ?? 'N/A',
+                      vehicle['purchaseDate']?.toString() ?? 'N/A',
+                    ]);
+                  }
+
+                  return Column(
                     children: [
+                      Card(
+                        elevation: 4,
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12)),
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(
+                              vertical: 12, horizontal: 16),
+                          child: Text(
+                            "Total Vehicles: $totalVehicles",
+                            style: TextStyle(
+                              fontSize: FontSizes.large,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.black,
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                        ),
+                      ),
                       buildTable(
                         title: "Vehicle Details",
                         headers: ['Registration No', 'Vehicle Type', 'Model'],
@@ -203,36 +224,47 @@ class VehicleReportScreen extends StatelessWidget {
                       ),
                       buildTable(
                         title: "Insurance Details",
-                        headers: ['Registration No', 'Insurance Value', 'Insurance Date'],
+                        headers: [
+                          'Registration No',
+                          'Insurance Value',
+                          'Insurance Date'
+                        ],
                         rows: insuranceDetails,
                       ),
                       buildTable(
                         title: "Finance Details",
-                        headers: ['Registration No', 'Purchase Price', 'Purchase Date'],
+                        headers: [
+                          'Registration No',
+                          'Purchase Price',
+                          'Purchase Date'
+                        ],
                         rows: financeDetails,
                       ),
                     ],
-                  ),
-                ),
-              ],
-            );
-          }),
+                  );
+                }),
+              );
+            },
+          ),
         ),
         floatingActionButton: FloatingActionButton.extended(
-          backgroundColor: Colors.black,
-          onPressed: () {
-            final vehicleData = assetsController.filteredAssets
-                .where((asset) => asset['category'] == 'Vehicle')
-                .toList();
-            PdfGenerator.generatePdf(context, 'Vehicle', data: vehicleData);
+          backgroundColor: Colors.blue.shade700,
+          onPressed: () async {
+            try {
+              final vehicleData = assetsController.filteredAssets
+                  .where((asset) => asset['category'] == 'Vehicle')
+                  .toList();
+
+              await PdfGenerator.generatePdf(context, 'Vehicle', data: vehicleData);
+
+              Get.snackbar("Success", "PDF generated successfully!",
+                  backgroundColor: Colors.green, colorText: Colors.white);
+            } catch (e) {
+              Get.snackbar("Error", "Failed to generate PDF: $e",
+                  backgroundColor: Colors.red, colorText: Colors.white);
+            }
           },
-          label: const Text(
-            "Generate PDF",
-            style: TextStyle(
-              color: Colors.white,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
+          label: const Text("Generate PDF", style: TextStyle(color: Colors.white)),
           icon: const Icon(Icons.print_rounded, color: Colors.white),
         ),
       ),

@@ -22,6 +22,11 @@ class LandController extends GetxController {
   final TextEditingController purchaseDateController = TextEditingController();
   final TextEditingController purchasePriceController = TextEditingController();
   final TextEditingController landImageController = TextEditingController();
+  final TextEditingController councilTaxDateController = TextEditingController();
+  final TextEditingController councilTaxValueController = TextEditingController();
+  final TextEditingController leaseDateController = TextEditingController();
+  final TextEditingController leaseValueController = TextEditingController();
+
 
   //:::::::::::::::::::::::::::::::::<< ADD LAND FUNCTION >>::::::::::::::::::::::::::::::::://
   Future<void> addLand() async {
@@ -48,6 +53,13 @@ class LandController extends GetxController {
         purchasePrice:
             _validateInput(purchasePriceController.text, defaultValue: '0'),
         landImage: _validateInput(landImageController.text),
+        councilTaxDate: _validateInput(councilTaxDateController.text, isRequired: true),
+        councilTaxValue: _validateInput(councilTaxValueController.text, isRequired: true),
+        leaseDate: _validateInput(leaseDateController.text, isRequired: true),
+        leaseValue: _validateInput(leaseValueController.text, isRequired: true),
+
+
+
       );
 
       print('response for test: $response');
@@ -81,7 +93,11 @@ class LandController extends GetxController {
     purchaseDateController.clear();
     purchasePriceController.clear();
     landImageController.clear();
-
+    councilTaxDateController.clear();
+    councilTaxValueController.clear();
+    leaseDateController.clear();
+    leaseValueController.clear();
+    landImageController .clear();
     // Reset form validation state
     landFormKey.currentState?.reset();
   }
@@ -94,7 +110,10 @@ class LandController extends GetxController {
     landProvinceController.text = 'Land Province 1';
     purchaseDateController.text = '2023-01-01';
     purchasePriceController.text = '1000';
-    landImageController.text = 'Land Image 1';
+
+    councilTaxDateController.text = '2023-01-01';
+    councilTaxValueController.text = '1000';
+
   }
 
   //:::::::::::::::::::::::::::::::::<< HELPER FUNCTION TO HANDLE NULL VALUES >>::::::::::::::::::::::::::::::::://
@@ -119,6 +138,10 @@ class LandController extends GetxController {
     purchaseDateController.dispose();
     purchasePriceController.dispose();
     landImageController.dispose();
+    councilTaxDateController.dispose();
+    councilTaxValueController.dispose();
+    landImageController.dispose();
+
     super.onClose();
   }
 }

@@ -271,4 +271,6 @@ class AssetController extends GetxController {
     hasMoreVehicles.value = currentVehiclePage.value < (totalVehicles.value ~/ 10);
     hasMoreLands.value = currentLandPage.value < (totalLands.value ~/ 10);
   }
+
+  void fetchAssets() {}
 }

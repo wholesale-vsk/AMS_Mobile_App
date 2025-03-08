@@ -19,6 +19,9 @@ class loadLandService {
     required String purchaseDate,
     required String purchasePrice,
     required String landImage,
+    required String councilTaxDate,
+    required String councilTaxValue,
+
   }) async {
     dio.options.contentType = Headers.jsonContentType;
 
@@ -36,6 +39,8 @@ class loadLandService {
         "purchaseDate": purchaseDate,
         "purchasePrice": purchasePrice,
         "landImage": landImage,
+        "councilTaxDate": councilTaxDate,
+        "councilTaxValue": councilTaxValue,
       };
 
       final response = await dio.post(
@@ -81,7 +86,13 @@ class loadLandService {
         required String landProvince,
         required String purchaseDate,
         required String purchasePrice,
-        required String landImage}) async {
+        required String landImage,
+        required String councilTaxValue,
+        required String councilTaxDate,
+        required String leaseDate,
+        required String leaseValue,
+
+      }) async {
     print(
         'Land details: $landName, $landType, $landSize, $landAddress, $landCity, $landProvince, $purchaseDate, $purchasePrice, $landImage');
     String? accessToken = await _secureStorage.read(key: 'access_token');
@@ -98,6 +109,10 @@ class loadLandService {
           "purchaseDate": purchaseDate,
           "purchasePrice": purchasePrice,
           "imageURL": landImage,
+          "councilTaxDate": councilTaxDate,
+          "councilTaxValue": councilTaxValue,
+          "leaseDate": leaseDate,
+          "leaseValue": leaseValue
         },
         options: Options(
           headers: {

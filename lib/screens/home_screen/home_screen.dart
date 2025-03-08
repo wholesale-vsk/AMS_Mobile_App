@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+
 import 'package:hexalyte_ams/routes/app_routes.dart';
+
+import '../../controllers/assets_controllers/assets_controller.dart';
 
 class HomeScreen extends StatefulWidget {
   @override
@@ -8,6 +11,7 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
+  final AssetController _assetController = Get.put(AssetController());
   int _selectedIndex = 0;
 
   @override
@@ -28,7 +32,7 @@ class _HomeScreenState extends State<HomeScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _buildStatisticsSection(),
+            Obx(() => _buildStatisticsSection()), // 📌 Dynamic asset count
             SizedBox(height: 20),
             _buildQuickActions(),
             SizedBox(height: 20),
@@ -36,17 +40,18 @@ class _HomeScreenState extends State<HomeScreen> {
           ],
         ),
       ),
-      bottomNavigationBar: _buildBottomNavigation(),
     );
   }
 
+  /// **📊 Statistics Section (Dynamic)**
   Widget _buildStatisticsSection() {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        _buildStatCard('Total Assets', '120', Icons.business, Colors.purple),
-        _buildStatCard('Active Users', '30', Icons.people, Colors.teal),
-        _buildStatCard('Pending Reports', '5', Icons.warning, Colors.orange),
+        _buildStatCard('Total Assets', _assetController.totalAssets.value.toString(), Icons.business, Colors.purple),
+        _buildStatCard('Buildings', _assetController.totalBuildings.value.toString(), Icons.apartment, Colors.teal),
+        _buildStatCard('Vehicles', _assetController.totalVehicles.value.toString(), Icons.directions_car, Colors.orange),
+        _buildStatCard('Lands', _assetController.totalLands.value.toString(), Icons.landscape, Colors.green),
       ],
     );
   }
@@ -71,6 +76,7 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
+  /// **🚀 Quick Action Buttons**
   Widget _buildQuickActions() {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -99,13 +105,14 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
+  /// **📦 Feature Grid**
   Widget _buildFeatureGrid() {
     List<Map<String, dynamic>> features = [
       {'title': 'Assets', 'icon': Icons.business, 'route': AppRoutes.VIEW_ALL_ASSETS_SCREEN},
       {'title': 'Reports', 'icon': Icons.bar_chart, 'route': AppRoutes.ASSETS_SELECT_FOR_REPORT_SCREEN},
       {'title': 'Analytics', 'icon': Icons.show_chart, 'route': AppRoutes.DASHBOARD_SCREEN},
       {'title': 'Settings', 'icon': Icons.settings, 'route': AppRoutes.APP_SETTINGS_SCREEN},
-      {'title': 'Users', 'icon': Icons.people, 'route': AppRoutes.USERS_SCREEN},
+      {'title': 'Chat', 'icon': Icons.chat, 'route': AppRoutes.user_selection_screen},
       {'title': 'Help', 'icon': Icons.help, 'route': AppRoutes.HELP_AND_SUPPORT_SCREEN},
     ];
 
@@ -139,37 +146,6 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         );
       },
-    );
-  }
-
-  Widget _buildBottomNavigation() {
-    return BottomNavigationBar(
-      backgroundColor: Colors.white,
-      selectedItemColor: Colors.purple,
-      unselectedItemColor: Colors.black,
-      currentIndex: _selectedIndex,
-      iconSize: 30,
-      onTap: (index) {
-        setState(() {
-          _selectedIndex = index;
-        });
-        switch (index) {
-          case 0:
-            Get.offNamed(AppRoutes.HOME_SCREEN);
-            break;
-          case 1:
-            Get.offNamed(AppRoutes.user_selection_screen);
-            break;
-          case 2:
-            Get.offNamed(AppRoutes.APP_SETTINGS_SCREEN);
-            break;
-        }
-      },
-      items: const [
-        BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
-        BottomNavigationBarItem(icon: Icon(Icons.chat), label: 'Chat'),
-        BottomNavigationBarItem(icon: Icon(Icons.settings), label: 'Settings'),
-      ],
     );
   }
 }
