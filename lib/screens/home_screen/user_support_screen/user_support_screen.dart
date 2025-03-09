@@ -67,17 +67,18 @@ class SupportScreen extends StatelessWidget {
           ],
         ),
       ),
-      floatingActionButton: FloatingActionButton.extended(
-        backgroundColor: isDarkMode ? Colors.black : Colors.blueAccent,
-        onPressed: () => Get.toNamed('/liveChat'),
-        icon: const Icon(Icons.support_agent, color: Colors.white),
-        label: const Text(
-          "Live Support",
-          style: TextStyle(color: Colors.white),
-        ),
-      ),
+  //     floatingActionButton: FloatingActionButton.extended(
+  //       backgroundColor: isDarkMode ? Colors.black : Colors.blueAccent,
+  //       onPressed: () => Get.toNamed('/liveChat'),
+  //       icon: const Icon(Icons.support_agent, color: Colors.white),
+  //       label: const Text(
+  //         "Live Support",
+  //         style: TextStyle(color: Colors.white),
+  //       ),
+  //     ),
+
     );
-  }
+   }
 
   Widget _buildSupportCard({
     required IconData icon,

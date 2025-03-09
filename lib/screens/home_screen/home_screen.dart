@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:flutter/widgets.dart';
 
 import 'package:hexalyte_ams/routes/app_routes.dart';
-
 import '../../controllers/assets_controllers/assets_controller.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -10,9 +10,35 @@ class HomeScreen extends StatefulWidget {
   _HomeScreenState createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> {
+class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   final AssetController _assetController = Get.put(AssetController());
-  int _selectedIndex = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    _assetController.fetchAllAssets(); // Initial asset fetch
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      _silentRefreshAssets(); // Silent refresh when app resumes
+    }
+  }
+
+  /// **🔄 Silent Refresh Function**
+  void _silentRefreshAssets() async {
+    Future.delayed(Duration(milliseconds: 500), () async {
+      await _assetController.refreshAssets();
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -26,24 +52,42 @@ class _HomeScreenState extends State<HomeScreen> {
         centerTitle: true,
         backgroundColor: Colors.white,
         elevation: 3,
+        actions: [
+          IconButton(
+            icon: Icon(Icons.refresh, color: Colors.black),
+            onPressed: () async {
+              await _assetController.refreshAssets();
+            }, // Manual refresh
+          )
+        ],
       ),
-      body: SingleChildScrollView(
-        padding: EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Obx(() => _buildStatisticsSection()), // 📌 Dynamic asset count
-            SizedBox(height: 20),
-            _buildQuickActions(),
-            SizedBox(height: 20),
-            _buildFeatureGrid(),
-          ],
-        ),
+      body: Obx(() {
+        // **Avoid showing loading indicator for silent refresh**
+        if (_assetController.isLoading.value && !_assetController.isRefreshing.value) {
+          return Center(child: CircularProgressIndicator());
+        }
+        return _buildBody();
+      }),
+    );
+  }
+
+  Widget _buildBody() {
+    return SingleChildScrollView(
+      padding: EdgeInsets.all(16.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _buildStatisticsSection(),
+          SizedBox(height: 20),
+          _buildQuickActions(),
+          SizedBox(height: 20),
+          _buildFeatureGrid(),
+        ],
       ),
     );
   }
 
-  /// **📊 Statistics Section (Dynamic)**
+  /// **📊 Statistics Section**
   Widget _buildStatisticsSection() {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -112,7 +156,7 @@ class _HomeScreenState extends State<HomeScreen> {
       {'title': 'Reports', 'icon': Icons.bar_chart, 'route': AppRoutes.ASSETS_SELECT_FOR_REPORT_SCREEN},
       {'title': 'Analytics', 'icon': Icons.show_chart, 'route': AppRoutes.DASHBOARD_SCREEN},
       {'title': 'Settings', 'icon': Icons.settings, 'route': AppRoutes.APP_SETTINGS_SCREEN},
-      {'title': 'Chat', 'icon': Icons.chat, 'route': AppRoutes.user_selection_screen},
+      {'title': 'Chat', 'icon': Icons.chat, 'route': AppRoutes.USER_SELECTION_SCREEN},
       {'title': 'Help', 'icon': Icons.help, 'route': AppRoutes.HELP_AND_SUPPORT_SCREEN},
     ];
 

@@ -63,11 +63,11 @@ class AddLandScreen extends StatelessWidget {
 
               const Text("Leaseing Deteails", style: TextStyle(fontSize: 20, fontWeight: FontWeight.w500)),
               CalendarField(
-                controller: landController.leaseDateController,
+                controller: landController.councilTaxDateController,
                 hintText: 'Leaseing  Date',
                 icon: Icons.calendar_month,
               ),
-              _buildTextField('Leaseing  Value (GBP)', landController.leaseValueController, isNumeric: true),
+              _buildTextField('Leaseing Tax Value (GBP)', landController.councilTaxValueController, isNumeric: true),
 
 
               // const Text("Council Deteails", style: TextStyle(fontSize: 20, fontWeight: FontWeight.w500)),
@@ -78,7 +78,7 @@ class AddLandScreen extends StatelessWidget {
               // ),
               // _buildTextField('Council Tax Value (GBP)', landController.councilTaxValueController, isNumeric: true),
 
-              _buildImagePickerField(),
+              // _buildImagePickerField(),
               const SizedBox(height: 20),
               Obx(() => ElevatedButton(
                 onPressed: landController.isLoading.value
@@ -124,55 +124,55 @@ class AddLandScreen extends StatelessWidget {
     );
   }
 
-  //:::::::::::::::::::::::::::::::::<< IMAGE PICKER FIELD >>::::::::::::::::::::::::::::::::://
-  Widget _buildImagePickerField() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        const Text("Land Image", style: TextStyle(fontSize: 20, fontWeight: FontWeight.w500)),
-        const SizedBox(height: 8),
-        GestureDetector(
-          onTap: () async {
-            await imagePickerController.pickImage(ImageSource.gallery);
-            if (imagePickerController.selectedImage.value != null) {
-              landController.landImageController.text = imagePickerController.selectedImage.value!.path;
-              landController.update();
-            }
-          },
-          child: Container(
-            height: 150,
-            decoration: BoxDecoration(
-              border: Border.all(color: Colors.grey),
-              borderRadius: BorderRadius.circular(16),
-            ),
-            child: Obx(() {
-              return imagePickerController.selectedImage.value != null
-                  ? ClipRRect(
-                borderRadius: BorderRadius.circular(16),
-                child: Image.file(
-                  imagePickerController.selectedImage.value!,
-                  fit: BoxFit.cover,
-                  width: double.infinity,
-                ),
-              )
-                  : const Center(
-                child: Icon(Icons.add_a_photo, size: 50, color: Colors.grey),
-              );
-            }),
-          ),
-        ),
-        const SizedBox(height: 10),
-        Obx(() {
-          return imagePickerController.selectedImage.value != null
-              ? ElevatedButton(
-            onPressed: () {
-              Get.snackbar("Image Selected", "Land image added successfully.");
-            },
-            child: const Text("Use This Image"),
-          )
-              : const SizedBox.shrink();
-        }),
-      ],
-    );
-  }
-}
+//   //:::::::::::::::::::::::::::::::::<< IMAGE PICKER FIELD >>::::::::::::::::::::::::::::::::://
+//   Widget _buildImagePickerField() {
+//     return Column(
+//       crossAxisAlignment: CrossAxisAlignment.stretch,
+//       children: [
+//         const Text("Land Image", style: TextStyle(fontSize: 20, fontWeight: FontWeight.w500)),
+//         const SizedBox(height: 8),
+//         GestureDetector(
+//           onTap: () async {
+//             await imagePickerController.pickImage(ImageSource.gallery);
+//             if (imagePickerController.selectedImage.value != null) {
+//               landController.landImageController.text = imagePickerController.selectedImage.value!.path;
+//               landController.update();
+//             }
+//           },
+//           child: Container(
+//             height: 150,
+//             decoration: BoxDecoration(
+//               border: Border.all(color: Colors.grey),
+//               borderRadius: BorderRadius.circular(16),
+//             ),
+//             child: Obx(() {
+//               return imagePickerController.selectedImage.value != null
+//                   ? ClipRRect(
+//                 borderRadius: BorderRadius.circular(16),
+//                 child: Image.file(
+//                   imagePickerController.selectedImage.value!,
+//                   fit: BoxFit.cover,
+//                   width: double.infinity,
+//                 ),
+//               )
+//                   : const Center(
+//                 child: Icon(Icons.add_a_photo, size: 50, color: Colors.grey),
+//               );
+//             }),
+//           ),
+//         ),
+//         const SizedBox(height: 10),
+//         Obx(() {
+//           return imagePickerController.selectedImage.value != null
+//               ? ElevatedButton(
+//             onPressed: () {
+//               Get.snackbar("Image Selected", "Land image added successfully.");
+//             },
+//             child: const Text("Use This Image"),
+//           )
+//               : const SizedBox.shrink();
+//         }),
+//       ],
+//     );
+//   }
+ }

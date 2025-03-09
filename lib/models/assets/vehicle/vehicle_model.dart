@@ -9,12 +9,14 @@ class Vehicle {
   final double purchasePrice;
   final String purchaseDate;
   final String motDate;
+  final String Milage;
   final String insuranceDate;
   final String imageURL;
   final String createdBy;
   final String createdDate;
   final String lastModifiedBy;
   final String lastModifiedDate;
+  final String motExpiredDate;
 
   Vehicle({
     required this.model,
@@ -33,6 +35,8 @@ class Vehicle {
     required this.createdDate,
     required this.lastModifiedBy,
     required this.lastModifiedDate,
+    required this.Milage,
+    required this.motExpiredDate
   });
 
   /// **✅ Convert JSON to `Vehicle` object**
@@ -54,6 +58,8 @@ class Vehicle {
       createdDate: json?['createdDate'] ?? 'N/A',
       lastModifiedBy: json?['lastModifiedBy'] ?? 'Unknown',
       lastModifiedDate: json?['lastModifiedDate'] ?? 'N/A',
+      motExpiredDate: json?['motExpiredDate'] ?? 'N/A',
+      Milage: json?['Milege'] ?? 'N/A',
     );
   }
 
@@ -76,6 +82,8 @@ class Vehicle {
       'createdDate': createdDate,
       'lastModifiedBy': lastModifiedBy,
       'lastModifiedDate': lastModifiedDate,
+      'Milege': Milage,
+      'motExpiredDate': motExpiredDate,
       'type': 'Vehicle', // ✅ Ensures type is set for filtering
     };
   }

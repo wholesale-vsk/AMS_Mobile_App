@@ -3,7 +3,7 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:hexalyte_ams/services/api_environment.dart';
 import 'package:hexalyte_ams/services/auth/api_response_formatter.dart';
 
-class loadLandService {
+class LandService {
   final Dio dio = Dio(BaseOptions(baseUrl: DataEnvironment.baseURL));
   final FlutterSecureStorage _secureStorage = const FlutterSecureStorage();
 
@@ -87,10 +87,7 @@ class loadLandService {
         required String purchaseDate,
         required String purchasePrice,
         required String landImage,
-        required String councilTaxValue,
-        required String councilTaxDate,
-        required String leaseDate,
-        required String leaseValue,
+        required String councilTaxValue, required String councilTaxDate,
 
       }) async {
     print(
@@ -108,11 +105,9 @@ class loadLandService {
           "province": landProvince,
           "purchaseDate": purchaseDate,
           "purchasePrice": purchasePrice,
-          "imageURL": landImage,
           "councilTaxDate": councilTaxDate,
           "councilTaxValue": councilTaxValue,
-          "leaseDate": leaseDate,
-          "leaseValue": leaseValue
+          "imageURL": landImage,
         },
         options: Options(
           headers: {

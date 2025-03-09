@@ -8,8 +8,17 @@ class Building {
   final String province;
   final String ownerName;
   final String purchaseDate;
+  final String purposeOfUse;
   final String constructionType;
   final double constructionCost;
+  final String constructionStatus;
+  final String councilTaxDate;
+  final double councilTaxValue;
+  final double buildingValue;
+  final String leaseDate;
+  final double leaseValue;
+  final double purchasePrice;
+
   final DateTime? constructionDate;
   final String imageURL;
 
@@ -25,6 +34,15 @@ class Building {
     required this.ownerName,
     required this.constructionType,
     required this.constructionCost,
+    required this.constructionStatus,
+    required this.councilTaxDate,
+    required this.councilTaxValue,
+    required this.buildingValue,
+    required this.leaseDate,
+    required this.leaseValue,
+    required this.purposeOfUse,
+    required this.purchasePrice,
+
     this.constructionDate,
     required this.imageURL,
   });
@@ -47,6 +65,14 @@ class Building {
       constructionCost: _parseDouble(json['constructionCost']),
       purchaseDate: json['purchaseDate']?.toString() ?? 'N/A',
       constructionDate: _parseDate(json['constructionDate']),
+      constructionStatus: json['constructionStatus']?.toString() ?? 'Unknown',
+      councilTaxDate: json['councilTaxDate']?.toString() ?? 'N/A',
+      councilTaxValue: _parseDouble(json['councilTaxValue']),
+      buildingValue: _parseDouble(json['buildingValue']),
+      leaseDate: json['leaseDate']?.toString() ?? 'N/A',
+      leaseValue: _parseDouble(json['leaseValue']),
+      purposeOfUse: json['purposeOfUse']?.toString() ?? 'Unknown',
+      purchasePrice: _parseDouble(json['purchasePrice']),
 
       imageURL: json?['imageUrl'] ?? '', // ✅ If API uses lowercase "imageUrl"
 

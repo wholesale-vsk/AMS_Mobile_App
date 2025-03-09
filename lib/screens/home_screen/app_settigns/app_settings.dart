@@ -5,30 +5,32 @@ import '../../../utils/theme/responsive_size.dart';
 import '../home_screen.dart';
 
 class AppSettings extends StatelessWidget {
-  final AppThemeManager themeManager = Get.find<AppThemeManager>();
+  final AppThemeManager themeManager;
+  final RxBool enableNotifications = true.obs;
+  final RxBool enableLocationServices = true.obs;
+  final RxBool shareDataWithThirdParties = false.obs;
+  final RxBool profileVisibility = true.obs;
 
-  AppSettings({Key? key}) : super(key: key);
-
-  // List of themes for the dropdown
-  final List<String> themeNames = ThemeType.values.map((theme) => theme.name.capitalizeFirst!).toList();
-  RxString selectedTheme = ThemeType.values.first.name.capitalizeFirst!.obs;
+  AppSettings({Key? key})
+      : themeManager = Get.find<AppThemeManager>(),
+        super(key: key);
 
   // Logout Function
   void logout() {
-    Get.offNamed('/login');
+    Get.offAllNamed('/login');
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Colors.white, // 🔹 White Header
+        backgroundColor: Colors.white,
         elevation: 2,
         leading: IconButton(
-          icon: Icon(Icons.arrow_back, color: Colors.black), // 🔹 Back Button
-          onPressed: () => Get.offAll(() => HomeScreen()),
+          icon: const Icon(Icons.arrow_back, color: Colors.black),
+          onPressed: () => Get.back(),
         ),
-        title: Text(
+        title: const Text(
           "App Settings",
           style: TextStyle(
             fontSize: 20,
@@ -43,55 +45,29 @@ class AppSettings extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _buildSectionTitle('Appearance'),
-            _buildDropdownSetting(
-              context,
-              icon: Icons.palette,
-              label: 'Theme',
-              value: selectedTheme,
-              items: themeNames,
-              onChanged: (String? newValue) {
-                if (newValue != null) {
-                  selectedTheme.value = newValue;
-                  final selectedThemeType = ThemeType.values.firstWhere(
-                          (theme) => theme.name.capitalizeFirst! == selectedTheme.value);
-                  themeManager.setTheme(selectedThemeType);
-                }
-              },
-            ),
-            Divider(thickness: 1, color: Colors.grey.shade300),
-
             _buildSectionTitle('Notifications'),
             _buildSwitchSetting(
-              context,
               icon: Icons.notifications,
               label: 'Enable Notifications',
-              value: true.obs,
-              onChanged: (bool? newValue) {},
+              value: enableNotifications,
             ),
             Divider(thickness: 1, color: Colors.grey.shade300),
 
             _buildSectionTitle('Privacy & Security'),
             _buildSwitchSetting(
-              context,
               icon: Icons.location_on,
               label: 'Enable Location Services',
-              value: true.obs,
-              onChanged: (bool? newValue) {},
+              value: enableLocationServices,
             ),
             _buildSwitchSetting(
-              context,
               icon: Icons.data_usage,
               label: 'Share Data with Third Parties',
-              value: false.obs,
-              onChanged: (bool? newValue) {},
+              value: shareDataWithThirdParties,
             ),
             _buildSwitchSetting(
-              context,
               icon: Icons.visibility,
               label: 'Profile Visibility',
-              value: true.obs,
-              onChanged: (bool? newValue) {},
+              value: profileVisibility,
             ),
 
             SizedBox(height: ResponsiveSize.getHeight(size: 32)),
@@ -112,7 +88,7 @@ class AppSettings extends StatelessWidget {
                 borderRadius: BorderRadius.circular(12),
               ),
             ),
-            child: Text(
+            child: const Text(
               'Logout',
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
             ),
@@ -133,66 +109,30 @@ class AppSettings extends StatelessWidget {
     );
   }
 
-  // Dropdown Settings Card
-  Widget _buildDropdownSetting(
-      BuildContext context, {
-        required IconData icon,
-        required String label,
-        required RxString value,
-        required List<String> items,
-        required ValueChanged<String?> onChanged,
-      }) {
-    return _buildCard(
-      child: Row(
-        children: [
-          Icon(icon, color: themeManager.primaryColor, size: 30),
-          SizedBox(width: 16),
-          Expanded(
-            child: Text(label, style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: themeManager.textColor)),
-          ),
-          Obx(
-                () {
-              return DropdownButton<String>(
-                value: value.value,
-                icon: Icon(Icons.arrow_drop_down, color: themeManager.textColor),
-                style: TextStyle(color: themeManager.textColor),
-                onChanged: onChanged,
-                items: items.map((String value) {
-                  return DropdownMenuItem(value: value, child: Text(value));
-                }).toList(),
-              );
-            },
-          ),
-        ],
-      ),
-    );
-  }
-
   // Switch Settings Card
-  Widget _buildSwitchSetting(
-      BuildContext context, {
-        required IconData icon,
-        required String label,
-        required RxBool value,
-        required ValueChanged<bool?> onChanged,
-      }) {
+  Widget _buildSwitchSetting({
+    required IconData icon,
+    required String label,
+    required RxBool value,
+  }) {
     return _buildCard(
       child: Row(
         children: [
           Icon(icon, color: themeManager.primaryColor, size: 30),
-          SizedBox(width: 16),
+          const SizedBox(width: 16),
           Expanded(
-            child: Text(label, style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: themeManager.textColor)),
+            child: Text(
+              label,
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: themeManager.textColor),
+            ),
           ),
-          Obx(
-                () {
-              return Switch(
-                value: value.value,
-                onChanged: onChanged,
-                activeColor: themeManager.primaryColor,
-              );
-            },
-          ),
+          Obx(() {
+            return Switch(
+              value: value.value,
+              onChanged: (bool newValue) => value.value = newValue,
+              activeColor: themeManager.primaryColor,
+            );
+          }),
         ],
       ),
     );

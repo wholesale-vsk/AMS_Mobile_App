@@ -13,7 +13,7 @@ class FirebaseApi{
   Future<void> initNotifications()async{
     await firebaseMessaging.requestPermission();
     final fCMToken = await firebaseMessaging.getToken();
-    print('Token:$fCMToken');
+    await FirebaseMessaging.instance.subscribeToTopic("Common");
     FirebaseMessaging.onBackgroundMessage(handleBackgroundMessage);
     print('FCM Token: $fCMToken');
 

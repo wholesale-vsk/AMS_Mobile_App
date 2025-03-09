@@ -144,6 +144,7 @@ class BuildingDetailsScreen extends StatelessWidget {
           _buildDetailRow('🗓 Purchase Date:', building.purchaseDate, primaryColor, textColor),
           _buildDetailRow('🏗 Construction Type:', building.constructionType, primaryColor, textColor),
           _buildDetailRow('💰 Construction Cost:', _formatCurrency(building.constructionCost), primaryColor, textColor),
+
         ],
       ),
     );

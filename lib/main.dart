@@ -41,7 +41,7 @@ class MainApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       defaultTransition: Transition.fadeIn,
       getPages: AppRoutes.routes,
-      initialRoute: AppRoutes.LOGIN_SCREEN,
+      initialRoute: AppRoutes.LOADING_SCREEN,
     );
   }
 }

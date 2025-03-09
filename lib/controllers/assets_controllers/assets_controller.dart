@@ -150,17 +150,17 @@ class AssetController extends GetxController {
       List<Map<String, dynamic>> buildingAssets = buildings.map((b) => {
         "category": "Building",
 
-        "name": b.name ?? "Unknown",
+        "name": (b.name?.trim().isNotEmpty ?? false) ? b.name!.trim() : "N/A",
         "buildingType": b.buildingType ?? "N/A",
-        "numberOfFloors": b.numberOfFloors ?? "N/A",
-        "totalArea": b.totalArea ?? "N/A",
+        "numberOfFloors": b.numberOfFloors.toString(), // Ensures it's a string
+        "totalArea": b.totalArea.toString(), // Ensures it's a string
         "address": b.address ?? "N/A",
         "city": b.city ?? "N/A",
         "province": b.province ?? "N/A",
         "ownerName": b.ownerName ?? "N/A",
-        "constructionType": b.constructionType ?? "N/A",
-        "purchasePrice": b.constructionCost ?? "N/A",
-        "purchaseDate": b.constructionDate ?? "N/A",
+        "constructionType": b.councilTaxDate ?? "N/A",
+        "purchasePrice": b.purchasePrice.toString(), // Ensures it's a string
+        "purchaseDate": b.purchaseDate?.toString() ?? "N/A", // Convert DateTime properly
 
       }).toList();
 
@@ -186,22 +186,24 @@ class AssetController extends GetxController {
       List<Vehicle> vehicles = (response['vehicles'] ?? []).cast<Vehicle>();
       List<Map<String, dynamic>> vehicleAssets = vehicles.map((v) => {
         "category": "Vehicle",
-        "model": v.model ?? "Unknown",
-        "vrn": v.vrn ?? "N/A",
-        "motValue": v.motValue ?? "N/A",
-        "insuranceValue": v.insuranceValue ?? "N/A",
-        "vehicleCategory": v.vehicleCategory ?? "N/A",
-        "owner_name": v.ownerName ?? "N/A",
-        "isActive": v.isActive ?? false,
-        "purchasePrice": v.purchasePrice ?? "N/A",
-        "purchaseDate": v.purchaseDate ?? "N/A",
-        "motDate": v.motDate ?? "N/A",
-        "insuranceDate": v.insuranceDate ?? "N/A",
-        "imageURL": v.imageURL ?? "",
-        "createdBy": v.createdBy ?? "N/A",
-        "createdDate": v.createdDate ?? "N/A",
-        "lastModifiedBy": v.lastModifiedBy ?? "N/A",
-        "lastModifiedDate": v.lastModifiedDate ?? "N/A",
+        "model": v.model,
+        "vrn": v.vrn,
+        "motValue": v.motValue,
+        "insuranceValue": v.insuranceValue,
+        "vehicleCategory": v.vehicleCategory,
+        "owner_name": v.ownerName,
+        "isActive": v.isActive,
+        "purchasePrice": v.purchasePrice, // Keep as double, no "N/A"
+        "purchaseDate":(v.purchaseDate),
+        "motDate": (v.motDate),
+        "insuranceDate":(v.insuranceDate),
+        "imageURL": v.imageURL,
+        "createdBy": v.createdBy,
+        "createdDate": (v.createdDate),
+        "lastModifiedBy": v.lastModifiedBy,
+        "lastModifiedDate": (v.lastModifiedDate),
+        "mileage": v.Milage,
+        "motExpiredDate": (v.motExpiredDate),
         "type": "Vehicle", // ✅ Ensures type is set for filtering
       }).toList();
 

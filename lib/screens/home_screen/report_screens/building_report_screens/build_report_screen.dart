@@ -215,25 +215,25 @@ class _BuildingReportScreenState extends State<BuildingReportScreen>
 
                   return Column(
                     children: [
-                      // Total Count Widget
-                      Card(
-                        elevation: 4,
-                        shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12)),
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(
-                              vertical: 12, horizontal: 16),
-                          child: Text(
-                            "Total Buildings: $totalBuildings",
-                            style: TextStyle(
-                              fontSize: FontSizes.large,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.black,
-                            ),
-                            textAlign: TextAlign.center,
-                          ),
-                        ),
-                      ),
+                      // // Total Count Widget
+                      // Card(
+                      //   elevation: 4,
+                      //   shape: RoundedRectangleBorder(
+                      //       borderRadius: BorderRadius.circular(12)),
+                      //   child: Padding(
+                      //     padding: const EdgeInsets.symmetric(
+                      //         vertical: 12, horizontal: 16),
+                      //     child: Text(
+                      //       "Total Buildings: $totalBuildings",
+                      //       style: TextStyle(
+                      //         fontSize: FontSizes.large,
+                      //         fontWeight: FontWeight.bold,
+                      //         color: Colors.black,
+                      //       ),
+                      //       textAlign: TextAlign.center,
+                      //     ),
+                      //   ),
+                      // ),
                       buildTable(
                         title: "Building Details",
                         headers: ['Name', 'Building Type', 'Size'],

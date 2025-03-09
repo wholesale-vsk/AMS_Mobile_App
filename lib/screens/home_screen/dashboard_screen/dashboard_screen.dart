@@ -13,7 +13,7 @@ class DashboardScreen extends StatefulWidget {
   _DashboardScreenState createState() => _DashboardScreenState();
 }
 
-class _DashboardScreenState extends State<DashboardScreen> {
+class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingObserver {
   final AppThemeManager themeManager = Get.find();
   final AssetController assetController = Get.find();
   Timer? autoRefreshTimer;
@@ -21,20 +21,31 @@ class _DashboardScreenState extends State<DashboardScreen> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _startAutoRefresh();
   }
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     autoRefreshTimer?.cancel();
     super.dispose();
   }
 
   /// **🔄 Auto Refresh Every 30 Seconds**
   void _startAutoRefresh() {
-    autoRefreshTimer = Timer.periodic(const Duration(seconds: 30), (timer) {
+    autoRefreshTimer?.cancel(); // Prevent duplicate timers
+    autoRefreshTimer = Timer.periodic(const Duration(seconds: 1000), (timer) {
       assetController.refreshAssets();
     });
+  }
+
+  /// **🔄 Detect App Resuming from Background**
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      assetController.refreshAssets(); // Refresh when app resumes
+    }
   }
 
   @override
@@ -51,8 +62,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
         ),
         centerTitle: true,
         elevation: 0,
-        backgroundColor: Colors.white, // ✅ No header color
-        automaticallyImplyLeading: false, // ✅ Removes back button
+        backgroundColor: Colors.white,
+        automaticallyImplyLeading: false, // Removes back button
       ),
       body: Obx(() {
         var assetSummary = _generateAssetSummary();
@@ -99,14 +110,29 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
+  /// **📊 Generate Income Summary**
+  List<Map<String, dynamic>> _generateIncomeSummary() {
+    double buildingIncome = assetController.totalBuildings.value * 5000000;
+    double landIncome = assetController.totalLands.value * 3000000;
+    double vehicleIncome = assetController.totalVehicles.value * 2000000;
+    double totalIncome = buildingIncome + landIncome + vehicleIncome;
+
+    if (totalIncome == 0) return [];
+
+    return [
+      {'color': Colors.blue, 'value': (buildingIncome / totalIncome) * 1000, 'title': '${(buildingIncome / totalIncome * 100).toStringAsFixed(1)}%', 'label': 'Building Income'},
+      {'color': Colors.green, 'value': (landIncome / totalIncome) * 1000, 'title': '${(landIncome / totalIncome * 100).toStringAsFixed(1)}%', 'label': 'Land Income'},
+      {'color': Colors.orange, 'value': (vehicleIncome / totalIncome) * 1000, 'title': '${(vehicleIncome / totalIncome * 100).toStringAsFixed(1)}%', 'label': 'Vehicle Income'},
+    ];
+  }
   /// **📊 Asset Count Section**
   Widget _buildAssetCountSection() {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Expanded(child: _buildCountCard('Buildings', assetController.totalBuildings.value.toString(), Icons.apartment_rounded, Colors.blue.shade300)),
-        Expanded(child: _buildCountCard('Lands', assetController.totalLands.value.toString(), Icons.landscape_rounded, Colors.green.shade300)),
-        Expanded(child: _buildCountCard('Vehicles', assetController.totalVehicles.value.toString(), Icons.directions_car_rounded, Colors.orange.shade300)),
+        Expanded(child: _buildCountCard('Buildings', assetController.totalBuildings.value.toString(), Icons.apartment_rounded, Colors.blue)),
+        Expanded(child: _buildCountCard('Lands', assetController.totalLands.value.toString(), Icons.landscape_rounded, Colors.green)),
+        Expanded(child: _buildCountCard('Vehicles', assetController.totalVehicles.value.toString(), Icons.directions_car_rounded, Colors.orange)),
       ],
     );
   }
@@ -123,10 +149,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
           padding: const EdgeInsets.all(16.0),
           child: Column(
             children: [
-              Icon(icon, size: 40, color: Colors.white),
+              Icon(icon, size: 40, color: Colors.black),
               const SizedBox(height: 8),
-              Text(count, style: const TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: Colors.white)),
-              Text(label, style: TextStyle(fontSize: 16, color: Colors.white.withOpacity(0.7))),
+              Text(count, style: const TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: Colors.black)),
+              Text(label, style: TextStyle(fontSize: 16, color: Colors.black.withOpacity(0.7))),
             ],
           ),
         ),
@@ -218,22 +244,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
       {'color': Colors.blue, 'value': (buildings / total) * 100, 'title': '${(buildings / total * 100).toStringAsFixed(1)}%', 'label': 'Buildings'},
       {'color': Colors.green, 'value': (lands / total) * 100, 'title': '${(lands / total * 100).toStringAsFixed(1)}%', 'label': 'Lands'},
       {'color': Colors.orange, 'value': (vehicles / total) * 100, 'title': '${(vehicles / total * 100).toStringAsFixed(1)}%', 'label': 'Vehicles'},
-    ];
-  }
-
-  /// **📊 Generate Income Summary**
-  List<Map<String, dynamic>> _generateIncomeSummary() {
-    double buildingIncome = assetController.totalBuildings.value * 50000;
-    double landIncome = assetController.totalLands.value * 30000;
-    double vehicleIncome = assetController.totalVehicles.value * 20000;
-    double totalIncome = buildingIncome + landIncome + vehicleIncome;
-
-    if (totalIncome == 0) return [];
-
-    return [
-      {'color': Colors.blue, 'value': (buildingIncome / totalIncome) * 100, 'title': '${(buildingIncome / totalIncome * 100).toStringAsFixed(1)}%', 'label': 'Building Income'},
-      {'color': Colors.green, 'value': (landIncome / totalIncome) * 100, 'title': '${(landIncome / totalIncome * 100).toStringAsFixed(1)}%', 'label': 'Land Income'},
-      {'color': Colors.orange, 'value': (vehicleIncome / totalIncome) * 100, 'title': '${(vehicleIncome / totalIncome * 100).toStringAsFixed(1)}%', 'label': 'Vehicle Income'},
     ];
   }
 

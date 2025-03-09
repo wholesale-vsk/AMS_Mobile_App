@@ -194,24 +194,24 @@ class VehicleReportScreen extends StatelessWidget {
 
                   return Column(
                     children: [
-                      Card(
-                        elevation: 4,
-                        shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12)),
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(
-                              vertical: 12, horizontal: 16),
-                          child: Text(
-                            "Total Vehicles: $totalVehicles",
-                            style: TextStyle(
-                              fontSize: FontSizes.large,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.black,
-                            ),
-                            textAlign: TextAlign.center,
-                          ),
-                        ),
-                      ),
+                      // Card(
+                      //   elevation: 4,
+                      //   shape: RoundedRectangleBorder(
+                      //       borderRadius: BorderRadius.circular(12)),
+                      //   child: Padding(
+                      //     padding: const EdgeInsets.symmetric(
+                      //         vertical: 12, horizontal: 16),
+                      //     child: Text(
+                      //       "Total Vehicles: $totalVehicles",
+                      //       style: TextStyle(
+                      //         fontSize: FontSizes.large,
+                      //         fontWeight: FontWeight.bold,
+                      //         color: Colors.black,
+                      //       ),
+                      //       textAlign: TextAlign.center,
+                      //     ),
+                      //   ),
+                      // ),
                       buildTable(
                         title: "Vehicle Details",
                         headers: ['Registration No', 'Vehicle Type', 'Model'],

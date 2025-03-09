@@ -36,7 +36,7 @@ class HomeCardView extends StatelessWidget {
             Get.toNamed(AppRoutes.HELP_AND_SUPPORT_SCREEN); // Help and Support
             break;
             case 7:
-            Get.toNamed(AppRoutes.APP_CHAT_SCREEN); // App chat screen
+            Get.toNamed(AppRoutes.USER_SELECTION_SCREEN); // App chat screen
             break;
           case 8:
             Get.toNamed(AppRoutes.APP_SETTINGS_SCREEN); // App settings screen
