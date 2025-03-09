@@ -14,6 +14,9 @@ class FirebaseApi{
     await firebaseMessaging.requestPermission();
     final fCMToken = await firebaseMessaging.getToken();
     await FirebaseMessaging.instance.subscribeToTopic("Common");
+    await FirebaseMessaging.instance.subscribeToTopic("Asset");
+    await FirebaseMessaging.instance.subscribeToTopic("Land");
+    await FirebaseMessaging.instance.subscribeToTopic("Vehicle");
     FirebaseMessaging.onBackgroundMessage(handleBackgroundMessage);
     print('FCM Token: $fCMToken');
 
