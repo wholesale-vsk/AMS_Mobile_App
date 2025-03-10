@@ -35,7 +35,7 @@ class LoadBuildingService {
   /// **🏗 Fetch paginated buildings from API**
   /// - `page` = current page number (default: 1)
   /// - `size` = number of buildings per page (default: 20)
-  Future<Map<String, dynamic>> fetchBuildings({int page = 1, int size = 20}) async {
+  Future<Map<String, dynamic>> fetchBuildings({int page = 1, int size = 100}) async {
     print('🏗 Fetching Buildings - Page: $page, Size: $size');
 
     try {

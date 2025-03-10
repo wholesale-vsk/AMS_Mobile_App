@@ -35,7 +35,7 @@ class LoadLandsService {
   /// **🏡 Fetch paginated lands from API**
   /// - `page` = current page number (default: 1)
   /// - `size` = number of lands per page (default: 20)
-  Future<Map<String, dynamic>> fetchLands({int page = 1, int size = 20}) async {
+  Future<Map<String, dynamic>> fetchLands({int page = 1, int size = 100}) async {
     print('🏡 Fetching Lands - Page: $page, Size: $size');
 
     try {

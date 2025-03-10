@@ -18,7 +18,7 @@ class LoadVehicleService {
   /// **🚗 Fetch paginated vehicles from API**
   /// - `page` = current page number (default: 1)
   /// - `pageSize` = number of vehicles per page (default: 20)
-  Future<Map<String, dynamic>> fetchVehicles({int page = 1, int pageSize = 20}) async {
+  Future<Map<String, dynamic>> fetchVehicles({int page = 1, int pageSize = 100}) async {
     print('🚗 Fetching vehicles... Page: $page, Limit: $pageSize');
 
     try {
