@@ -41,7 +41,6 @@ class VehicleController extends GetxController {
     try {
       final response = await _vehicleService.addVehicle(
         registrationNumber: _validateInput(registrationNumberController.text),
-        vehicleCategory: _validateInput(vehicleCategoryController.text),
         vehicleModel: _validateInput(vehicleModelController.text),
         vehicleType: _validateInput(vehicleTypeController.text),
         vehicleImage: _validateInput(vehicleImageController.text),
@@ -79,7 +78,6 @@ class VehicleController extends GetxController {
   void clearForm() {
     brandController.clear();
     registrationNumberController.clear();
-    vehicleCategoryController.clear();
     vehicleModelController.clear();
     vehicleTypeController.clear();
     vehicleImageController.clear();
@@ -105,7 +103,6 @@ class VehicleController extends GetxController {
     // ✅ Ensured controllers are disposed of correctly
     brandController.dispose();
     registrationNumberController.dispose();
-    vehicleCategoryController.dispose();
     vehicleModelController.dispose();
     vehicleTypeController.dispose();
     vehicleImageController.dispose();

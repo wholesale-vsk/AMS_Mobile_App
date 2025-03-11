@@ -7,6 +7,8 @@ class Land {
   final String province;
   final String purchaseDate;
   final double purchasePrice;
+  final String leaseDate;
+  // final String leaseValue;
   final String imageURL;
 
   Land({
@@ -18,6 +20,8 @@ class Land {
     required this.province,
     required this.purchaseDate,
     required this.purchasePrice,
+    required this.leaseDate,
+    // required this.leaseValue,
     required this.imageURL,
   });
 
@@ -30,12 +34,14 @@ class Land {
     return Land(
       name: json['name'] ?? 'Unknown',
       type: json['type'] ?? 'Unknown',
-      size: (json['size'] is num) ? (json['size'] as num).toDouble() : 0.0,
+      size: (json['landSize'] is num) ? (json['landSize'] as num).toDouble() : 0.0,
       address: json['address'] ?? 'Unknown',
       city: json['city'] ?? 'Unknown',
       province: json['province'] ?? 'Unknown',
       purchaseDate: json['purchaseDate'] ?? 'N/A',
       purchasePrice: (json['purchasePrice'] is num) ? (json['purchasePrice'] as num).toDouble() : 0.0,
+      leaseDate: json['lease_date'] ?? 'N/A',
+      // leaseValue: json['leaseValue'] ?? 'N/A',
       imageURL: json['imageURL'] is String ? json['imageURL'] : "",
     );
   }
@@ -45,12 +51,14 @@ class Land {
     return {
       'name': name,
       'type': type,
-      'size': size,
+      'landSize': size,
       'address': address,
       'city': city,
       'province': province,
       'purchaseDate': purchaseDate,
       'purchasePrice': purchasePrice,
+      'lease_date': leaseDate,
+      // 'leaseValue': leaseValue,
       'imageURL': imageURL,
       'category': 'Land', // ✅ Ensures filtering works
     };

@@ -153,15 +153,18 @@ class VehicleDetailsScreen extends StatelessWidget {
         children: [
           Divider(color: primaryColor),
           _buildDetailRow('🚘 Registration:', vehicle?['vrn'], primaryColor, textColor),
-          _buildDetailRow('🚗 Vehicle Type:', vehicle?['vehicleCategory'], primaryColor, textColor),
+          _buildDetailRow('🚗 Vehicle Type:', vehicle?['vehicle_type'], primaryColor, textColor),
           _buildDetailRow('📍 Model:', vehicle?['model'], primaryColor, textColor),
-          _buildDetailRow('👤 Owner:', vehicle?['ownerName'], primaryColor, textColor),
+          _buildDetailRow('👤 Owner:', vehicle?['owner_name'], primaryColor, textColor),
           _buildDetailRow('💰 MOT Value:', _formatCurrency(vehicle?['motValue']), primaryColor, textColor),
           _buildDetailRow('📅 MOT Date:', vehicle?['motDate'], primaryColor, textColor),
+          _buildDetailRow('🔚 MOT Expiry:', vehicle?['motExpiredDate'], primaryColor, textColor),
           _buildDetailRow('🔒 Insurance Value:', _formatCurrency(vehicle?['insuranceValue']), primaryColor, textColor),
           _buildDetailRow('🗓 Insurance Date:', vehicle?['insuranceDate'], primaryColor, textColor),
+          _buildDetailRow('📊 Mileage:', vehicle?['mileage'], primaryColor, textColor),
           _buildDetailRow('🛒 Purchase Date:', vehicle?['purchaseDate'], primaryColor, textColor),
-          _buildDetailRow('💵 Value:', _formatCurrency(vehicle?['purchasePrice']), primaryColor, textColor),
+          _buildDetailRow('💵 Purchase Price:', _formatCurrency(vehicle?['purchasePrice']), primaryColor, textColor),
+
           SizedBox(height: ResponsiveSize.getHeight(size: 16)),
           Divider(color: primaryColor),
         ],
@@ -195,6 +198,6 @@ class VehicleDetailsScreen extends StatelessWidget {
 
   /// **🔹 Format Currency**
   String _formatCurrency(dynamic value) {
-    return value == null ? 'N/A' : 'LKR ${value.toString()}';
+    return value == null ? 'N/A' : ' ${value.toString()}';
   }
 }

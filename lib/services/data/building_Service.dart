@@ -18,15 +18,15 @@ class BuildingService {
     required String buildingCity,
     required String buildingProvince,
     required String ownerName,
-    required String constructionType,
-    required String constructionCost,
-    required String constructionDate,
+    required String purchasePrice,
+    required String purchaseDate,
     required String buildingImage,
     required String purposeOfUse,
     required String councilTax,
     required String councilTaxDate,
     required String councilTaxValue,
-    required String buildingValue,
+    required String leaseDate,
+    required String leaseValue,
   }) async {
     dio.options.contentType = Headers.jsonContentType;
 
@@ -43,23 +43,23 @@ class BuildingService {
 
       final updateData = {
         "buildingId": buildingId,
-        "buildingName": buildingName,
+        "name": buildingName,
         "buildingType": buildingType,
         "numberOfFloors": numberOfFloors,
         "totalArea": totalArea,
-        "buildingAddress": buildingAddress,
-        "buildingCity": buildingCity,
+        "address": buildingAddress,
+        "city": buildingCity,
         "buildingProvince": buildingProvince,
         "ownerName": ownerName,
-        "constructionType": constructionType,
-        "constructionCost": constructionCost,
-        "constructionDate": constructionDate,
+        "purchasePrice": purchasePrice,
+        "purchaseDate": purchaseDate,
         "buildingImage": buildingImage.isNotEmpty ? buildingImage : null, // ✅ Prevents empty image from being sent
         "purposeOfUse": purposeOfUse,
         "councilTax": councilTax,
         "councilTaxDate": councilTaxDate,
         "councilTaxValue": councilTaxValue,
-        "buildingValue": buildingValue,
+        "lease_date": leaseDate,
+        "leaseValue": leaseValue,
       };
 
       final response = await dio.put(
@@ -107,27 +107,22 @@ class BuildingService {
     required String buildingCity,
     required String buildingProvince,
     required String ownerName,
-    required String constructionType,
-    required String constructionCost,
-    required String constructionDate,
     required String buildingImage,
     required String purposeOfUse,
     required String councilTax,
     required String councilTaxDate,
     required String councilTaxValue,
-    required String buildingValue,
-    required String vehicleImage,
     required String image,
     required String leaseValue,
     required String leaseDate,
-    required String leaseDatePicke,
     required String purchaseDate,
     required String purchasePrice,
 
 
+
   }) async {
     print(
-        'Building Details: $buildingName, $buildingType, $numberOfFloors, $totalArea, $buildingAddress, $buildingCity, $buildingProvince, $ownerName, $constructionType, $constructionDate, $purposeOfUse, $councilTax, $councilTaxDate, $councilTaxValue, $buildingValue');
+        'Building Details: $buildingName, $buildingType, $numberOfFloors, $totalArea, $buildingAddress, $buildingCity, $buildingProvince, $ownerName, $purposeOfUse, $councilTax, $councilTaxDate, $councilTaxValue, ');
 
     String? accessToken = await _secureStorage.read(key: 'access_token');
     if (accessToken == null) {
@@ -149,19 +144,17 @@ class BuildingService {
           "totalArea": totalArea,
           "address": buildingAddress,
           "city": buildingCity,
-          "province": buildingProvince,
+          "buildingProvince": buildingProvince,
           "ownerName": ownerName,
-          "constructionType": constructionType,
-          "purchasePrice": constructionCost,
-          "purchaseDate": constructionDate,
-          "imageURL": buildingImage.isNotEmpty ? buildingImage : null,
+          "purchasePrice": purchasePrice,
+          "purchaseDate": purchaseDate,
+          "buildingImage": buildingImage.isNotEmpty ? buildingImage : null, // ✅ Prevents empty image from being sent
           "purposeOfUse": purposeOfUse,
           "councilTax": councilTax,
           "councilTaxDate": councilTaxDate,
           "councilTaxValue": councilTaxValue,
-          "buildingValue": buildingValue,
-          "leaseDate": leaseDate,
-          "leaseValue": leaseValue
+          "lease_date": leaseDate,
+          "leaseValue": leaseValue,
 
         },
         options: Options(

@@ -5,13 +5,9 @@ class Building {
   final double totalArea;
   final String city;
   final String address;
-  final String province;
   final String ownerName;
   final String purchaseDate;
   final String purposeOfUse;
-  final String constructionType;
-  final double constructionCost;
-  final String constructionStatus;
   final String councilTaxDate;
   final double councilTaxValue;
   final double buildingValue;
@@ -29,12 +25,8 @@ class Building {
     required this.totalArea,
     required this.city,
     required this.address,
-    required this.province,
     required this.purchaseDate,
     required this.ownerName,
-    required this.constructionType,
-    required this.constructionCost,
-    required this.constructionStatus,
     required this.councilTaxDate,
     required this.councilTaxValue,
     required this.buildingValue,
@@ -59,22 +51,18 @@ class Building {
       totalArea: _parseDouble(json['totalArea']),
       address: json['address']?.toString() ?? 'Unknown',
       city: json['city']?.toString() ?? 'Unknown',
-      province: json['province']?.toString() ?? 'Unknown',
       ownerName: json['ownerName']?.toString() ?? 'Unknown',
-      constructionType: json['constructionType']?.toString() ?? 'Unknown',
-      constructionCost: _parseDouble(json['constructionCost']),
       purchaseDate: json['purchaseDate']?.toString() ?? 'N/A',
       constructionDate: _parseDate(json['constructionDate']),
-      constructionStatus: json['constructionStatus']?.toString() ?? 'Unknown',
       councilTaxDate: json['councilTaxDate']?.toString() ?? 'N/A',
       councilTaxValue: _parseDouble(json['councilTaxValue']),
       buildingValue: _parseDouble(json['buildingValue']),
-      leaseDate: json['leaseDate']?.toString() ?? 'N/A',
+      leaseDate: json['lease_date']?.toString() ?? 'N/A',
       leaseValue: _parseDouble(json['leaseValue']),
       purposeOfUse: json['purposeOfUse']?.toString() ?? 'Unknown',
       purchasePrice: _parseDouble(json['purchasePrice']),
 
-      imageURL: json?['imageUrl'] ?? '', // ✅ If API uses lowercase "imageUrl"
+      imageURL: json?['imageURL'] ?? '', // ✅ If API uses lowercase "imageUrl"
 
     );
   }

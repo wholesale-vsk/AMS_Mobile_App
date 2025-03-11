@@ -133,17 +133,24 @@ class BuildingDetailsScreen extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Divider(color: primaryColor),
-          _buildDetailRow('🏢 Building Type:', building.buildingType, primaryColor, textColor),
-          _buildDetailRow('🏗 Number of Floors:', building.numberOfFloors?.toString(), primaryColor, textColor),
-          _buildDetailRow('📍 Address:', building.address, primaryColor, textColor),
-          _buildDetailRow('🏙 City:', building.city, primaryColor, textColor),
-          _buildDetailRow('🌍 Province:', building.province, primaryColor, textColor),
-          _buildDetailRow('👤 Owner:', building.ownerName, primaryColor, textColor),
-          SizedBox(height: ResponsiveSize.getHeight(size: 16)),
-          Divider(color: primaryColor),
-          _buildDetailRow('🗓 Purchase Date:', building.purchaseDate, primaryColor, textColor),
-          _buildDetailRow('🏗 Construction Type:', building.constructionType, primaryColor, textColor),
-          _buildDetailRow('💰 Construction Cost:', _formatCurrency(building.constructionCost), primaryColor, textColor),
+          _buildDetailRow('📛 Name:', (building.name), primaryColor, textColor),
+          _buildDetailRow('🏢 Building Type:', (building.buildingType), primaryColor, textColor),
+          _buildDetailRow('🏗 Number of Floors:', (building.numberOfFloors), primaryColor, textColor),
+          _buildDetailRow('📍 Address:', (building.address), primaryColor, textColor),
+          _buildDetailRow('🏙 City:', (building.city), primaryColor, textColor),
+          _buildDetailRow('👤 Owner:', (building.ownerName), primaryColor, textColor),
+          _buildDetailRow('🗓 Purchase Date:', (building.purchaseDate), primaryColor, textColor),
+          _buildDetailRow('💰 Purchase Price:', (building.purchasePrice), primaryColor, textColor),
+          _buildDetailRow('💼 Lease Value:', (building.leaseValue), primaryColor, textColor),
+          _buildDetailRow('🗓 Lease Date:', (building.leaseDate), primaryColor, textColor),
+          _buildDetailRow('🏠 Total Area:', (building.totalArea), primaryColor, textColor),
+          _buildDetailRow('📅 Council Tax Date:', (building.councilTaxDate), primaryColor, textColor),
+          _buildDetailRow('💸 Council Tax Value:', (building.councilTaxValue), primaryColor, textColor),
+          _buildDetailRow('🎯 Purpose of Use:', (building.purposeOfUse), primaryColor, textColor),
+
+
+
+
 
         ],
       ),

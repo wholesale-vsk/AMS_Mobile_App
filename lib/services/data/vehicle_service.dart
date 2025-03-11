@@ -36,20 +36,18 @@ class VehicleService {
 
       final updateData = {
         "vrn": registrationNumber,
-        "vehicleType": vehicleType,
+        "vehicle_type": vehicleType,
         "model": vehicleModel,
-        "vehicleCategory": vehicleCategory,
         "owner_name": ownerName,
         "purchasePrice": purchasePrice,
         "purchaseDate": purchaseDate,
-        "imageURL": vehicleImage,
+        "imageURL": vehicleImage.isNotEmpty ? vehicleImage : null,
         "motValue": motValue,
         "motDate": motDate,
         "milage": milage,
         "insuranceValue": insuranceValue,
         "insuranceDate": insuranceDate,
-        "motExpiredDate": motExpiredDate,
-        "imageURL": vehicleImage.isNotEmpty ? vehicleImage : null, // ✅ P
+        "motExpiredDate": motExpiredDate
       };
 
       final response = await dio.put(
@@ -91,7 +89,6 @@ class VehicleService {
     required String registrationNumber,
     required String vehicleType,
     required String vehicleModel,
-    required String vehicleCategory,
     required String ownerName,
     required String motValue,
     required String motDate,
@@ -115,20 +112,18 @@ class VehicleService {
         'https://api.ams.hexalyte.com/vehicle/vehicles',
         data: {
           "vrn": registrationNumber,
-          "vehicleType": vehicleType,
+          "vehicle_type": vehicleType,
           "model": vehicleModel,
-          "vehicleCategory": vehicleCategory,
           "owner_name": ownerName,
           "purchasePrice": purchasePrice,
           "purchaseDate": purchaseDate,
-          "imageURL": vehicleImage,
+          "imageURL": vehicleImage.isNotEmpty ? vehicleImage : null,
           "motValue": motValue,
           "motDate": motDate,
           "milage": milage,
           "insuranceValue": insuranceValue,
           "insuranceDate": insuranceDate,
-          "motExpiredDate": motExpiredDate,
-          "imageURL": vehicleImage.isNotEmpty ? vehicleImage : null, // ✅ P
+          "motExpiredDate": motExpiredDate
         },
         options: Options(
           headers: {

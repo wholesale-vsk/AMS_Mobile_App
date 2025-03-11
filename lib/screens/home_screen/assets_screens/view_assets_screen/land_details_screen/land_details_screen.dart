@@ -149,16 +149,13 @@ class LandDetailsScreen extends StatelessWidget {
         children: [
           Divider(color: primaryColor),
           _buildDetailRow('🏡 Land Type:', land!['type'], primaryColor, textColor), // ✅ Fixed Key
-          _buildDetailRow('📏 Size:', "${land!['size']} acres", primaryColor, textColor), // ✅ Added unit
+          _buildDetailRow('📏 Size:', "${land!['landSize']} acres", primaryColor, textColor), // ✅ Added unit
           _buildDetailRow('📍 Address:', land!['address'], primaryColor, textColor),
           _buildDetailRow('🏙 City:', land!['city'], primaryColor, textColor),
-          _buildDetailRow('🌍 Province:', land!['province'], primaryColor, textColor),
-
-          SizedBox(height: ResponsiveSize.getHeight(size: 16)),
-          Divider(color: primaryColor),
-
           _buildDetailRow('🗓 Purchase Date:', land!['purchaseDate'], primaryColor, textColor), // ✅ Fixed Key
-          _buildDetailRow('💰 Value:', _formatCurrency(land!['purchasePrice']), primaryColor, textColor), // ✅ Fixed Key
+          _buildDetailRow('💰 purchase Price:', _formatCurrency(land!['purchasePrice']), primaryColor, textColor), // ✅ Fixed Key
+          _buildDetailRow('📅 Lease Date:', land!['lease_date'], primaryColor, textColor), // ✅ Fixed Key
+          _buildDetailRow('💸 Lease Value:', _formatCurrency(land!['leaseValue']), primaryColor, textColor), // ✅ Fixed Key
         ],
       ),
     );
@@ -200,6 +197,6 @@ class LandDetailsScreen extends StatelessWidget {
 
   /// **🔹 Format Currency**
   String _formatCurrency(dynamic value) {
-    return value == null ? 'N/A' : 'LKR ${value.toString()}';
+    return value == null ? 'N/A' : 'GBP ${value.toString()}';
   }
 }

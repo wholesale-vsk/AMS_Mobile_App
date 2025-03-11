@@ -22,8 +22,8 @@ class LandController extends GetxController {
   final TextEditingController purchaseDateController = TextEditingController();
   final TextEditingController purchasePriceController = TextEditingController();
   final TextEditingController landImageController = TextEditingController();
-  final TextEditingController councilTaxDateController = TextEditingController();
-  final TextEditingController councilTaxValueController = TextEditingController();
+  final TextEditingController leaseDateController = TextEditingController();
+  final TextEditingController leaseValueController = TextEditingController();
 
   //:::::::::::::::::::::::::::::::::<< ADD LAND FUNCTION >>::::::::::::::::::::::::::::::::://
   Future<void> addLand() async {
@@ -41,12 +41,11 @@ class LandController extends GetxController {
         landSize: _validateInput(landSizeController.text, defaultValue: '0'),
         landAddress: _validateInput(landAddressController.text, isRequired: true),
         landCity: _validateInput(landCityController.text, isRequired: true),
-        landProvince: _validateInput(landProvinceController.text, isRequired: true),
         purchaseDate: _validateInput(purchaseDateController.text, isRequired: true),
         purchasePrice: _validateInput(purchasePriceController.text, defaultValue: '0'),
         landImage: _validateInput(landImageController.text),
-        councilTaxDate: _validateInput(councilTaxDateController.text, isRequired: true),
-        councilTaxValue: _validateInput(councilTaxValueController.text, isRequired: true),
+        leaseDate: _validateInput(leaseDateController.text, isRequired: true),
+        leaseValue: _validateInput(leaseValueController.text, isRequired: true),
       );
 
       print('Response for test: $response');
@@ -78,27 +77,27 @@ class LandController extends GetxController {
     purchaseDateController.clear();
     purchasePriceController.clear();
     // landImageController.clear(); // ❌ Removed to retain image
-    councilTaxDateController.clear();
-    councilTaxValueController.clear();
+    leaseDateController.clear();
+    leaseValueController.clear();
 
     // Reset form validation state
     landFormKey.currentState?.reset();
   }
 
-  //:::::::::::::::::::::::::::::::::<< AUTO FILL FUNCTION (FOR TESTING) >>::::::::::::::::::::::::::::::::://
-  void autoFill() {
-    landNameController.text = 'Land 1';
-    landTypeController.text = 'Agricultural';
-    landSizeController.text = '5000';
-    landAddressController.text = '123 Green Street';
-    landCityController.text = 'Colombo';
-    landProvinceController.text = 'Western';
-    purchaseDateController.text = '2023-01-01';
-    purchasePriceController.text = '5000000';
-    landImageController.text = 'image_url_here';
-    councilTaxDateController.text = '2023-02-01';
-    councilTaxValueController.text = '15000';
-  }
+  // //:::::::::::::::::::::::::::::::::<< AUTO FILL FUNCTION (FOR TESTING) >>::::::::::::::::::::::::::::::::://
+  // void autoFill() {
+  //   landNameController.text = 'Land 1';
+  //   landTypeController.text = 'Agricultural';
+  //   landSizeController.text = '5000';
+  //   landAddressController.text = '123 Green Street';
+  //   landCityController.text = 'Colombo';
+  //   landProvinceController.text = 'Western';
+  //   purchaseDateController.text = '2023-01-01';
+  //   purchasePriceController.text = '5000000';
+  //   landImageController.text = 'image_url_here';
+  //   leaseDateController.text = '2023-01-01';
+  //   leaseValueController.text = '1000000';
+  // }
 
   //:::::::::::::::::::::::::::::::::<< HELPER FUNCTION TO HANDLE NULL VALUES >>::::::::::::::::::::::::::::::::://
   String _validateInput(String? value, {String defaultValue = '', bool isRequired = false}) {
@@ -121,8 +120,9 @@ class LandController extends GetxController {
     purchaseDateController.dispose();
     purchasePriceController.dispose();
     landImageController.dispose();
-    councilTaxDateController.dispose();
-    councilTaxValueController.dispose();
+    leaseDateController.dispose();
+    leaseValueController.dispose();
+
     super.onClose();
   }
 }

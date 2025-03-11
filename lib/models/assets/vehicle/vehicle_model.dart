@@ -3,7 +3,7 @@ class Vehicle {
   final String vrn;
   final String motValue;
   final String insuranceValue;
-  final String vehicleCategory;
+  final String vehicletype;
   final String ownerName;
   final bool isActive;
   final double purchasePrice;
@@ -23,8 +23,8 @@ class Vehicle {
     required this.vrn,
     required this.motValue,
     required this.insuranceValue,
-    required this.vehicleCategory,
     required this.ownerName,
+    required this.vehicletype,
     required this.isActive,
     required this.purchasePrice,
     required this.purchaseDate,
@@ -43,10 +43,10 @@ class Vehicle {
   factory Vehicle.fromJson(Map<String, dynamic>? json) {
     return Vehicle(
       model: json?['model'] ?? 'Unknown',
+      vehicletype: json?['vehicle_type'] ?? 'Unknown',
       vrn: json?['vrn'] ?? 'Unknown',
       motValue: json?['motValue'] ?? 'N/A',
       insuranceValue: json?['insuranceValue'] ?? 'N/A',
-      vehicleCategory: json?['vehicleCategory'] ?? 'N/A',
       ownerName: json?['owner_name'] ?? 'N/A',
       isActive: json?['isActive'] ?? false,
       purchasePrice: (json?['purchasePrice'] as num?)?.toDouble() ?? 0.0,
@@ -59,7 +59,7 @@ class Vehicle {
       lastModifiedBy: json?['lastModifiedBy'] ?? 'Unknown',
       lastModifiedDate: json?['lastModifiedDate'] ?? 'N/A',
       motExpiredDate: json?['motExpiredDate'] ?? 'N/A',
-      Milage: json?['Milege'] ?? 'N/A',
+      Milage: json?['Milage'] ?? 'N/A',
     );
   }
 
@@ -70,7 +70,7 @@ class Vehicle {
       'vrn': vrn,
       'motValue': motValue,
       'insuranceValue': insuranceValue,
-      'vehicleCategory': vehicleCategory,
+      'vehicle_type': vehicletype,
       'owner_name': ownerName, // ✅ Ensures correct key format
       'isActive': isActive,
       'purchasePrice': purchasePrice,
@@ -82,7 +82,7 @@ class Vehicle {
       'createdDate': createdDate,
       'lastModifiedBy': lastModifiedBy,
       'lastModifiedDate': lastModifiedDate,
-      'Milege': Milage,
+      'milage': Milage,
       'motExpiredDate': motExpiredDate,
       'type': 'Vehicle', // ✅ Ensures type is set for filtering
     };

@@ -63,11 +63,11 @@ class AddLandScreen extends StatelessWidget {
 
               const Text("Leaseing Deteails", style: TextStyle(fontSize: 20, fontWeight: FontWeight.w500)),
               CalendarField(
-                controller: landController.councilTaxDateController,
+                controller: landController.leaseDateController,
                 hintText: 'Leaseing  Date',
                 icon: Icons.calendar_month,
               ),
-              _buildTextField('Leaseing Tax Value (GBP)', landController.councilTaxValueController, isNumeric: true),
+              _buildTextField('Leaseing Tax Value (GBP)', landController.leaseValueController, isNumeric: true),
 
 
               // const Text("Council Deteails", style: TextStyle(fontSize: 20, fontWeight: FontWeight.w500)),

@@ -155,12 +155,18 @@ class AssetController extends GetxController {
         "numberOfFloors": b.numberOfFloors.toString(), // Ensures it's a string
         "totalArea": b.totalArea.toString(), // Ensures it's a string
         "address": b.address ?? "N/A",
+        "purposeOfUse": b.purposeOfUse ?? "N/A",
+        "councilTaxValue": b.councilTaxValue.toString(), // Ensures it's a string
+        "councilTaxDate": b.councilTaxDate?.toString() ?? "N/A", // Convert DateTime properly
         "city": b.city ?? "N/A",
-        "province": b.province ?? "N/A",
         "ownerName": b.ownerName ?? "N/A",
-        "constructionType": b.councilTaxDate ?? "N/A",
         "purchasePrice": b.purchasePrice.toString(), // Ensures it's a string
         "purchaseDate": b.purchaseDate?.toString() ?? "N/A", // Convert DateTime properly
+        "leaseValue": b.leaseValue.toString(), // Ensures it's a string
+        "lease_date": b.leaseDate?.toString() ?? "N/A", // Convert DateTime properly
+
+
+
 
       }).toList();
 
@@ -190,7 +196,7 @@ class AssetController extends GetxController {
         "vrn": v.vrn,
         "motValue": v.motValue,
         "insuranceValue": v.insuranceValue,
-        "vehicleCategory": v.vehicleCategory,
+        "vehicle_type": v.vehicletype,
         "owner_name": v.ownerName,
         "isActive": v.isActive,
         "purchasePrice": v.purchasePrice, // Keep as double, no "N/A"
@@ -202,7 +208,7 @@ class AssetController extends GetxController {
         "createdDate": (v.createdDate),
         "lastModifiedBy": v.lastModifiedBy,
         "lastModifiedDate": (v.lastModifiedDate),
-        "mileage": v.Milage,
+        " milage": v.Milage,
         "motExpiredDate": (v.motExpiredDate),
         "type": "Vehicle", // ✅ Ensures type is set for filtering
       }).toList();
@@ -231,12 +237,13 @@ class AssetController extends GetxController {
         "category": "Land",
         "name": l.name ?? "Unknown",
         "type": l.type ?? "N/A",
-        "size": l.size ?? "N/A",
+        "landSize": l.size ?? "N/A",
         "address": l.address ?? "N/A",
         "city": l.city ?? "N/A",
-        "province": l.province ?? "N/A",
         "purchaseDate": l.purchaseDate ?? "N/A",
         "purchasePrice": l.purchasePrice ?? "N/A",
+        // 'leaseValue': l.leaseValue ?? "N/A",
+        'lease_date': l.leaseDate ?? "N/A",
         "imageURL": l.imageURL ?? "",
       }).toList();
 
@@ -275,4 +282,6 @@ class AssetController extends GetxController {
   }
 
   void fetchAssets() {}
+
+  getAssetsByCategory(String s) {}
 }

@@ -9,18 +9,16 @@ class LandService {
 
   /// **Update Land Details**
   Future<ApiResponse> updateLand({
-    required String landId,
     required String landName,
     required String landType,
     required String landSize,
     required String landAddress,
     required String landCity,
-    required String landProvince,
     required String purchaseDate,
     required String purchasePrice,
     required String landImage,
-    required String councilTaxDate,
-    required String councilTaxValue,
+    required String leaseValue,
+    required String leaseDate,
 
   }) async {
     dio.options.contentType = Headers.jsonContentType;
@@ -30,17 +28,15 @@ class LandService {
       String? accessToken = await _secureStorage.read(key: 'access_token');
 
       final updateData = {
-        "landName": landName,
-        "landType": landType,
+        "name": landName,
         "landSize": landSize,
-        "landAddress": landAddress,
-        "landCity": landCity,
-        "landProvince": landProvince,
+        "address": landAddress,
+        "city": landCity,
         "purchaseDate": purchaseDate,
         "purchasePrice": purchasePrice,
-        "landImage": landImage,
-        "councilTaxDate": councilTaxDate,
-        "councilTaxValue": councilTaxValue,
+        "lease_date": leaseDate,
+        "leaseValue": leaseValue,
+        "imageURL": landImage,
       };
 
       final response = await dio.post(
@@ -83,15 +79,15 @@ class LandService {
         required String landSize,
         required String landAddress,
         required String landCity,
-        required String landProvince,
         required String purchaseDate,
         required String purchasePrice,
         required String landImage,
-        required String councilTaxValue, required String councilTaxDate,
+        required String leaseValue,
+        required String leaseDate,
 
       }) async {
     print(
-        'Land details: $landName, $landType, $landSize, $landAddress, $landCity, $landProvince, $purchaseDate, $purchasePrice, $landImage');
+        'Land details: $landName, $landType, $landSize, $landAddress, $landCity, , $purchaseDate, $purchasePrice, $landImage');
     String? accessToken = await _secureStorage.read(key: 'access_token');
 
     try {
@@ -102,11 +98,10 @@ class LandService {
           "landSize": landSize,
           "address": landAddress,
           "city": landCity,
-          "province": landProvince,
           "purchaseDate": purchaseDate,
           "purchasePrice": purchasePrice,
-          "councilTaxDate": councilTaxDate,
-          "councilTaxValue": councilTaxValue,
+          "lease_date": leaseDate,
+          "leaseValue": leaseValue,
           "imageURL": landImage,
         },
         options: Options(
