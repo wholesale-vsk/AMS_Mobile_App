@@ -172,7 +172,7 @@ class VehicleReportScreen extends StatelessWidget {
                   for (var vehicle in vehicleAssets) {
                     vehicleDetails.add([
                       vehicle['vrn']?.toString() ?? 'N/A',
-                      vehicle['vehicleCategory']?.toString() ?? 'N/A',
+                      vehicle['vehicle_type']?.toString() ?? 'N/A',
                       vehicle['model']?.toString() ?? 'N/A',
                     ]);
                     motDetails.add([
@@ -190,6 +190,7 @@ class VehicleReportScreen extends StatelessWidget {
                       vehicle['purchasePrice']?.toString() ?? 'N/A',
                       vehicle['purchaseDate']?.toString() ?? 'N/A',
                     ]);
+
                   }
 
                   return Column(

@@ -22,7 +22,7 @@ dependencies:
   connectivity_plus: ^4.0.1
   image_picker: ^1.1.2
   image_cropper: ^8.0.1
-  get: ^4.7.2
+  get: ^4.6.6
   iconsax: ^0.0.8
   lottie: ^3.3.1
   animate_do: ^4.1.1
@@ -36,6 +36,13 @@ dependencies:
   syncfusion_flutter_core: ^28.1.39
   syncfusion_flutter_charts: ^28.1.39
   intl: ^0.18.1
+  url_launcher: ^6.1.14
+  webview_flutter: ^4.2.2
+  permission_handler: ^11.1.0
+  flutter_tawkto: ^0.0.5
+  flutter_inappwebview: ^6.0.0 # or latest
+
+
 
 dev_dependencies:
   flutter_test:

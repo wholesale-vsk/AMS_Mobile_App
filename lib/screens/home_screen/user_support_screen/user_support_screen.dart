@@ -43,17 +43,17 @@ class SupportScreen extends StatelessWidget {
               icon: Icons.chat_bubble_outline,
               title: 'Live Chat',
               subtitle: 'Chat with our support team',
-              onTap: () => Get.toNamed('/liveChat'),
-            ),
-            const SizedBox(height: 15),
-            _buildSupportCard(
-              icon: Icons.email_outlined,
-              title: 'Submit a Ticket',
-              // route: AppRoutes.TOTAL_ASSETS_REPORT_SCREEN,
-              subtitle: 'Get help from our team',
               onTap: () => Get.toNamed(AppRoutes.TICKET_SUBMIT_SCREEN),
-
             ),
+            // const SizedBox(height: 15),
+            // _buildSupportCard(
+            //   icon: Icons.email_outlined,
+            //   title: 'Submit a Ticket',
+            //   // route: AppRoutes.TOTAL_ASSETS_REPORT_SCREEN,
+            //   subtitle: 'Get help from our team',
+            //   onTap: () => Get.toNamed(AppRoutes.TICKET_SUBMIT_SCREEN),
+            //
+            // ),
             const SizedBox(height: 30),
             const Text(
               "Need help?",
