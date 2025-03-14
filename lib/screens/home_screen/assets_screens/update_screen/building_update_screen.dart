@@ -14,37 +14,31 @@ class BuildingUpdatePage extends StatefulWidget {
 class _BuildingUpdatePageState extends State<BuildingUpdatePage> {
   final _formKey = GlobalKey<FormState>();
   Map<String, TextEditingController> _controllers = {};
-  bool _hasError = false;
 
   @override
   void initState() {
     super.initState();
 
-    if (widget.buildingData != null && widget.buildingData!.isNotEmpty) {
-      _controllers = {
-        'name': TextEditingController(text: widget.buildingData!['name'] ?? ''),
-        'buildingType': TextEditingController(text: widget.buildingData!['buildingType'] ?? ''),
-        'numberOfFloors': TextEditingController(text: widget.buildingData!['numberOfFloors']?.toString() ?? ''),
-        'totalArea': TextEditingController(text: widget.buildingData!['totalArea']?.toString() ?? ''),
-        'city': TextEditingController(text: widget.buildingData!['city'] ?? ''),
-        'address': TextEditingController(text: widget.buildingData!['address'] ?? ''),
-        'purchaseDate': TextEditingController(text: widget.buildingData!['purchaseDate'] ?? ''),
-        'ownerName': TextEditingController(text: widget.buildingData!['ownerName'] ?? ''),
-        'councilTaxDate': TextEditingController(text: widget.buildingData!['councilTaxDate'] ?? ''),
-        'councilTaxValue': TextEditingController(text: widget.buildingData!['councilTaxValue']?.toString() ?? ''),
-        'leaseDate': TextEditingController(text: widget.buildingData!['leaseDate'] ?? ''),
-        'leaseValue': TextEditingController(text: widget.buildingData!['leaseValue']?.toString() ?? ''),
-        'purposeOfUse': TextEditingController(text: widget.buildingData!['purposeOfUse'] ?? ''),
-        'purchasePrice': TextEditingController(text: widget.buildingData!['purchasePrice']?.toString() ?? ''),
-      };
-    } else {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        setState(() {
-          _hasError = true;
-        });
-        Get.snackbar('Error', 'No building data provided.', snackPosition: SnackPosition.BOTTOM);
-      });
-    }
+    _controllers = {
+      'buildingId': TextEditingController(text: widget.buildingData?['buildingId'] ?? ''),
+      'buildingName': TextEditingController(text: widget.buildingData?['buildingName'] ?? ''),
+      'buildingType': TextEditingController(text: widget.buildingData?['buildingType'] ?? ''),
+      'numberOfFloors': TextEditingController(text: widget.buildingData?['numberOfFloors']?.toString() ?? ''),
+      'totalArea': TextEditingController(text: widget.buildingData?['totalArea']?.toString() ?? ''),
+      'buildingAddress': TextEditingController(text: widget.buildingData?['buildingAddress'] ?? ''),
+      'buildingCity': TextEditingController(text: widget.buildingData?['buildingCity'] ?? ''),
+      'buildingProvince': TextEditingController(text: widget.buildingData?['buildingProvince'] ?? ''),
+      'ownerName': TextEditingController(text: widget.buildingData?['ownerName'] ?? ''),
+      'purposeOfUse': TextEditingController(text: widget.buildingData?['purposeOfUse'] ?? ''),
+      'councilTax': TextEditingController(text: widget.buildingData?['councilTax'] ?? ''),
+      'councilTaxDate': TextEditingController(text: widget.buildingData?['councilTaxDate'] ?? ''),
+      'councilTaxValue': TextEditingController(text: widget.buildingData?['councilTaxValue']?.toString() ?? ''),
+      'leaseDate': TextEditingController(text: widget.buildingData?['leaseDate'] ?? ''),
+      'leaseValue': TextEditingController(text: widget.buildingData?['leaseValue']?.toString() ?? ''),
+      'purchaseDate': TextEditingController(text: widget.buildingData?['purchaseDate'] ?? ''),
+      'purchasePrice': TextEditingController(text: widget.buildingData?['purchasePrice']?.toString() ?? ''),
+      'buildingImage': TextEditingController(text: widget.buildingData?['buildingImage'] ?? ''),
+    };
   }
 
   @override
@@ -61,9 +55,7 @@ class _BuildingUpdatePageState extends State<BuildingUpdatePage> {
       lastDate: DateTime(2100),
     );
     if (picked != null) {
-      setState(() {
-        _controllers[field]?.text = DateFormat('yyyy-MM-dd').format(picked);
-      });
+      _controllers[field]?.text = DateFormat('yyyy-MM-dd').format(picked);
     }
   }
 
@@ -103,46 +95,38 @@ class _BuildingUpdatePageState extends State<BuildingUpdatePage> {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: () => FocusScope.of(context).unfocus(),
-      child: Scaffold(
-        appBar: AppBar(title: const Text('Update Building Details')),
-        body: _hasError
-            ? Center(
-          child: ElevatedButton(
-            onPressed: () => Get.back(),
-            child: const Text('Go Back'),
-          ),
-        )
-            : _controllers.isEmpty
-            ? const Center(child: CircularProgressIndicator())
-            : SingleChildScrollView(
-          padding: const EdgeInsets.all(16),
-          child: Form(
-            key: _formKey,
-            child: Column(
-              children: [
-                _buildFormField('Building Name', 'name'),
-                _buildFormField('Building Type', 'buildingType'),
-                _buildFormField('Number of Floors', 'numberOfFloors', inputType: TextInputType.number),
-                _buildFormField('Total Area (sq ft)', 'totalArea', inputType: TextInputType.number),
-                _buildFormField('City', 'city'),
-                _buildFormField('Address', 'address'),
-                _buildFormField('Purchase Date', 'purchaseDate', isDate: true),
-                _buildFormField('Owner Name', 'ownerName'),
-                _buildFormField('Council Tax Date', 'councilTaxDate', isDate: true),
-                _buildFormField('Council Tax Value', 'councilTaxValue', inputType: TextInputType.number),
-                _buildFormField('Lease Date', 'leaseDate', isDate: true),
-                _buildFormField('Lease Value', 'leaseValue', inputType: TextInputType.number),
-                _buildFormField('Purpose of Use', 'purposeOfUse'),
-                _buildFormField('Purchase Price', 'purchasePrice', inputType: TextInputType.number),
-                const SizedBox(height: 20),
-                ElevatedButton(
-                  onPressed: _submitForm,
-                  child: const Text('Update Building'),
-                ),
-              ],
-            ),
+    return Scaffold(
+      appBar: AppBar(title: const Text('Update Building Details')),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(16),
+        child: Form(
+          key: _formKey,
+          child: Column(
+            children: [
+              _buildFormField('Building ID', 'buildingId'),
+              _buildFormField('Building Name', 'buildingName'),
+              _buildFormField('Building Type', 'buildingType'),
+              _buildFormField('Number of Floors', 'numberOfFloors', inputType: TextInputType.number),
+              _buildFormField('Total Area (sq ft)', 'totalArea', inputType: TextInputType.number),
+              _buildFormField('Building Address', 'buildingAddress'),
+              _buildFormField('City', 'buildingCity'),
+              _buildFormField('Province', 'buildingProvince'),
+              _buildFormField('Owner Name', 'ownerName'),
+              _buildFormField('Purpose of Use', 'purposeOfUse'),
+              _buildFormField('Council Tax', 'councilTax'),
+              _buildFormField('Council Tax Date', 'councilTaxDate', isDate: true),
+              _buildFormField('Council Tax Value', 'councilTaxValue', inputType: TextInputType.number),
+              _buildFormField('Lease Date', 'leaseDate', isDate: true),
+              _buildFormField('Lease Value', 'leaseValue', inputType: TextInputType.number),
+              _buildFormField('Purchase Date', 'purchaseDate', isDate: true),
+              _buildFormField('Purchase Price', 'purchasePrice', inputType: TextInputType.number),
+              _buildFormField('Building Image URL', 'buildingImage'),
+              const SizedBox(height: 20),
+              ElevatedButton(
+                onPressed: _submitForm,
+                child: const Text('Update Building'),
+              ),
+            ],
           ),
         ),
       ),

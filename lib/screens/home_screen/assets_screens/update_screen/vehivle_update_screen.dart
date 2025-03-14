@@ -3,9 +3,9 @@ import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 
 class VehicleUpdatePage extends StatefulWidget {
-  final Map<String, dynamic> vehicleData;
+  final Map<String, dynamic>? vehicleData;
 
-  VehicleUpdatePage({super.key, required this.vehicleData});
+  const VehicleUpdatePage({super.key, this.vehicleData});
 
   @override
   _VehicleUpdatePageState createState() => _VehicleUpdatePageState();
@@ -20,11 +20,12 @@ class _VehicleUpdatePageState extends State<VehicleUpdatePage> {
   late TextEditingController _insuranceValueController;
   late TextEditingController _vehicleTypeController;
   late TextEditingController _ownerNameController;
+  late TextEditingController _vehicleColorController;
+  late TextEditingController _engineNumberController;
   late TextEditingController _purchasePriceController;
   late TextEditingController _purchaseDateController;
   late TextEditingController _motDateController;
   late TextEditingController _insuranceDateController;
-  late TextEditingController _imageURLController;
   late TextEditingController _milageController;
   late TextEditingController _motExpiredDateController;
   bool _isActive = true;
@@ -32,72 +33,65 @@ class _VehicleUpdatePageState extends State<VehicleUpdatePage> {
   @override
   void initState() {
     super.initState();
-
-    _modelController = TextEditingController(text: widget.vehicleData['model']);
-    _vrnController = TextEditingController(text: widget.vehicleData['vrn']);
-    _motValueController = TextEditingController(text: widget.vehicleData['motValue'].toString());
-    _insuranceValueController = TextEditingController(text: widget.vehicleData['insuranceValue'].toString());
-    _vehicleTypeController = TextEditingController(text: widget.vehicleData['vehicle_type']);
-    _ownerNameController = TextEditingController(text: widget.vehicleData['owner_name']);
-    _purchasePriceController = TextEditingController(text: widget.vehicleData['purchasePrice'].toString());
-    _purchaseDateController = TextEditingController(text: widget.vehicleData['purchaseDate']);
-    _motDateController = TextEditingController(text: widget.vehicleData['motDate']);
-    _insuranceDateController = TextEditingController(text: widget.vehicleData['insuranceDate']);
-    _milageController = TextEditingController(text: widget.vehicleData['milage'].toString());
-    _motExpiredDateController = TextEditingController(text: widget.vehicleData['motExpiredDate']);
-    _isActive = widget.vehicleData['isActive'] ?? true;
+    _initializeControllers();
   }
 
-  @override
-  void dispose() {
-    _modelController.dispose();
-    _vrnController.dispose();
-    _motValueController.dispose();
-    _insuranceValueController.dispose();
-    _vehicleTypeController.dispose();
-    _ownerNameController.dispose();
-    _purchasePriceController.dispose();
-    _purchaseDateController.dispose();
-    _motDateController.dispose();
-    _insuranceDateController.dispose();
-    _milageController.dispose();
-    _motExpiredDateController.dispose();
-    super.dispose();
+  void _initializeControllers() {
+    final data = widget.vehicleData ?? {};
+
+    _modelController = TextEditingController(text: data['model'] ?? '');
+    _vrnController = TextEditingController(text: data['vrn'] ?? '');
+    _motValueController = TextEditingController(text: data['motValue']?.toString() ?? '');
+    _insuranceValueController = TextEditingController(text: data['insuranceValue']?.toString() ?? '');
+    _vehicleTypeController = TextEditingController(text: data['vehicle_type'] ?? '');
+    _ownerNameController = TextEditingController(text: data['owner_name'] ?? '');
+    _vehicleColorController = TextEditingController(text: data['vehicle_color'] ?? '');
+    _engineNumberController = TextEditingController(text: data['engine_number'] ?? '');
+    _purchasePriceController = TextEditingController(text: data['purchasePrice']?.toString() ?? '');
+    _purchaseDateController = TextEditingController(text: data['purchaseDate'] ?? '');
+    _motDateController = TextEditingController(text: data['motDate'] ?? '');
+    _insuranceDateController = TextEditingController(text: data['insuranceDate'] ?? '');
+    _milageController = TextEditingController(text: data['milage']?.toString() ?? '');
+    _motExpiredDateController = TextEditingController(text: data['motExpiredDate'] ?? '');
+    _isActive = data['isActive'] ?? true;
   }
 
-  /// Date Picker Handler
+  String? _validateField(String? value, String label) {
+    return (value == null || value.isEmpty) ? '$label is required' : null;
+  }
+
+  double _parseDouble(String value) => double.tryParse(value) ?? 0;
+
   Future<void> _selectDate(BuildContext context, TextEditingController controller) async {
-    final DateTime? picked = await showDatePicker(
+    final picked = await showDatePicker(
       context: context,
       initialDate: DateTime.tryParse(controller.text) ?? DateTime.now(),
       firstDate: DateTime(2000),
       lastDate: DateTime(2100),
     );
     if (picked != null) {
-      setState(() {
-        controller.text = DateFormat('yyyy-MM-dd').format(picked);
-      });
+      controller.text = DateFormat('yyyy-MM-dd').format(picked);
     }
   }
 
-  /// Submit Handler
   void _submitForm() {
     if (_formKey.currentState!.validate()) {
       final updatedData = {
         'model': _modelController.text,
         'vrn': _vrnController.text,
-        'motValue': double.tryParse(_motValueController.text) ?? 0,
-        'insuranceValue': double.tryParse(_insuranceValueController.text) ?? 0,
+        'motValue': _parseDouble(_motValueController.text),
+        'insuranceValue': _parseDouble(_insuranceValueController.text),
         'vehicle_type': _vehicleTypeController.text,
         'owner_name': _ownerNameController.text,
+        'vehicle_color': _vehicleColorController.text,
+        'engine_number': _engineNumberController.text,
         'isActive': _isActive,
-        'purchasePrice': double.tryParse(_purchasePriceController.text) ?? 0,
+        'purchasePrice': _parseDouble(_purchasePriceController.text),
         'purchaseDate': _purchaseDateController.text,
         'motDate': _motDateController.text,
         'insuranceDate': _insuranceDateController.text,
-        'milage': double.tryParse(_milageController.text) ?? 0,
+        'milage': _parseDouble(_milageController.text),
         'motExpiredDate': _motExpiredDateController.text,
-        'type': 'Vehicle',
       };
 
       print("Updated Vehicle Data: $updatedData");
@@ -115,24 +109,23 @@ class _VehicleUpdatePageState extends State<VehicleUpdatePage> {
           key: _formKey,
           child: Column(
             children: [
-              _buildTextField('Model', _modelController),
-              _buildTextField('Vehicle Registration Number (VRN)', _vrnController),
-              _buildTextField('MOT Value', _motValueController, inputType: TextInputType.number),
-              _buildTextField('Insurance Value', _insuranceValueController, inputType: TextInputType.number),
-              _buildTextField('Vehicle Type', _vehicleTypeController),
-              _buildTextField('Owner Name', _ownerNameController),
-              _buildSwitchField('Active Status', _isActive),
-              _buildTextField('Purchase Price', _purchasePriceController, inputType: TextInputType.number),
-              _buildDateField('Purchase Date', _purchaseDateController),
-              _buildDateField('MOT Date', _motDateController),
-              _buildDateField('Insurance Date', _insuranceDateController),
-              _buildTextField('Milage', _milageController, inputType: TextInputType.number),
-              _buildDateField('MOT Expired Date', _motExpiredDateController),
+              _buildInputField('Model', _modelController),
+              _buildInputField('VRN', _vrnController),
+              _buildInputField('MOT Value', _motValueController, inputType: TextInputType.number),
+              _buildInputField('Insurance Value', _insuranceValueController, inputType: TextInputType.number),
+              _buildInputField('Vehicle Type', _vehicleTypeController),
+              _buildInputField('Owner Name', _ownerNameController),
+              _buildInputField('Vehicle Color', _vehicleColorController),
+              _buildInputField('Engine Number', _engineNumberController),
+              _buildSwitchField('Active Status'),
+              _buildInputField('Purchase Price', _purchasePriceController, inputType: TextInputType.number),
+              _buildInputField('Purchase Date', _purchaseDateController, isDate: true),
+              _buildInputField('MOT Date', _motDateController, isDate: true),
+              _buildInputField('Insurance Date', _insuranceDateController, isDate: true),
+              _buildInputField('Milage', _milageController, inputType: TextInputType.number),
+              _buildInputField('MOT Expired Date', _motExpiredDateController, isDate: true),
               const SizedBox(height: 20),
-              ElevatedButton(
-                onPressed: _submitForm,
-                child: const Text('Update Vehicle'),
-              ),
+              ElevatedButton(onPressed: _submitForm, child: const Text('Update Vehicle')),
             ],
           ),
         ),
@@ -140,56 +133,34 @@ class _VehicleUpdatePageState extends State<VehicleUpdatePage> {
     );
   }
 
-  Widget _buildTextField(String label, TextEditingController controller,
-      {TextInputType inputType = TextInputType.text}) {
+  Widget _buildInputField(String label, TextEditingController controller,
+      {TextInputType inputType = TextInputType.text, bool isDate = false}) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 10),
       child: TextFormField(
         controller: controller,
         keyboardType: inputType,
+        readOnly: isDate,
         decoration: InputDecoration(
           labelText: label,
           border: const OutlineInputBorder(),
+          suffixIcon: isDate ? const Icon(Icons.calendar_today) : null,
         ),
-        validator: (value) {
-          if (value == null || value.isEmpty) {
-            return '$label is required';
-          }
-          return null;
-        },
+        validator: (value) => _validateField(value, label),
+        onTap: isDate ? () => _selectDate(context, controller) : null,
       ),
     );
   }
 
-  Widget _buildDateField(String label, TextEditingController controller) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 10),
-      child: TextFormField(
-        controller: controller,
-        readOnly: true,
-        decoration: InputDecoration(
-          labelText: label,
-          border: const OutlineInputBorder(),
-          suffixIcon: const Icon(Icons.calendar_today),
-        ),
-        onTap: () => _selectDate(context, controller),
-      ),
-    );
-  }
-
-  Widget _buildSwitchField(String label, bool value) {
+  Widget _buildSwitchField(String label) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 10),
       child: Row(
         children: [
           Expanded(child: Text(label)),
           Switch(
-            value: value,
-            onChanged: (val) {
-              setState(() {
-                _isActive = val;
-              });
-            },
+            value: _isActive,
+            onChanged: (val) => setState(() => _isActive = val),
           ),
         ],
       ),

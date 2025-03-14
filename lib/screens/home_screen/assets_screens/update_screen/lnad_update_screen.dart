@@ -3,7 +3,7 @@ import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 
 class LandUpdatePage extends StatefulWidget {
-  final Map<String, dynamic> landData;
+  final Map<String, dynamic>? landData;
 
   LandUpdatePage({super.key, required this.landData});
 
@@ -13,79 +13,78 @@ class LandUpdatePage extends StatefulWidget {
 
 class _LandUpdatePageState extends State<LandUpdatePage> {
   final _formKey = GlobalKey<FormState>();
-
-  late TextEditingController _landNameController;
-  late TextEditingController _landTypeController;
-  late TextEditingController _landSizeController;
-  late TextEditingController _landAddressController;
-  late TextEditingController _landCityController;
-  late TextEditingController _landProvinceController;
-  late TextEditingController _purchaseDateController;
-  late TextEditingController _purchasePriceController;
-  late TextEditingController _landImageController;
+  Map<String, TextEditingController> _controllers = {};
 
   @override
   void initState() {
     super.initState();
 
-    _landNameController = TextEditingController(text: widget.landData['landName']);
-    _landTypeController = TextEditingController(text: widget.landData['landType']);
-    _landSizeController = TextEditingController(text: widget.landData['landSize'].toString());
-    _landAddressController = TextEditingController(text: widget.landData['landAddress']);
-    _landCityController = TextEditingController(text: widget.landData['landCity']);
-    _landProvinceController = TextEditingController(text: widget.landData['landProvince']);
-    _purchaseDateController = TextEditingController(text: widget.landData['purchaseDate']);
-    _purchasePriceController = TextEditingController(text: widget.landData['purchasePrice'].toString());
-    _landImageController = TextEditingController(text: widget.landData['landImage']);
+    _controllers = {
+      'landId': TextEditingController(text: widget.landData?['landId'] ?? ''),
+      'landName': TextEditingController(text: widget.landData?['landName'] ?? ''),
+      'landType': TextEditingController(text: widget.landData?['landType'] ?? ''),
+      'landSize': TextEditingController(text: widget.landData?['landSize']?.toString() ?? ''),
+      'landAddress': TextEditingController(text: widget.landData?['landAddress'] ?? ''),
+      'landCity': TextEditingController(text: widget.landData?['landCity'] ?? ''),
+      'landProvince': TextEditingController(text: widget.landData?['landProvince'] ?? ''),
+      'purchaseDate': TextEditingController(text: widget.landData?['purchaseDate'] ?? ''),
+      'purchasePrice': TextEditingController(text: widget.landData?['purchasePrice']?.toString() ?? ''),
+      'landImage': TextEditingController(text: widget.landData?['landImage'] ?? ''),
+      'leaseDate': TextEditingController(text: widget.landData?['leaseDate'] ?? ''),
+      'leaseValue': TextEditingController(text: widget.landData?['leaseValue']?.toString() ?? ''),
+    };
   }
 
   @override
   void dispose() {
-    _landNameController.dispose();
-    _landTypeController.dispose();
-    _landSizeController.dispose();
-    _landAddressController.dispose();
-    _landCityController.dispose();
-    _landProvinceController.dispose();
-    _purchaseDateController.dispose();
-    _purchasePriceController.dispose();
-    _landImageController.dispose();
+    _controllers.forEach((_, controller) => controller.dispose());
     super.dispose();
   }
 
-  /// Date Picker Handler
-  Future<void> _selectDate(BuildContext context, TextEditingController controller) async {
+  Future<void> _selectDate(BuildContext context, String field) async {
     final DateTime? picked = await showDatePicker(
       context: context,
-      initialDate: DateTime.tryParse(controller.text) ?? DateTime.now(),
+      initialDate: DateTime.tryParse(_controllers[field]?.text ?? '') ?? DateTime.now(),
       firstDate: DateTime(2000),
       lastDate: DateTime(2100),
     );
     if (picked != null) {
-      setState(() {
-        controller.text = DateFormat('yyyy-MM-dd').format(picked);
-      });
+      _controllers[field]?.text = DateFormat('yyyy-MM-dd').format(picked);
     }
   }
 
-  /// Submit Handler
   void _submitForm() {
     if (_formKey.currentState!.validate()) {
-      final updatedData = {
-        'landName': _landNameController.text,
-        'landType': _landTypeController.text,
-        'landSize': double.tryParse(_landSizeController.text) ?? 0,
-        'landAddress': _landAddressController.text,
-        'landCity': _landCityController.text,
-        'landProvince': _landProvinceController.text,
-        'purchaseDate': _purchaseDateController.text,
-        'purchasePrice': double.tryParse(_purchasePriceController.text) ?? 0,
-        'landImage': _landImageController.text,
-      };
-
-      print("Updated Land Data: $updatedData");
+      final updatedData = _controllers.map((key, controller) => MapEntry(key, controller.text));
       Get.back(result: updatedData);
+      Get.snackbar('Success', 'Land details updated successfully!', snackPosition: SnackPosition.BOTTOM);
     }
+  }
+
+  Widget _buildFormField(String label, String key, {TextInputType inputType = TextInputType.text, bool isDate = false}) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 10),
+      child: TextFormField(
+        controller: _controllers[key],
+        keyboardType: inputType,
+        readOnly: isDate,
+        decoration: InputDecoration(
+          labelText: label,
+          border: const OutlineInputBorder(),
+          suffixIcon: isDate ? const Icon(Icons.calendar_today) : null,
+        ),
+        validator: (value) {
+          if (value == null || value.isEmpty) {
+            return '$label is required';
+          }
+          if (isDate && DateTime.tryParse(value) == null) {
+            return 'Enter a valid date (yyyy-MM-dd)';
+          }
+          return null;
+        },
+        onTap: isDate ? () => _selectDate(context, key) : null,
+      ),
+    );
   }
 
   @override
@@ -98,15 +97,18 @@ class _LandUpdatePageState extends State<LandUpdatePage> {
           key: _formKey,
           child: Column(
             children: [
-              _buildTextField('Land Name', _landNameController),
-              _buildTextField('Land Type', _landTypeController),
-              _buildTextField('Land Size (in Acres)', _landSizeController, inputType: TextInputType.number),
-              _buildTextField('Land Address', _landAddressController),
-              _buildTextField('Land City', _landCityController),
-              _buildTextField('Land Province', _landProvinceController),
-              _buildDateField('Purchase Date', _purchaseDateController),
-              _buildTextField('Purchase Price (LKR)', _purchasePriceController, inputType: TextInputType.number),
-              _buildTextField('Land Image URL', _landImageController),
+              _buildFormField('Land ID', 'landId'),
+              _buildFormField('Land Name', 'landName'),
+              _buildFormField('Land Type', 'landType'),
+              _buildFormField('Land Size', 'landSize', inputType: TextInputType.number),
+              _buildFormField('Land Address', 'landAddress'),
+              _buildFormField('City', 'landCity'),
+              _buildFormField('Province', 'landProvince'),
+              _buildFormField('Purchase Date', 'purchaseDate', isDate: true),
+              _buildFormField('Purchase Price', 'purchasePrice', inputType: TextInputType.number),
+              _buildFormField('Land Image URL', 'landImage'),
+              _buildFormField('Lease Date', 'leaseDate', isDate: true),
+              _buildFormField('Lease Value', 'leaseValue', inputType: TextInputType.number),
               const SizedBox(height: 20),
               ElevatedButton(
                 onPressed: _submitForm,
@@ -115,45 +117,6 @@ class _LandUpdatePageState extends State<LandUpdatePage> {
             ],
           ),
         ),
-      ),
-    );
-  }
-
-  /// Generic Text Field
-  Widget _buildTextField(String label, TextEditingController controller,
-      {TextInputType inputType = TextInputType.text}) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 10),
-      child: TextFormField(
-        controller: controller,
-        keyboardType: inputType,
-        decoration: InputDecoration(
-          labelText: label,
-          border: const OutlineInputBorder(),
-        ),
-        validator: (value) {
-          if (value == null || value.isEmpty) {
-            return '$label is required';
-          }
-          return null;
-        },
-      ),
-    );
-  }
-
-  /// Date Field
-  Widget _buildDateField(String label, TextEditingController controller) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 10),
-      child: TextFormField(
-        controller: controller,
-        readOnly: true,
-        decoration: InputDecoration(
-          labelText: label,
-          border: const OutlineInputBorder(),
-          suffixIcon: const Icon(Icons.calendar_today),
-        ),
-        onTap: () => _selectDate(context, controller),
       ),
     );
   }
