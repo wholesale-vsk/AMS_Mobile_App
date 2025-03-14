@@ -26,7 +26,6 @@ Future<void> main() async {
   Get.lazyPut(() => NetworkController(), fenix: true);
   Get.put(AppThemeManager());
   Get.put(AssetController());
-  Get.put(BuildingController()); // ✅ Register BuildingController
   Get.put(ImagePickerController()); // ✅ Register ImagePickerController
 
   runApp(const MainApp());
