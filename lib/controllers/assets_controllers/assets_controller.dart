@@ -256,6 +256,13 @@ class AssetController extends GetxController {
       return [];
     }
   }
+  void deleteAsset(Map<String, dynamic> asset) {
+    assets.remove(asset);
+    totalAssets.value = assets.length;
+    update(); // Notify listeners to refresh the UI
+
+    _logger.i("✅ Asset Deleted: ${asset['name']}");
+  }
 
 
 

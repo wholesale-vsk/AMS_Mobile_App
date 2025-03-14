@@ -26,7 +26,10 @@ import 'package:hexalyte_ams/screens/login_screen/login_screen.dart';
 import 'package:hexalyte_ams/screens/loading_screen/loading_screen.dart';
 import 'package:hexalyte_ams/services/data/load_land.dart';
 
-import '../screens/home_screen/assets_screens/add_asset_screen/building_add/add_building_screen.dart'; // ✅ FIXED INCORRECT IMPORT
+import '../screens/home_screen/assets_screens/add_asset_screen/building_add/add_building_screen.dart';
+import '../screens/home_screen/assets_screens/update_screen/building_update_screen.dart';
+import '../screens/home_screen/assets_screens/update_screen/lnad_update_screen.dart';
+import '../screens/home_screen/assets_screens/update_screen/vehivle_update_screen.dart'; // ✅ FIXED INCORRECT IMPORT
 
 class AppRoutes {
   // Route Names
@@ -56,6 +59,9 @@ class AppRoutes {
   static const String VEHICLE_REPORT_SCREEN = '/vehicle_report_screen';
   static const String TOTAL_ASSETS_REPORT_SCREEN = '/total_assets_report_screen';
   static const String FAQ_SCREEN = '/faq_screen';
+  static const String  VEHICLE_UPDATE_SCREEN = '/vehicle_update_screen';
+  static const String  LAND_UPDATE_SCREEN = '/land_update_screen';
+  static const String  BUILDING_UPDATE_SCREEN = '/building_update_screen';
 
   static final List<GetPage> routes = [
     GetPage(name: LOADING_SCREEN, page: () => LoadingScreen(), transition: Transition.fadeIn),
@@ -86,6 +92,9 @@ class AppRoutes {
     GetPage(name: DASHBOARD_SCREEN, page: () => DashboardScreen(), transition: Transition.rightToLeft),
     GetPage(name: APP_SETTINGS_SCREEN, page: () => AppSettings(), transition: Transition.rightToLeft),
     GetPage(name: APP_CHAT_SCREEN, page: () => ChatScreen(user: Get.arguments), transition: Transition.rightToLeft),
+    GetPage(name: VEHICLE_UPDATE_SCREEN, page: () => VehicleUpdatePage(vehicleData: Get.arguments), transition: Transition.rightToLeft),
+    GetPage(name: LAND_UPDATE_SCREEN, page: () => LandUpdatePage(landData: Get.arguments), transition: Transition.rightToLeft),
+    GetPage(name: BUILDING_UPDATE_SCREEN, page: () => BuildingUpdatePage(buildingData: Get.arguments), transition: Transition.rightToLeft),
 
     GetPage(name: ASSETS_SELECT_FOR_REPORT_SCREEN, page: () => AssetsSelectForReports(), transition: Transition.rightToLeft),
     GetPage(name: BUILDING_REPORT_SCREEN, page: () => BuildingReportScreen(), transition: Transition.rightToLeft),

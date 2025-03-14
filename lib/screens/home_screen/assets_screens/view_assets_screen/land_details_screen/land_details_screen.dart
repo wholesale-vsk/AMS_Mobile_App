@@ -45,6 +45,13 @@ class LandDetailsScreen extends StatelessWidget {
           ],
         ),
       ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          Get.toNamed('/edit-land', arguments: land); // ✅ Navigate to Edit Screen
+        },
+        backgroundColor: primaryColor,
+        child: const Icon(Icons.edit, color: Colors.white),
+      ),
     );
   }
 

@@ -37,9 +37,15 @@ class BuildingDetailsScreen extends StatelessWidget {
           ],
         ),
       ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          Get.toNamed('/edit-building', arguments: building); // ✅ Navigate to Edit Screen
+        },
+        backgroundColor: primaryColor,
+        child: const Icon(Icons.edit, color: Colors.white),
+      ),
     );
   }
-
   /// **🔹 Building Image with Back Button**
   Widget _buildBuildingImage(BuildContext context) {
     return Stack(
