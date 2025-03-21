@@ -7,7 +7,7 @@ class BuildingController extends GetxController {
 
   final buildingFormKey = GlobalKey<FormState>();
 
-  // Text Controllers
+  // Text Controllers (same as before)
   final TextEditingController buildingIdController = TextEditingController();
   final TextEditingController buildingNameController = TextEditingController();
   final TextEditingController buildingTypeController = TextEditingController();
@@ -29,8 +29,8 @@ class BuildingController extends GetxController {
 
   var isLoading = false.obs;
 
-  /// **Add Building**
-  Future<void> addBuilding() async {
+  /// **Update Existing Building**
+  Future<void> updateBuilding() async {
     if (!buildingFormKey.currentState!.validate()) {
       Get.snackbar('Validation Error', 'Please fill in all required fields.');
       return;
@@ -39,7 +39,7 @@ class BuildingController extends GetxController {
     isLoading(true);
 
     try {
-      final response = await buildingService.addBuilding(
+      final response = await buildingService.updateBuilding(
         buildingId: buildingIdController.text.trim(),
         buildingName: buildingNameController.text.trim(),
         buildingType: buildingTypeController.text.trim().toUpperCase(),
@@ -57,22 +57,44 @@ class BuildingController extends GetxController {
         councilTaxDate: councilTaxDateController.text.trim(),
         councilTaxValue: councilTaxValueController.text.trim(),
         leaseDate: leaseDateController.text.trim(),
-        leaseValue: leaseValueController.text.trim(), image: '',
+        leaseValue: leaseValueController.text.trim(),
       );
 
       if (response.isSuccess) {
-        Get.snackbar('Success', response.message ?? 'Building added successfully.');
+        Get.snackbar('Success', response.message ?? 'Building updated successfully.');
         clearForm();
       } else {
-        Get.snackbar('Error', response.message ?? 'Failed to add building.');
+        Get.snackbar('Error', response.message ?? 'Failed to update building.');
       }
     } catch (e, stackTrace) {
-      debugPrint("Exception in addBuilding: $e");
+      debugPrint("Exception in updateBuilding: $e");
       debugPrint("StackTrace: $stackTrace");
       Get.snackbar('Error', 'An unexpected error occurred.');
     } finally {
       isLoading(false);
     }
+  }
+
+  /// **Populate Form for Editing**
+  void populateFormForEditing(Map<String, dynamic> buildingData) {
+    buildingIdController.text = buildingData['buildingId']?.toString() ?? '';
+    buildingNameController.text = buildingData['name']?.toString() ?? '';
+    buildingTypeController.text = buildingData['buildingType']?.toString() ?? '';
+    numberOfFloorsController.text = buildingData['numberOfFloors']?.toString() ?? '';
+    totalAreaController.text = buildingData['totalArea']?.toString() ?? '';
+    buildingAddressController.text = buildingData['address']?.toString() ?? '';
+    buildingCityController.text = buildingData['city']?.toString() ?? '';
+    buildingProvinceController.text = buildingData['buildingProvince']?.toString() ?? '';
+    ownerNameController.text = buildingData['ownerName']?.toString() ?? '';
+    purposeOfUseController.text = buildingData['purposeOfUse']?.toString() ?? '';
+    councilTaxController.text = buildingData['councilTax']?.toString() ?? '';
+    councilTaxDateController.text = buildingData['councilTaxDate']?.toString() ?? '';
+    councilTaxValueController.text = buildingData['councilTaxValue']?.toString() ?? '';
+    leaseDateController.text = buildingData['lease_date']?.toString() ?? '';
+    leaseValueController.text = buildingData['leaseValue']?.toString() ?? '';
+    purchaseDateController.text = buildingData['purchaseDate']?.toString() ?? '';
+    purchasePriceController.text = buildingData['purchasePrice']?.toString() ?? '';
+    buildingImageController.text = buildingData['buildingImage']?.toString() ?? '';
   }
 
   /// **Helper method to get selected image path**
@@ -142,4 +164,8 @@ class BuildingController extends GetxController {
 
     super.onClose();
   }
+
+  addBuilding() {}
+
+
 }

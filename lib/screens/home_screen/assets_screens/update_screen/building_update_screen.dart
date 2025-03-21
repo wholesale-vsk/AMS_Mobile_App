@@ -1,135 +1,450 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:hexalyte_ams/models/assets/building/building_model.dart';
 import 'package:intl/intl.dart';
 
-class BuildingUpdatePage extends StatefulWidget {
-  final Map<String, dynamic>? buildingData;
 
-  BuildingUpdatePage({super.key, required this.buildingData});
+import '../../../../controllers/Building_Controller/building_controller.dart'; // Import the controller
+
+class BuildingUpdatePage extends StatefulWidget {
+  final Building? building;
+  final Map<String, dynamic>? buildingData;
+  final dynamic asset;
+
+  const BuildingUpdatePage({
+    super.key,
+    this.building,
+    this.buildingData,
+    this.asset
+  });
 
   @override
-  _BuildingUpdatePageState createState() => _BuildingUpdatePageState();
+  State<BuildingUpdatePage> createState() => _BuildingUpdatePageState();
 }
 
-class _BuildingUpdatePageState extends State<BuildingUpdatePage> {
-  final _formKey = GlobalKey<FormState>();
-  Map<String, TextEditingController> _controllers = {};
+class _BuildingUpdatePageState extends State<BuildingUpdatePage> with SingleTickerProviderStateMixin {
+  late TabController _tabController;
+  late BuildingController _buildingController;
+  bool isLoading = true;
 
   @override
   void initState() {
     super.initState();
 
-    _controllers = {
-      'buildingId': TextEditingController(text: widget.buildingData?['buildingId'] ?? ''),
-      'buildingName': TextEditingController(text: widget.buildingData?['buildingName'] ?? ''),
-      'buildingType': TextEditingController(text: widget.buildingData?['buildingType'] ?? ''),
-      'numberOfFloors': TextEditingController(text: widget.buildingData?['numberOfFloors']?.toString() ?? ''),
-      'totalArea': TextEditingController(text: widget.buildingData?['totalArea']?.toString() ?? ''),
-      'buildingAddress': TextEditingController(text: widget.buildingData?['buildingAddress'] ?? ''),
-      'buildingCity': TextEditingController(text: widget.buildingData?['buildingCity'] ?? ''),
-      'buildingProvince': TextEditingController(text: widget.buildingData?['buildingProvince'] ?? ''),
-      'ownerName': TextEditingController(text: widget.buildingData?['ownerName'] ?? ''),
-      'purposeOfUse': TextEditingController(text: widget.buildingData?['purposeOfUse'] ?? ''),
-      'councilTax': TextEditingController(text: widget.buildingData?['councilTax'] ?? ''),
-      'councilTaxDate': TextEditingController(text: widget.buildingData?['councilTaxDate'] ?? ''),
-      'councilTaxValue': TextEditingController(text: widget.buildingData?['councilTaxValue']?.toString() ?? ''),
-      'leaseDate': TextEditingController(text: widget.buildingData?['leaseDate'] ?? ''),
-      'leaseValue': TextEditingController(text: widget.buildingData?['leaseValue']?.toString() ?? ''),
-      'purchaseDate': TextEditingController(text: widget.buildingData?['purchaseDate'] ?? ''),
-      'purchasePrice': TextEditingController(text: widget.buildingData?['purchasePrice']?.toString() ?? ''),
-      'buildingImage': TextEditingController(text: widget.buildingData?['buildingImage'] ?? ''),
-    };
+    // Initialize the controller
+    _buildingController = Get.put(BuildingController());
+
+    _tabController = TabController(length: 4, vsync: this);
+    _loadBuildingData();
   }
 
   @override
   void dispose() {
-    _controllers.forEach((_, controller) => controller.dispose());
+    _tabController.dispose();
     super.dispose();
   }
 
-  Future<void> _selectDate(BuildContext context, String field) async {
+  Future<void> _loadBuildingData() async {
+    // Try to get building data from constructor parameters
+    Map<String, dynamic>? buildingData;
+
+    // First check if we have building data directly
+    if (widget.buildingData != null) {
+      buildingData = widget.buildingData;
+    }
+    // Then check if we have a building object
+    else if (widget.building != null) {
+      buildingData = _buildingFromModel(widget.building!);
+    }
+    // Finally check arguments
+    else if (Get.arguments != null && Get.arguments is Map) {
+      if (Get.arguments['buildingData'] != null) {
+        buildingData = Get.arguments['buildingData'] as Map<String, dynamic>;
+      } else if (Get.arguments['building'] != null) {
+        buildingData = _buildingFromModel(Get.arguments['building'] as Building);
+      }
+    }
+
+    // If we have building data, populate the form
+    if (buildingData != null) {
+      _buildingController.populateFormForEditing(buildingData);
+      setState(() {
+        isLoading = false;
+      });
+    } else {
+      // Show error and navigate back if no data found
+      Get.snackbar(
+        'Error',
+        'No building data found',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.red.withOpacity(0.1),
+        colorText: Colors.red,
+      );
+
+      // Wait a moment for the snackbar to show before navigating back
+      await Future.delayed(const Duration(seconds: 2));
+      Get.back();
+    }
+  }
+
+  // Convert Building model to Map for controller
+  Map<String, dynamic> _buildingFromModel(Building building) {
+    return {
+
+      'name': building.name,
+      'buildingType': building.buildingType,
+      'numberOfFloors': building.numberOfFloors?.toString(),
+      'totalArea': building.totalArea?.toString(),
+      'address': building.address,
+      'city': building.city,
+
+      'ownerName': building.ownerName,
+      'purposeOfUse': building.purposeOfUse,
+
+      'councilTaxDate': building.councilTaxDate,
+      'councilTaxValue': building.councilTaxValue?.toString(),
+      'lease_date': building.leaseDate, // Note: the controller expects 'lease_date' not 'leaseDate'
+      'leaseValue': building.leaseValue?.toString(),
+      'purchaseDate': building.purchaseDate,
+      'purchasePrice': building.purchasePrice?.toString(),
+      'buildingImage': building.imageURL,
+    };
+  }
+
+  Future<void> _selectDate(BuildContext context, TextEditingController controller) async {
+    DateTime initialDate;
+    try {
+      initialDate = DateTime.tryParse(controller.text) ?? DateTime.now();
+    } catch (e) {
+      initialDate = DateTime.now();
+    }
+
     final DateTime? picked = await showDatePicker(
       context: context,
-      initialDate: DateTime.tryParse(_controllers[field]?.text ?? '') ?? DateTime.now(),
+      initialDate: initialDate,
       firstDate: DateTime(2000),
       lastDate: DateTime(2100),
     );
+
     if (picked != null) {
-      _controllers[field]?.text = DateFormat('yyyy-MM-dd').format(picked);
+      setState(() {
+        controller.text = DateFormat('yyyy-MM-dd').format(picked);
+      });
     }
   }
 
-  void _submitForm() {
-    if (_formKey.currentState!.validate()) {
-      final updatedData = _controllers.map((key, controller) => MapEntry(key, controller.text));
-      Get.back(result: updatedData);
-      Get.snackbar('Success', 'Building details updated successfully!', snackPosition: SnackPosition.BOTTOM);
-    }
-  }
-
-  Widget _buildFormField(String label, String key, {TextInputType inputType = TextInputType.text, bool isDate = false}) {
+  Widget _buildFormField(String label, TextEditingController controller, {
+    TextInputType inputType = TextInputType.text,
+    bool isDate = false,
+    bool isRequired = true,
+    int maxLines = 1,
+    IconData? prefixIcon,
+  }) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 10),
+      padding: const EdgeInsets.symmetric(vertical: 8),
       child: TextFormField(
-        controller: _controllers[key],
+        controller: controller,
         keyboardType: inputType,
         readOnly: isDate,
+        maxLines: maxLines,
         decoration: InputDecoration(
           labelText: label,
-          border: const OutlineInputBorder(),
-          suffixIcon: isDate ? const Icon(Icons.calendar_today) : null,
+          filled: true,
+          fillColor: Colors.grey.shade50,
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide(color: Colors.grey.shade300),
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide(color: Colors.grey.shade300),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide(color: Theme.of(context).primaryColor, width: 2),
+          ),
+          prefixIcon: prefixIcon != null ? Icon(prefixIcon) : null,
+          suffixIcon: isDate
+              ? IconButton(
+            icon: const Icon(Icons.calendar_today),
+            onPressed: () => _selectDate(context, controller),
+          )
+              : null,
+          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
         ),
         validator: (value) {
-          if (value == null || value.isEmpty) {
+          if (isRequired && (value == null || value.isEmpty)) {
             return '$label is required';
-          }
-          if (isDate && DateTime.tryParse(value) == null) {
-            return 'Enter a valid date (yyyy-MM-dd)';
           }
           return null;
         },
-        onTap: isDate ? () => _selectDate(context, key) : null,
+        onTap: isDate ? () => _selectDate(context, controller) : null,
       ),
     );
+  }
+
+  Widget _buildFormSection(String title, List<Widget> fields) {
+    return Card(
+      elevation: 2,
+      margin: const EdgeInsets.symmetric(vertical: 8),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              title,
+              style: const TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const Divider(height: 24),
+            ...fields,
+          ],
+        ),
+      ),
+    );
+  }
+
+  List<Widget> _buildBasicInfoFields() {
+    return [
+      _buildFormField('Building Name', _buildingController.buildingNameController,
+          prefixIcon: Icons.business),
+      _buildFormField('Building Type', _buildingController.buildingTypeController,
+          prefixIcon: Icons.category),
+      _buildFormField('Number of Floors', _buildingController.numberOfFloorsController,
+          inputType: TextInputType.number, prefixIcon: Icons.layers),
+      _buildFormField('Total Area (sq ft)', _buildingController.totalAreaController,
+          inputType: TextInputType.number, prefixIcon: Icons.square_foot),
+      _buildFormField('Purpose of Use', _buildingController.purposeOfUseController,
+          prefixIcon: Icons.info_outline),
+    ];
+  }
+
+  List<Widget> _buildLocationFields() {
+    return [
+      _buildFormField('Address', _buildingController.buildingAddressController,
+          maxLines: 2, prefixIcon: Icons.location_on),
+      Row(
+        children: [
+          Expanded(
+            child: _buildFormField('City', _buildingController.buildingCityController,
+                prefixIcon: Icons.location_city),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: _buildFormField('Province', _buildingController.buildingProvinceController,
+                prefixIcon: Icons.map),
+          ),
+        ],
+      ),
+    ];
+  }
+
+  List<Widget> _buildFinancialFields() {
+    return [
+      _buildFormField('Owner Name', _buildingController.ownerNameController,
+          prefixIcon: Icons.person),
+      Row(
+        children: [
+          Expanded(
+            child: _buildFormField('Purchase Date', _buildingController.purchaseDateController,
+                isDate: true, prefixIcon: Icons.date_range),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: _buildFormField('Purchase Price', _buildingController.purchasePriceController,
+                inputType: TextInputType.number, prefixIcon: Icons.attach_money),
+          ),
+        ],
+      ),
+      Row(
+        children: [
+          Expanded(
+            child: _buildFormField('Lease Date', _buildingController.leaseDateController,
+                isDate: true, prefixIcon: Icons.date_range),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: _buildFormField('Lease Value', _buildingController.leaseValueController,
+                inputType: TextInputType.number, prefixIcon: Icons.attach_money),
+          ),
+        ],
+      ),
+      _buildFormField('Council Tax', _buildingController.councilTaxController,
+          prefixIcon: Icons.receipt),
+      Row(
+        children: [
+          Expanded(
+            child: _buildFormField('Council Tax Date', _buildingController.councilTaxDateController,
+                isDate: true, prefixIcon: Icons.date_range),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: _buildFormField('Council Tax Value', _buildingController.councilTaxValueController,
+                inputType: TextInputType.number, prefixIcon: Icons.attach_money),
+          ),
+        ],
+      ),
+    ];
+  }
+
+  List<Widget> _buildMediaFields() {
+    return [
+      _buildFormField('Building Image URL', _buildingController.buildingImageController,
+          prefixIcon: Icons.image),
+      const SizedBox(height: 16),
+
+      // Image preview
+      Obx(() {
+        final imageUrl = _buildingController.buildingImageController.text;
+        if (imageUrl.isNotEmpty) {
+          return Container(
+            width: double.infinity,
+            height: 200,
+            decoration: BoxDecoration(
+              border: Border.all(color: Colors.grey.shade300),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(12),
+              child: Image.network(
+                imageUrl,
+                fit: BoxFit.cover,
+                errorBuilder: (context, error, stackTrace) => Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.broken_image, size: 48, color: Colors.grey.shade400),
+                      const SizedBox(height: 8),
+                      const Text('Image not available'),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          );
+        } else {
+          return const SizedBox.shrink();
+        }
+      }),
+    ];
   }
 
   @override
   Widget build(BuildContext context) {
+    // Define tabs
+    final tabs = [
+      const Tab(icon: Icon(Icons.business), text: 'Basic Info'),
+      const Tab(icon: Icon(Icons.location_on), text: 'Location'),
+      const Tab(icon: Icon(Icons.attach_money), text: 'Financial'),
+      const Tab(icon: Icon(Icons.image), text: 'Media'),
+    ];
+
+    if (isLoading) {
+      return Scaffold(
+        appBar: AppBar(
+          title: const Text('Loading Building...'),
+        ),
+        body: const Center(
+          child: CircularProgressIndicator(),
+        ),
+      );
+    }
+
     return Scaffold(
-      appBar: AppBar(title: const Text('Update Building Details')),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            children: [
-              _buildFormField('Building ID', 'buildingId'),
-              _buildFormField('Building Name', 'buildingName'),
-              _buildFormField('Building Type', 'buildingType'),
-              _buildFormField('Number of Floors', 'numberOfFloors', inputType: TextInputType.number),
-              _buildFormField('Total Area (sq ft)', 'totalArea', inputType: TextInputType.number),
-              _buildFormField('Building Address', 'buildingAddress'),
-              _buildFormField('City', 'buildingCity'),
-              _buildFormField('Province', 'buildingProvince'),
-              _buildFormField('Owner Name', 'ownerName'),
-              _buildFormField('Purpose of Use', 'purposeOfUse'),
-              _buildFormField('Council Tax', 'councilTax'),
-              _buildFormField('Council Tax Date', 'councilTaxDate', isDate: true),
-              _buildFormField('Council Tax Value', 'councilTaxValue', inputType: TextInputType.number),
-              _buildFormField('Lease Date', 'leaseDate', isDate: true),
-              _buildFormField('Lease Value', 'leaseValue', inputType: TextInputType.number),
-              _buildFormField('Purchase Date', 'purchaseDate', isDate: true),
-              _buildFormField('Purchase Price', 'purchasePrice', inputType: TextInputType.number),
-              _buildFormField('Building Image URL', 'buildingImage'),
-              const SizedBox(height: 20),
-              ElevatedButton(
-                onPressed: _submitForm,
-                child: const Text('Update Building'),
-              ),
-            ],
+      appBar: AppBar(
+        title: const Text('Update Building'),
+        actions: [
+          Obx(() => _buildingController.isLoading.value
+              ? const Center(child: Padding(
+            padding: EdgeInsets.symmetric(horizontal: 16),
+            child: SizedBox(
+              width: 20,
+              height: 20,
+              child: CircularProgressIndicator(strokeWidth: 2),
+            ),
+          ))
+              : IconButton(
+            icon: const Icon(Icons.save),
+            onPressed: () => _buildingController.updateBuilding(),
+            tooltip: 'Save Changes',
           ),
+          ),
+        ],
+        bottom: TabBar(
+          controller: _tabController,
+          tabs: tabs,
+          indicatorSize: TabBarIndicatorSize.tab,
+          labelStyle: const TextStyle(fontWeight: FontWeight.bold),
         ),
       ),
+      body: Form(
+        key: _buildingController.buildingFormKey,
+        child: TabBarView(
+          controller: _tabController,
+          children: [
+            // Basic Info Tab
+            SingleChildScrollView(
+              padding: const EdgeInsets.all(16),
+              child: _buildFormSection('Basic Information', _buildBasicInfoFields()),
+            ),
+
+            // Location Tab
+            SingleChildScrollView(
+              padding: const EdgeInsets.all(16),
+              child: _buildFormSection('Location Details', _buildLocationFields()),
+            ),
+
+            // Financial Tab
+            SingleChildScrollView(
+              padding: const EdgeInsets.all(16),
+              child: _buildFormSection('Financial Information', _buildFinancialFields()),
+            ),
+
+            // // Media Tab
+            // SingleChildScrollView(
+            //   padding: const EdgeInsets.all(16),
+            //   child: _buildFormSection('Building Media', _buildMediaFields()),
+            // ),
+          ],
+        ),
+      ),
+      bottomNavigationBar: Obx(() => Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.05),
+              blurRadius: 5,
+              offset: const Offset(0, -3),
+            ),
+          ],
+        ),
+        child: ElevatedButton(
+          onPressed: _buildingController.isLoading.value
+              ? null
+              : () => _buildingController.updateBuilding(),
+          style: ElevatedButton.styleFrom(
+            minimumSize: const Size(double.infinity, 54),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+            padding: const EdgeInsets.symmetric(vertical: 12),
+          ),
+          child: _buildingController.isLoading.value
+              ? const CircularProgressIndicator()
+              : const Text(
+            'Update Building',
+            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+          ),
+        ),
+      )),
     );
   }
 }

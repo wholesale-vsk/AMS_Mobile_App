@@ -2,6 +2,7 @@ import 'package:get/get.dart';
 import 'package:hexalyte_ams/screens/home_screen/app_settigns/app_settings.dart';
 import 'package:hexalyte_ams/screens/home_screen/assets_screens/add_asset_screen/add_asset_screen.dart';
 import 'package:hexalyte_ams/screens/home_screen/assets_screens/add_asset_screen/add_land/add_land_screen.dart';
+import 'package:hexalyte_ams/screens/home_screen/assets_screens/add_asset_screen/add_building/add_building_screen.dart';
 import 'package:hexalyte_ams/screens/home_screen/assets_screens/add_asset_screen/add_vehicle/add_vehicle_screen.dart';
 import 'package:hexalyte_ams/screens/home_screen/assets_screens/view_assets_screen/building_details_screen/building_details_screen.dart';
 import 'package:hexalyte_ams/screens/home_screen/assets_screens/view_assets_screen/land_details_screen/land_details_screen.dart';
@@ -26,9 +27,10 @@ import 'package:hexalyte_ams/screens/login_screen/login_screen.dart';
 import 'package:hexalyte_ams/screens/loading_screen/loading_screen.dart';
 import 'package:hexalyte_ams/services/data/load_land.dart';
 
+import '../models/assets/Building/Building_model.dart';
 import '../screens/home_screen/assets_screens/add_asset_screen/building_add/add_building_screen.dart';
 import '../screens/home_screen/assets_screens/update_screen/building_update_screen.dart';
-import '../screens/home_screen/assets_screens/update_screen/lnad_update_screen.dart';
+import '../screens/home_screen/assets_screens/update_screen/lnad_update_screen.dart' show LandUpdatePage;
 import '../screens/home_screen/assets_screens/update_screen/vehivle_update_screen.dart'; // ✅ FIXED INCORRECT IMPORT
 
 class AppRoutes {
@@ -58,10 +60,10 @@ class AppRoutes {
   static const String LAND_REPORT_SCREEN = '/land_report_screen';
   static const String VEHICLE_REPORT_SCREEN = '/vehicle_report_screen';
   static const String TOTAL_ASSETS_REPORT_SCREEN = '/total_assets_report_screen';
+  static const String UPDATE_VEHICLE_SCREEN = '/edit_vehicle_screen';
+  static const String UPDATE_LAND_SCREEN = '/edit_land_screen';
+  static const String UPDATE_BUILDING_SCREEN = '/edit_building_screen';
   static const String FAQ_SCREEN = '/faq_screen';
-  static const String  VEHICLE_UPDATE_SCREEN = '/vehicle_update_screen';
-  static const String  LAND_UPDATE_SCREEN = '/land_update_screen';
-  static const String  BUILDING_UPDATE_SCREEN = '/building_update_screen';
 
   static final List<GetPage> routes = [
     GetPage(name: LOADING_SCREEN, page: () => LoadingScreen(), transition: Transition.fadeIn),
@@ -92,9 +94,9 @@ class AppRoutes {
     GetPage(name: DASHBOARD_SCREEN, page: () => DashboardScreen(), transition: Transition.rightToLeft),
     GetPage(name: APP_SETTINGS_SCREEN, page: () => AppSettings(), transition: Transition.rightToLeft),
     GetPage(name: APP_CHAT_SCREEN, page: () => ChatScreen(user: Get.arguments), transition: Transition.rightToLeft),
-    GetPage(name: VEHICLE_UPDATE_SCREEN, page: () => VehicleUpdatePage(vehicleData: Get.arguments), transition: Transition.rightToLeft),
-    GetPage(name: LAND_UPDATE_SCREEN, page: () => LandUpdatePage(landData: Get.arguments), transition: Transition.rightToLeft),
-    GetPage(name: BUILDING_UPDATE_SCREEN, page: () => BuildingUpdatePage(buildingData: Get.arguments), transition: Transition.rightToLeft),
+    GetPage(name: UPDATE_VEHICLE_SCREEN, page: () => VehicleUpdatePage(  vehicle: Get.arguments, asset: null, land: {},), transition: Transition.rightToLeft),
+    GetPage(name: UPDATE_LAND_SCREEN, page: () => LandUpdatePage (land: Get.arguments, landData: {}, asset: null, vehicle: {},), transition: Transition.rightToLeft),
+    GetPage(name: UPDATE_BUILDING_SCREEN, page: () => BuildingUpdatePage (building: Get.arguments, buildingData: {}, asset: null,), transition: Transition.rightToLeft),
 
     GetPage(name: ASSETS_SELECT_FOR_REPORT_SCREEN, page: () => AssetsSelectForReports(), transition: Transition.rightToLeft),
     GetPage(name: BUILDING_REPORT_SCREEN, page: () => BuildingReportScreen(), transition: Transition.rightToLeft),
@@ -103,5 +105,21 @@ class AppRoutes {
     GetPage(name: TOTAL_ASSETS_REPORT_SCREEN, page: () => TotalAssetsReportScreen(), transition: Transition.rightToLeft),
 
     GetPage(name: FAQ_SCREEN, page: () => FAQScreen(), transition: Transition.rightToLeft),
+
+    // Place this in your routes/app_routes.dart file
+
+// Update this route to handle different ways building might be passed
+    GetPage(
+        name: UPDATE_BUILDING_SCREEN,
+        page: () => BuildingUpdatePage(
+          building: Get.arguments is Building ? Get.arguments : null,
+          buildingData: Get.arguments is Map<String, dynamic> ? Get.arguments : null,
+          asset: null,
+        ),
+        transition: Transition.rightToLeft
+    ),
+
+    
   ];
+
 }

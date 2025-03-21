@@ -126,7 +126,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
       children: [
         _buildActionButton(Icons.add, 'New Asset', Colors.purple, AppRoutes.ADD_ASSET_SCREEN),
-        _buildActionButton(Icons.history, 'History', Colors.teal, AppRoutes.VEHICLE_UPDATE_SCREEN),
+        _buildActionButton(Icons.history, 'History', Colors.teal, AppRoutes.UPDATE_BUILDING_SCREEN),
         _buildActionButton(Icons.notifications, 'Alerts', Colors.orange, AppRoutes.NOTIFICATION_SCREEN),
       ],
     );
@@ -155,10 +155,13 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
       {'title': 'Assets', 'icon': Icons.business, 'route': AppRoutes.VIEW_ALL_ASSETS_SCREEN},
       {'title': 'Reports', 'icon': Icons.bar_chart, 'route': AppRoutes.ASSETS_SELECT_FOR_REPORT_SCREEN},
       {'title': 'Analytics', 'icon': Icons.show_chart, 'route': AppRoutes.DASHBOARD_SCREEN},
-      {'title': 'Settings', 'icon': Icons.settings, 'route': AppRoutes.LAND_UPDATE_SCREEN},
-      {'title': 'Chat', 'icon': Icons.chat, 'route': AppRoutes.VEHICLE_UPDATE_SCREEN},
-      {'title': 'Help', 'icon': Icons.help, 'route': AppRoutes.BUILDING_UPDATE_SCREEN},
-    ];
+      {'title': 'Settings', 'icon': Icons.settings, 'route': AppRoutes.APP_SETTINGS_SCREEN},
+      {'title': 'Chat', 'icon': Icons.chat, 'route': AppRoutes.USER_SELECTION_SCREEN},
+      {
+        'title': 'Help',
+        'icon': Icons.help,
+        'route': AppRoutes.HELP_AND_SUPPORT_SCREEN,
+      }];
 
     return GridView.builder(
       shrinkWrap: true,

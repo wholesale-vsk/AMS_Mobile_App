@@ -5,7 +5,7 @@ import 'package:intl/intl.dart';
 class VehicleUpdatePage extends StatefulWidget {
   final Map<String, dynamic>? vehicleData;
 
-  const VehicleUpdatePage({super.key, this.vehicleData});
+  const VehicleUpdatePage({super.key, this.vehicleData, required asset, required Map<String, dynamic> land, required vehicle});
 
   @override
   _VehicleUpdatePageState createState() => _VehicleUpdatePageState();
