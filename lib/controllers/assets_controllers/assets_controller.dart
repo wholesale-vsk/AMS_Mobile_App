@@ -32,6 +32,9 @@ class AssetController extends GetxController {
   var totalLands = 0.obs;
   var totalAssets = 0.obs;
 
+  // Added total asset value property
+  var totalAssetValue = 0.0.obs;
+
   var currentVehiclePage = 1.obs;
   var currentBuildingPage = 1.obs;
   var currentLandPage = 1.obs;
@@ -57,6 +60,9 @@ class AssetController extends GetxController {
       assets.value = results.expand((element) => element).toList();
       totalAssets.value = totalBuildings.value + totalVehicles.value + totalLands.value;
 
+      // Calculate total asset value
+      _calculateTotalAssetValue();
+
       _updateLoadMoreFlags();
       _logger.i("📌 Total Assets Loaded: ${assets.length}");
     } catch (e) {
@@ -64,6 +70,32 @@ class AssetController extends GetxController {
     } finally {
       isLoading(false);
     }
+  }
+
+  /// Calculate the total value of all assets
+  void _calculateTotalAssetValue() {
+    double total = 0.0;
+
+    for (var asset in assets) {
+      if (asset.containsKey('purchasePrice') && asset['purchasePrice'] != null) {
+        // Handle different data types
+        var price = asset['purchasePrice'];
+
+        if (price is String) {
+          // Convert string to double if possible
+          final sanitizedPrice = price.replaceAll(RegExp(r'[^\d.]'), '');
+          if (sanitizedPrice.isNotEmpty) {
+            total += double.tryParse(sanitizedPrice) ?? 0.0;
+          }
+        } else if (price is num) {
+          // Already a number
+          total += price.toDouble();
+        }
+      }
+    }
+
+    totalAssetValue.value = total;
+    _logger.i("💰 Total Asset Value Calculated: \$${totalAssetValue.value}");
   }
 
   /// **🔄 Load More Assets (Infinite Scroll)**
@@ -83,6 +115,9 @@ class AssetController extends GetxController {
       assets.addAll(newAssets.expand((element) => element));
       _incrementPageNumbers();
       _updateLoadMoreFlags();
+
+      // Recalculate total value
+      _calculateTotalAssetValue();
 
       _logger.i("📌 Total Assets After Load More: ${assets.length}");
     } catch (e) {
@@ -259,6 +294,7 @@ class AssetController extends GetxController {
   void deleteAsset(Map<String, dynamic> asset) {
     assets.remove(asset);
     totalAssets.value = assets.length;
+    _calculateTotalAssetValue(); // Recalculate total value after deletion
     update(); // Notify listeners to refresh the UI
 
     _logger.i("✅ Asset Deleted: ${asset['name']}");
@@ -291,4 +327,12 @@ class AssetController extends GetxController {
   void fetchAssets() {}
 
   getAssetsByCategory(String s) {}
+
+  // Format total value as currency string
+  String get formattedTotalValue {
+    return '\$${totalAssetValue.value.toStringAsFixed(2).replaceAllMapped(
+        RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
+            (Match m) => '${m[1]},'
+    )}';
+  }
 }

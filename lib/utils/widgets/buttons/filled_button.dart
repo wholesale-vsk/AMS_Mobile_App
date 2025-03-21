@@ -27,7 +27,7 @@ class AppFilledButton extends StatelessWidget {
     this.height = 48.0,
     this.width = double.infinity,
     this.borderRadius = 6.0,
-    this.borderWidth = 1.0,
+    this.borderWidth = 1.0, required TextStyle textStyle, required bool showShadow,
   })  : borderColor = borderColor ?? themeManager.primaryColor,
         backgroundColor = backgroundColor ?? themeManager.primaryColor,
         textColor = textColor ?? themeManager.backgroundColor,

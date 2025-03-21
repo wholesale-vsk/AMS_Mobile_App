@@ -22,7 +22,7 @@ class AppPasswordTextFormField extends StatelessWidget {
     this.borderColor = Colors.black,
     this.hintColor = Colors.grey,
     this.validator,
-    required this.obscureText,
+    required this.obscureText, required Icon prefixIcon,
   }) : super(key: key);
 
   @override

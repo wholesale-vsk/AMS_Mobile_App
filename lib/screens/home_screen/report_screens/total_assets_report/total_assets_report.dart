@@ -13,6 +13,44 @@ class TotalAssetsReportScreen extends StatelessWidget {
     assetsController.fetchAssets();
   }
 
+  Widget buildSummaryCard({
+    required String title,
+    required String value,
+    required IconData icon,
+    required Color color,
+  }) {
+    return Card(
+      elevation: 4,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          children: [
+            Icon(icon, size: 40, color: color),
+            const SizedBox(height: 10),
+            Text(
+              title,
+              style: TextStyle(
+                fontSize: FontSizes.small,
+                fontWeight: FontWeight.w500,
+                color: Colors.black54,
+              ),
+            ),
+            const SizedBox(height: 5),
+            Text(
+              value,
+              style: TextStyle(
+                fontSize: FontSizes.large,
+                fontWeight: FontWeight.bold,
+                color: Colors.black87,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   Widget buildTable({
     required String title,
     required List<String> headers,
@@ -22,29 +60,39 @@ class TotalAssetsReportScreen extends StatelessWidget {
       builder: (context, constraints) {
         return Card(
           elevation: 3,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // Table Title
               Container(
                 width: double.infinity,
-                padding: const EdgeInsets.all(12),
+                padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
                 decoration: BoxDecoration(
-                  color: Colors.teal.shade700,
+                  gradient: LinearGradient(
+                    colors: [Colors.teal.shade700, Colors.teal.shade500],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
                   borderRadius: const BorderRadius.only(
-                    topLeft: Radius.circular(12),
-                    topRight: Radius.circular(12),
+                    topLeft: Radius.circular(16),
+                    topRight: Radius.circular(16),
                   ),
                 ),
-                child: Text(
-                  title,
-                  style: TextStyle(
-                    fontSize: FontSizes.large,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                  ),
-                  textAlign: TextAlign.center,
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Icon(Icons.pie_chart, color: Colors.white, size: 24),
+                    const SizedBox(width: 12),
+                    Text(
+                      title,
+                      style: TextStyle(
+                        fontSize: FontSizes.large,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ],
                 ),
               ),
               // Scrollable Table
@@ -56,20 +104,25 @@ class TotalAssetsReportScreen extends StatelessWidget {
                   ),
                   child: DataTable(
                     headingRowColor: MaterialStateColor.resolveWith(
-                            (states) => Colors.teal.shade200),
+                            (states) => Colors.teal.shade50),
                     dataRowColor: MaterialStateColor.resolveWith(
                             (states) => Colors.white),
                     columnSpacing: 20,
+                    dividerThickness: 1,
+                    headingRowHeight: 56,
+                    dataRowHeight: 52,
                     columns: headers
                         .map((header) => DataColumn(
-                      label: Text(
-                        header,
-                        style: TextStyle(
-                          fontSize: FontSizes.medium,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.black87,
+                      label: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                        child: Text(
+                          header,
+                          style: TextStyle(
+                            fontSize: FontSizes.medium,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.teal.shade700,
+                          ),
                         ),
-                        textAlign: TextAlign.center,
                       ),
                     ))
                         .toList(),
@@ -79,17 +132,23 @@ class TotalAssetsReportScreen extends StatelessWidget {
                         cells: row
                             .map(
                               (cell) => DataCell(
-                            SizedBox(
-                              width: 100,
-                              child: Text(
-                                cell,
-                                style: TextStyle(
-                                  fontSize: FontSizes.small,
-                                  color: Colors.black.withOpacity(0.8),
+                            Container(
+                              constraints: const BoxConstraints(
+                                minWidth: 100,
+                                maxWidth: 180,
+                              ),
+                              child: Padding(
+                                padding: const EdgeInsets.symmetric(vertical: 8.0),
+                                child: Text(
+                                  cell,
+                                  style: TextStyle(
+                                    fontSize: FontSizes.small,
+                                    color: Colors.black87,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                  overflow: TextOverflow.ellipsis,
+                                  maxLines: 2,
                                 ),
-                                overflow: TextOverflow.ellipsis,
-                                maxLines: 2,
-                                textAlign: TextAlign.center,
                               ),
                             ),
                           ),
@@ -101,6 +160,7 @@ class TotalAssetsReportScreen extends StatelessWidget {
                   ),
                 ),
               ),
+              const SizedBox(height: 16),
             ],
           ),
         );
@@ -112,17 +172,17 @@ class TotalAssetsReportScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return SafeArea(
       child: Scaffold(
-        backgroundColor: Colors.white,
+        backgroundColor: Colors.grey[50],
         appBar: AppBar(
           title: const Text(
             'Total Assets Report',
             style: TextStyle(
-              color: Colors.black,
+              color: Colors.white,
               fontWeight: FontWeight.bold,
             ),
           ),
           centerTitle: true,
-          elevation: 2,
+          elevation: 0,
           backgroundColor: Colors.white,
           leading: IconButton(
             icon: const Icon(Icons.arrow_back, color: Colors.black),
@@ -137,18 +197,23 @@ class TotalAssetsReportScreen extends StatelessWidget {
         ),
         body: RefreshIndicator(
           onRefresh: _refreshData,
+          color: Colors.teal.shade700,
           child: LayoutBuilder(
             builder: (context, constraints) {
               return SingleChildScrollView(
                 padding: EdgeInsets.symmetric(
                   horizontal: constraints.maxWidth * 0.05,
-                  vertical: constraints.maxHeight * 0.02,
+                  vertical: 20,
                 ),
                 child: Obx(() {
                   if (assetsController.isLoading.value) {
                     return SizedBox(
                       height: constraints.maxHeight * 0.7,
-                      child: const Center(child: CircularProgressIndicator()),
+                      child: Center(
+                        child: CircularProgressIndicator(
+                          color: Colors.teal.shade700,
+                        ),
+                      ),
                     );
                   }
 
@@ -160,11 +225,16 @@ class TotalAssetsReportScreen extends StatelessWidget {
                     groupedAssets.putIfAbsent(type, () => []).add(asset);
                   }
 
+                  // Calculate totals
+                  int totalCount = assetsController.filteredAssets.length;
+                  double totalValue = 0.0;
+                  int categoryCount = groupedAssets.length;
+
                   // Prepare data for the table
                   final List<List<String>> assetDetails = groupedAssets.entries.map((entry) {
                     String assetType = entry.key;
                     int count = entry.value.length;
-                    double totalValue = entry.value.fold(0.0, (sum, asset) {
+                    double categoryValue = entry.value.fold(0.0, (sum, asset) {
                       double value = 0.0;
                       if (asset['purchasePrice'] != null) {
                         String valueString = asset['purchasePrice'].toString().replaceAll(',', '');
@@ -173,49 +243,103 @@ class TotalAssetsReportScreen extends StatelessWidget {
                       return sum + value;
                     });
 
-                    return [assetType, count.toString(), 'LKR ${totalValue.toStringAsFixed(2)}'];
+                    totalValue += categoryValue;
+
+                    return [
+                      assetType,
+                      count.toString(),
+                      '${categoryValue.toStringAsFixed(2)}',
+                      '${((count / totalCount) * 100).toStringAsFixed(1)}%'
+                    ];
                   }).toList();
 
                   if (assetDetails.isEmpty) {
                     return SizedBox(
                       height: constraints.maxHeight * 0.7,
-                      child: const Center(
-                        child: Text(
-                          'No Assets Available.',
-                          style: TextStyle(
-                            fontSize: 16,
-                            color: Colors.black,
-                          ),
+                      child: Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              Icons.inventory_2_outlined,
+                              size: 70,
+                              color: Colors.grey[400],
+                            ),
+                            const SizedBox(height: 16),
+                            Text(
+                              'No Assets Available',
+                              style: TextStyle(
+                                fontSize: FontSizes.large,
+                                color: Colors.grey[600],
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              'Add assets to view your report',
+                              style: TextStyle(
+                                fontSize: FontSizes.small,
+                                color: Colors.grey[500],
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                     );
                   }
 
                   return Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // Card(
-                      //   elevation: 4,
-                      //   shape: RoundedRectangleBorder(
-                      //       borderRadius: BorderRadius.circular(12)),
-                      //   child: Padding(
-                      //     padding: const EdgeInsets.symmetric(
-                      //         vertical: 12, horizontal: 16),
-                      //     child: Text(
-                      //       "Total Assets: ${assetsController.totalAssets.value}",
-                      //       style: TextStyle(
-                      //         fontSize: FontSizes.large,
-                      //         fontWeight: FontWeight.bold,
-                      //         color: Colors.black,
-                      //       ),
-                      //       textAlign: TextAlign.center,
-                      //     ),
-                      //   ),
-                      // ),
+                      // Summary Cards
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 8.0, left: 4.0),
+                        child: Text(
+                          "Assets Overview",
+                          style: TextStyle(
+                            fontSize: FontSizes.medium,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.black87,
+                          ),
+                        ),
+                      ),
+                      GridView.count(
+                        crossAxisCount: constraints.maxWidth > 600 ? 3 : 2,
+                        crossAxisSpacing: 12,
+                        mainAxisSpacing: 12,
+                        shrinkWrap: true,
+                        physics: const NeverScrollableScrollPhysics(),
+                        children: [
+                          buildSummaryCard(
+                            title: "Total Assets",
+                            value: totalCount.toString(),
+                            icon: Icons.inventory,
+                            color: Colors.blue,
+                          ),
+                          buildSummaryCard(
+                            title: "Categories",
+                            value: categoryCount.toString(),
+                            icon: Icons.category,
+                            color: Colors.orange,
+                          ),
+                          buildSummaryCard(
+                            title: "Total Value",
+                            value: " ${totalValue.toStringAsFixed(2)}",
+                            icon: Icons.attach_money,
+                            color: Colors.green,
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 24),
+
+                      // Assets Table
                       buildTable(
-                        title: "Assets Summary",
-                        headers: ['Asset Type', 'Count', 'Total Value'],
+                        title: "Assets by Category",
+                        headers: ['Category', 'Count', 'Value', 'Percentage'],
                         rows: assetDetails,
                       ),
+
+                      const SizedBox(height: 70), // Space for FAB
                     ],
                   );
                 }),
@@ -224,23 +348,61 @@ class TotalAssetsReportScreen extends StatelessWidget {
           ),
         ),
         floatingActionButton: FloatingActionButton.extended(
-          backgroundColor: Colors.black,
+          backgroundColor: Colors.teal.shade700,
           onPressed: () async {
             try {
-              final allAssetsData = assetsController.filteredAssets;
+              Get.dialog(
+                Center(
+                  child: Card(
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.all(20.0),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const CircularProgressIndicator(),
+                          const SizedBox(height: 16),
+                          const Text(
+                            "Generating PDF...",
+                            style: TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+                barrierDismissible: false,
+              );
 
+              final allAssetsData = assetsController.filteredAssets;
               await PdfGeneratorForAll.generatePdf(
                   context, 'Total Assets', data: allAssetsData);
 
-              Get.snackbar("Success", "PDF generated successfully!",
-                  backgroundColor: Colors.green, colorText: Colors.white);
+              Get.back(); // Close the loading dialog
+              Get.snackbar(
+                "Success",
+                "PDF generated successfully!",
+                backgroundColor: Colors.green,
+                colorText: Colors.white,
+                margin: const EdgeInsets.all(16),
+                icon: const Icon(Icons.check_circle, color: Colors.white),
+              );
             } catch (e) {
-              Get.snackbar("Error", "Failed to generate PDF: $e",
-                  backgroundColor: Colors.red, colorText: Colors.white);
+              Get.back(); // Close the loading dialog
+              Get.snackbar(
+                "Error",
+                "Failed to generate PDF: $e",
+                backgroundColor: Colors.red,
+                colorText: Colors.white,
+                margin: const EdgeInsets.all(16),
+                icon: const Icon(Icons.error, color: Colors.white),
+              );
             }
           },
           label: const Text("Generate PDF", style: TextStyle(color: Colors.white)),
-          icon: const Icon(Icons.print_rounded, color: Colors.white),
+          icon: const Icon(Icons.picture_as_pdf, color: Colors.white),
         ),
       ),
     );

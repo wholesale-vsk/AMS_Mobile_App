@@ -31,7 +31,7 @@ class AppTextFormField extends StatelessWidget {
     this.keyboardType = TextInputType.text,
     this.obscureText = false,
     this.minLine = 1,
-    this.maxLine = 1,
+    this.maxLine = 1, required Icon prefixIcon,
   }) : super(key: key);
 
   @override

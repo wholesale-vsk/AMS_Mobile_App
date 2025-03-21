@@ -3,8 +3,6 @@ import 'package:get/get.dart';
 import 'package:hexalyte_ams/models/assets/building/building_model.dart';
 import 'package:hexalyte_ams/utils/theme/font_size.dart';
 import 'package:hexalyte_ams/utils/theme/responsive_size.dart';
-
-
 import '../../../../../controllers/Building_Controller/building_controller.dart';
 import '../../update_screen/building_update_screen.dart';
 

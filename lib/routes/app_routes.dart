@@ -21,11 +21,9 @@ import 'package:hexalyte_ams/screens/home_screen/report_screens/total_assets_rep
 import 'package:hexalyte_ams/screens/home_screen/report_screens/vehicle_report_screens/vehicle_report_screen.dart';
 import 'package:hexalyte_ams/screens/home_screen/user_support_screen/submit_ticket_screen/submit_ticket_screen.dart';
 import 'package:hexalyte_ams/screens/home_screen/user_support_screen/user_support_screen.dart';
-import 'package:hexalyte_ams/screens/home_screen/users/add_user_screen/add_user_screen.dart';
-import 'package:hexalyte_ams/screens/home_screen/users/users_screen.dart';
 import 'package:hexalyte_ams/screens/login_screen/login_screen.dart';
 import 'package:hexalyte_ams/screens/loading_screen/loading_screen.dart';
-import 'package:hexalyte_ams/services/data/load_land.dart';
+
 
 import '../models/assets/Building/Building_model.dart';
 import '../screens/home_screen/assets_screens/add_asset_screen/building_add/add_building_screen.dart';
@@ -89,8 +87,6 @@ class AppRoutes {
     GetPage(name: BUILDING_DETAILS_SCREEN, page: () => BuildingDetailsScreen(asset: Get.arguments), transition: Transition.rightToLeft),
 
     GetPage(name: NOTIFICATION_SCREEN, page: () => NotificationScreen(), transition: Transition.rightToLeft),
-    GetPage(name: USERS_SCREEN, page: () => UserScreen(), transition: Transition.rightToLeft),
-    GetPage(name: ADD_USERS_SCREEN, page: () => AddUserFormScreen(), transition: Transition.rightToLeft),
     GetPage(name: DASHBOARD_SCREEN, page: () => DashboardScreen(), transition: Transition.rightToLeft),
     GetPage(name: APP_SETTINGS_SCREEN, page: () => AppSettings(), transition: Transition.rightToLeft),
     GetPage(name: APP_CHAT_SCREEN, page: () => ChatScreen(user: Get.arguments), transition: Transition.rightToLeft),
