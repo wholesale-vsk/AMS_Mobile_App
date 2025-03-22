@@ -243,7 +243,8 @@ class AssetController extends GetxController {
         "createdDate": (v.createdDate),
         "lastModifiedBy": v.lastModifiedBy,
         "lastModifiedDate": (v.lastModifiedDate),
-        " milage": v.Milage,
+        "milage": v.milage,
+        "vehicleId": Uri.parse(v.links).pathSegments.last,
         "motExpiredDate": (v.motExpiredDate),
         "type": "Vehicle", // ✅ Ensures type is set for filtering
       }).toList();

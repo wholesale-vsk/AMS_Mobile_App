@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:hexalyte_ams/services/data/vehicle_service.dart';
+import 'package:logger/logger.dart';
 
 class VehicleController extends GetxController {
   final VehicleService _vehicleService = VehicleService();
-
+  final Logger _logger = Logger();
   var isLoading = false.obs;
 
   // Form key for validation
@@ -27,6 +28,8 @@ class VehicleController extends GetxController {
   final TextEditingController motValueController = TextEditingController();
   final TextEditingController ownerNameController = TextEditingController();
   final TextEditingController mileageController = TextEditingController();
+  final TextEditingController vehicleIdController = TextEditingController();
+
 
   /// **ADD VEHICLE FUNCTION**
   Future<void> addVehicle() async {
@@ -117,5 +120,43 @@ class VehicleController extends GetxController {
     ownerNameController.dispose();
     mileageController.dispose(); // ✅ Added missing disposal
     super.onClose();
+  }
+
+  updateVehicle() async {
+    try {
+      final response = await _vehicleService.updateVehicle(
+        registrationNumber: _validateInput(registrationNumberController.text),
+        vehicleModel: _validateInput(vehicleModelController.text),
+        vehicleType: _validateInput(vehicleTypeController.text),
+        vehicleImage: _validateInput(vehicleImageController.text),
+        motDate: _validateInput(motDateController.text),
+        motExpiredDate: _validateInput(motExpiredDateController.text),
+        insuranceDate: _validateInput(insuranceDateController.text),
+        insuranceValue: _validateInput(insuranceValueController.text, defaultValue: '0'),
+        milage: _validateInput(mileageController.text),
+        purchaseDate: _validateInput(purchaseDateController.text),
+        purchasePrice: _validateInput(purchasePriceController.text, defaultValue: '0'),
+        motValue: _validateInput(motValueController.text, defaultValue: '0'),
+        ownerName: _validateInput(ownerNameController.text),
+        vehicleId: _validateInput(vehicleIdController.text),
+      );
+
+      _logger.i('Response for test: $response');
+
+      if (response.isSuccess) {
+        Get.snackbar('Success', response.message.toString(),
+            duration: const Duration(seconds: 3));
+        clearForm(); // ✅ Clears form after success
+      } else {
+        Get.snackbar('Error', response.message ?? 'Failed to add vehicle.',
+            duration: const Duration(seconds: 3));
+      }
+    } catch (e, stackTrace) {
+      Get.snackbar('Error', 'An unexpected error occurred. Please try again.',
+          duration: const Duration(seconds: 3));
+      debugPrint("🚨 Error in addVehicle: $e\nStackTrace: $stackTrace");
+    } finally {
+      isLoading.value = false;
+    }
   }
 }

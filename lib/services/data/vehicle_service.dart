@@ -14,7 +14,7 @@ class VehicleService {
     required String registrationNumber,
     required String vehicleType,
     required String vehicleModel,
-    required String vehicleCategory,
+    required String vehicleId,
     required String ownerName,
     required String motValue,
     required String motDate,
@@ -51,7 +51,7 @@ class VehicleService {
       };
 
       final response = await dio.put(
-        'https://api.ams.hexalyte.com/vehicle/vehicles/vehicle', // ✅ Changed from POST to PUT
+        'https://api.ams.hexalyte.com/vehicle/vehicles/$vehicleId', // ✅ Changed from POST to PUT
         data: updateData,
         options: Options(
           headers: {

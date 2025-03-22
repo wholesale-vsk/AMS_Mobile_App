@@ -28,8 +28,9 @@ import 'package:hexalyte_ams/screens/loading_screen/loading_screen.dart';
 import '../models/assets/Building/Building_model.dart';
 import '../screens/home_screen/assets_screens/add_asset_screen/building_add/add_building_screen.dart';
 import '../screens/home_screen/assets_screens/update_screen/building_update_screen.dart';
-import '../screens/home_screen/assets_screens/update_screen/lnad_update_screen.dart' show LandUpdatePage;
-import '../screens/home_screen/assets_screens/update_screen/vehivle_update_screen.dart'; // ✅ FIXED INCORRECT IMPORT
+import '../screens/home_screen/assets_screens/update_screen/land_update_screen.dart'
+    show LandUpdatePage;
+import '../screens/home_screen/assets_screens/update_screen/vehicle_update_screen.dart'; // ✅ FIXED INCORRECT IMPORT
 
 class AppRoutes {
   // Route Names

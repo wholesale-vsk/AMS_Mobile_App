@@ -215,11 +215,11 @@ class _LandUpdatePageState extends State<LandUpdatePage> with SingleTickerProvid
 
   List<Widget> _buildBasicInfoFields() {
     return [
-      _buildFormField('Land ID', 'landId', prefixIcon: Icons.tag),
+
       _buildFormField('Land Name', 'landName', prefixIcon: Icons.title),
       _buildFormField('Land Type', 'landType', prefixIcon: Icons.category),
       _buildFormField('Land Size', 'landSize', inputType: TextInputType.number, prefixIcon: Icons.straighten),
-      _buildFormField('Land Image URL', 'landImage', prefixIcon: Icons.image),
+
       const SizedBox(height: 16),
 
       // Image preview

@@ -54,6 +54,7 @@ class _VehicleUpdatePageState extends State<VehicleUpdatePage> with SingleTicker
     _vehicleController.motValueController.text = data['motValue']?.toString() ?? '';
     _vehicleController.ownerNameController.text = data['ownerName']?.toString() ?? data['owner_name']?.toString() ?? '';
     _vehicleController.mileageController.text = data['mileage']?.toString() ?? data['milage']?.toString() ?? data[' milage']?.toString() ?? '';
+    _vehicleController.vehicleIdController.text = data['vehicleId']?.toString() ?? '';
 
     // Handle brand if available
     if (data['brand'] != null) {
@@ -234,6 +235,7 @@ class _VehicleUpdatePageState extends State<VehicleUpdatePage> with SingleTicker
 
   List<Widget> _buildBasicInfoFields() {
     return [
+
       _buildFormField('Registration Number', _vehicleController.registrationNumberController,
           prefixIcon: Icons.confirmation_number),
       _buildFormField('Brand', _vehicleController.brandController,
@@ -417,7 +419,23 @@ class _VehicleUpdatePageState extends State<VehicleUpdatePage> with SingleTicker
           ],
         ),
         child: Obx(() => ElevatedButton(
-          onPressed: _vehicleController.isLoading.value || _isLoading ? null : _submitForm,
+          onPressed: _vehicleController.isLoading.value || _isLoading
+              ? null
+              : () async {
+            if (_vehicleController.vehicleFormKey.currentState?.validate() ?? false) {
+              await _vehicleController.updateVehicle();
+            } else {
+              Get.snackbar(
+                "Validation Error",
+                "Please fill all required fields.",
+                backgroundColor: Colors.red[100],
+                colorText: Colors.red[800],
+                snackPosition: SnackPosition.BOTTOM,
+                margin: EdgeInsets.all(16),
+                borderRadius: 10,
+              );
+            }
+          },
           style: ElevatedButton.styleFrom(
             minimumSize: const Size(double.infinity, 54),
             shape: RoundedRectangleBorder(
