@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:hexalyte_ams/utils/theme/font_size.dart';
 import 'package:hexalyte_ams/utils/theme/responsive_size.dart';
+import '../../update_screen/vehivle_update_screen.dart';
+
 
 class VehicleDetailsScreen extends StatelessWidget {
   VehicleDetailsScreen({super.key, required asset, required Map vehicle});
@@ -44,7 +46,13 @@ class VehicleDetailsScreen extends StatelessWidget {
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
-          Get.toNamed('/edit-vehicle', arguments: vehicle); // ✅ Navigate to Edit Screen
+          // Navigate to VehicleUpdatePage and pass all vehicle data
+          Get.to(() => VehicleUpdatePage(
+            vehicleData: vehicle,
+            vehicle: vehicle!, // Pass the vehicle map
+            land: {}, // Pass an empty map for the required land parameter
+            asset: null, // Pass null for the asset parameter
+          ));
         },
         backgroundColor: primaryColor,
         child: const Icon(Icons.edit, color: Colors.white),

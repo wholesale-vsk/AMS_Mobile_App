@@ -3,6 +3,8 @@ import 'package:get/get.dart';
 import 'package:hexalyte_ams/utils/theme/font_size.dart';
 import 'package:hexalyte_ams/utils/theme/responsive_size.dart';
 
+import '../../update_screen/lnad_update_screen.dart';
+
 class LandDetailsScreen extends StatelessWidget {
   LandDetailsScreen({super.key, required asset, required Map land});
 
@@ -47,7 +49,13 @@ class LandDetailsScreen extends StatelessWidget {
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
-          Get.toNamed('/edit-land', arguments: land); // ✅ Navigate to Edit Screen
+          // Navigate to LandUpdatePage and pass all land data
+          Get.to(() => LandUpdatePage(
+            landData: land,
+            land: land!, // Pass the land map
+            vehicle: {}, // Pass an empty map for the required vehicle parameter
+            asset: null, // Pass null for the asset parameter
+          ));
         },
         backgroundColor: primaryColor,
         child: const Icon(Icons.edit, color: Colors.white),

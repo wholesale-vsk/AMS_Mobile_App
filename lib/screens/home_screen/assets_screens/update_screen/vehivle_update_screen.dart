@@ -110,7 +110,7 @@ class _VehicleUpdatePageState extends State<VehicleUpdatePage> with SingleTicker
           'vehicleType': _vehicleController.vehicleTypeController.text,
           'vehicle_type': _vehicleController.vehicleTypeController.text, // For compatibility
           'vehicleImage': _vehicleController.vehicleImageController.text,
-          'imageURL': _vehicleController.vehicleImageController.text, // For compatibility
+          // 'imageURL': _vehicleController.vehicleImageController.text, // For compatibility
           'motDate': _vehicleController.motDateController.text,
           'motExpiredDate': _vehicleController.motExpiredDateController.text,
           'serviceDate': _vehicleController.serviceDateController.text,
@@ -251,43 +251,43 @@ class _VehicleUpdatePageState extends State<VehicleUpdatePage> with SingleTicker
           prefixIcon: Icons.person),
       _buildFormField('Mileage', _vehicleController.mileageController,
           inputType: TextInputType.number, prefixIcon: Icons.speed),
-      _buildFormField('Vehicle Image URL', _vehicleController.vehicleImageController,
-          prefixIcon: Icons.image),
+      // _buildFormField('Vehicle Image URL', _vehicleController.vehicleImageController,
+      //     prefixIcon: Icons.image),
       const SizedBox(height: 16),
 
-      // Image preview
-      Obx(() {
-        final imageUrl = _vehicleController.vehicleImageController.text;
-        if (imageUrl.isNotEmpty) {
-          return Container(
-            width: double.infinity,
-            height: 200,
-            decoration: BoxDecoration(
-              border: Border.all(color: Colors.grey.shade300),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(12),
-              child: Image.network(
-                imageUrl,
-                fit: BoxFit.cover,
-                errorBuilder: (context, error, stackTrace) => Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(Icons.broken_image, size: 48, color: Colors.grey.shade400),
-                      const SizedBox(height: 8),
-                      const Text('Image not available'),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-          );
-        } else {
-          return const SizedBox.shrink();
-        }
-      }),
+      // // Image preview
+      // Obx(() {
+      //   final imageUrl = _vehicleController.vehicleImageController.text;
+      //   if (imageUrl.isNotEmpty) {
+      //     return Container(
+      //       width: double.infinity,
+      //       height: 200,
+      //       decoration: BoxDecoration(
+      //         border: Border.all(color: Colors.grey.shade300),
+      //         borderRadius: BorderRadius.circular(12),
+      //       ),
+      //       child: ClipRRect(
+      //         borderRadius: BorderRadius.circular(12),
+      //         child: Image.network(
+      //           imageUrl,
+      //           fit: BoxFit.cover,
+      //           errorBuilder: (context, error, stackTrace) => Center(
+      //             child: Column(
+      //               mainAxisAlignment: MainAxisAlignment.center,
+      //               children: [
+      //                 Icon(Icons.broken_image, size: 48, color: Colors.grey.shade400),
+      //                 const SizedBox(height: 8),
+      //                 const Text('Image not available'),
+      //               ],
+      //             ),
+      //           ),
+      //         ),
+      //       ),
+      //     );
+      //   } else {
+      //     return const SizedBox.shrink();
+      //   }
+      // }),
     ];
   }
 

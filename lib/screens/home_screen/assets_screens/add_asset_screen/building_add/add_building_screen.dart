@@ -114,7 +114,7 @@ class AddBuildingScreen extends StatelessWidget {
                   context,
                   Column(
                     children: [
-                      _buildTextField('Construction Cost', buildingController.councilTaxValueController,
+                      _buildTextField('Council Cost', buildingController.councilTaxValueController,
                           prefixIcon: Icons.construction, isNumeric: true),
                       const SizedBox(height: 16),
                       CalendarField(
