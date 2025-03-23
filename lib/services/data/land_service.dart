@@ -2,9 +2,11 @@ import 'package:dio/dio.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:hexalyte_ams/services/api_environment.dart';
 import 'package:hexalyte_ams/services/auth/api_response_formatter.dart';
+import 'package:logger/logger.dart';
 
 class LandService {
   final Dio dio = Dio(BaseOptions(baseUrl: DataEnvironment.baseURL));
+  final Logger _logger = Logger();
   final FlutterSecureStorage _secureStorage = const FlutterSecureStorage();
 
   /// **Update Land Details**
@@ -19,6 +21,7 @@ class LandService {
     required String landImage,
     required String leaseValue,
     required String leaseDate,
+    required String landId,
 
   }) async {
     dio.options.contentType = Headers.jsonContentType;
@@ -39,8 +42,8 @@ class LandService {
         "imageURL": landImage,
       };
 
-      final response = await dio.post(
-        'https://api.ams.hexalyte.com/land/lands', // Corrected Endpoint
+      final response = await dio.put(
+        'https://api.ams.hexalyte.com/land/lands/$landId', // Corrected Endpoint
         data: updateData,
         options: Options(
           headers: {
@@ -86,8 +89,7 @@ class LandService {
         required String leaseDate,
 
       }) async {
-    print(
-        'Land details: $landName, $landType, $landSize, $landAddress, $landCity, , $purchaseDate, $purchasePrice, $landImage');
+    _logger.i('Land details: $landName, $landType, $landSize, $landAddress, $landCity, , $purchaseDate, $purchasePrice, $landImage');
     String? accessToken = await _secureStorage.read(key: 'access_token');
 
     try {

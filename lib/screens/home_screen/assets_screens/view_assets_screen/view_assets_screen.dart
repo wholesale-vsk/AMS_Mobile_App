@@ -449,6 +449,7 @@ class _AssetsViewScreenState extends State<AssetsViewScreen> {
       'Land': AppRoutes.LAND_DETAILS_SCREEN,
       'Building': AppRoutes.BUILDING_DETAILS_SCREEN,
     };
+    print("asset onpress "+asset.toString());
     Get.toNamed(routeMap[asset['category']] ?? AppRoutes.VIEW_ALL_ASSETS_SCREEN, arguments: asset);
   }
 }

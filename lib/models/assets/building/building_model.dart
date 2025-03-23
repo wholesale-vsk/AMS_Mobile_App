@@ -12,6 +12,7 @@ class Building {
   final double councilTaxValue;
   final double buildingValue;
   final String leaseDate;
+  final String link;
   final double leaseValue;
   final double purchasePrice;
 
@@ -34,6 +35,7 @@ class Building {
     required this.leaseValue,
     required this.purposeOfUse,
     required this.purchasePrice,
+    required this.link,
 
     this.constructionDate,
     required this.imageURL,
@@ -61,7 +63,7 @@ class Building {
       leaseValue: _parseDouble(json['leaseValue']),
       purposeOfUse: json['purposeOfUse']?.toString() ?? 'Unknown',
       purchasePrice: _parseDouble(json['purchasePrice']),
-
+      link: json['_links']['self']['href'] ?? 'N/A',
       imageURL: json?['imageURL'] ?? '', // ✅ If API uses lowercase "imageUrl"
 
     );

@@ -2,9 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:hexalyte_ams/services/data/land_service.dart';
 import 'package:flutter/foundation.dart';
+import 'package:logger/logger.dart';
+
 
 class LandController extends GetxController {
   final LandService _landService = LandService(); // ✅ Fixed Service Name
+  final Logger _logger = Logger();
 
   var isLoading = false.obs;
 
@@ -39,16 +42,19 @@ class LandController extends GetxController {
         landName: _validateInput(landNameController.text, isRequired: true),
         landType: _validateInput(landTypeController.text, isRequired: true),
         landSize: _validateInput(landSizeController.text, defaultValue: '0'),
-        landAddress: _validateInput(landAddressController.text, isRequired: true),
+        landAddress: _validateInput(
+            landAddressController.text, isRequired: true),
         landCity: _validateInput(landCityController.text, isRequired: true),
-        purchaseDate: _validateInput(purchaseDateController.text, isRequired: true),
-        purchasePrice: _validateInput(purchasePriceController.text, defaultValue: '0'),
+        purchaseDate: _validateInput(
+            purchaseDateController.text, isRequired: true),
+        purchasePrice: _validateInput(
+            purchasePriceController.text, defaultValue: '0'),
         landImage: _validateInput(landImageController.text),
         leaseDate: _validateInput(leaseDateController.text, isRequired: true),
         leaseValue: _validateInput(leaseValueController.text, isRequired: true),
       );
 
-      print('Response for test: $response');
+      _logger.i('Response for test: $response');
 
       if (response.isSuccess) {
         Get.snackbar('Success', response.message.toString());
@@ -100,11 +106,16 @@ class LandController extends GetxController {
   // }
 
   //:::::::::::::::::::::::::::::::::<< HELPER FUNCTION TO HANDLE NULL VALUES >>::::::::::::::::::::::::::::::::://
-  String _validateInput(String? value, {String defaultValue = '', bool isRequired = false}) {
-    if (isRequired && (value == null || value.trim().isEmpty)) {
+  String _validateInput(String? value,
+      {String defaultValue = '', bool isRequired = false}) {
+    if (isRequired && (value == null || value
+        .trim()
+        .isEmpty)) {
       return defaultValue;
     }
-    return value?.trim().isNotEmpty == true ? value!.trim() : defaultValue;
+    return value
+        ?.trim()
+        .isNotEmpty == true ? value!.trim() : defaultValue;
   }
 
   //:::::::::::::::::::::::::::::::::<< DISPOSE CONTROLLERS >>::::::::::::::::::::::::::::::::://
@@ -125,4 +136,43 @@ class LandController extends GetxController {
 
     super.onClose();
   }
+
+  updateLand(asset) async {
+    try {
+      final response = await _landService.updateLand(
+        landName: _validateInput(landNameController.text, isRequired: true),
+        landType: _validateInput(landTypeController.text, isRequired: true),
+        landSize: _validateInput(landSizeController.text, defaultValue: '0'),
+        landAddress: _validateInput(
+            landAddressController.text, isRequired: true),
+        landCity: _validateInput(landCityController.text, isRequired: true),
+        purchaseDate: _validateInput(
+            purchaseDateController.text, isRequired: true),
+        purchasePrice: _validateInput(
+            purchasePriceController.text, defaultValue: '0'),
+        landImage: _validateInput(landImageController.text),
+        leaseDate: _validateInput(leaseDateController.text, isRequired: true),
+        leaseValue: _validateInput(leaseValueController.text, isRequired: true),
+        landId: _validateInput(landIdController.text, isRequired: true),
+      );
+
+      _logger.i('Response for test: $response');
+
+
+      if (response.isSuccess) {
+        Get.snackbar('Success', response.message.toString());
+        clearForm();
+      } else {
+        debugPrint(response.message.toString());
+        Get.snackbar('Error', response.message ?? 'Failed to add land.');
+      }
+    } catch (e) {
+      debugPrint("Exception in addLand: ${e.toString()}");
+      Get.snackbar('Error', 'Something went wrong. Please try again.');
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
+
 }

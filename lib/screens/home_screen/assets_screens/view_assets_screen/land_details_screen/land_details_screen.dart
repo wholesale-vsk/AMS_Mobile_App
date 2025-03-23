@@ -293,8 +293,8 @@ class LandDetailsScreen extends StatelessWidget {
           Get.to(() => LandUpdatePage(
             landData: land,
             land: land!,
-            vehicle: {},
-            asset: null,
+
+            asset: null, vehicle: {},
           ));
         },
         backgroundColor: primaryColor,

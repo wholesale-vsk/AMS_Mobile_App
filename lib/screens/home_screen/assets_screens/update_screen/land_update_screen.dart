@@ -2,18 +2,16 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 
+import '../../../../controllers/land_controller/land_controller.dart'; // Update the path as needed
+
 class LandUpdatePage extends StatefulWidget {
   final Map<String, dynamic>? landData;
   final dynamic asset;
-  final Map<String, dynamic> vehicle;
-  final dynamic land;
 
   const LandUpdatePage({
     super.key,
     this.landData,
-    required this.asset,
-    required this.vehicle,
-    required this.land
+    this.asset, required Map<String, dynamic> land, required Map<String, dynamic> vehicle,
   });
 
   @override
@@ -21,9 +19,8 @@ class LandUpdatePage extends StatefulWidget {
 }
 
 class _LandUpdatePageState extends State<LandUpdatePage> with SingleTickerProviderStateMixin {
-  final _formKey = GlobalKey<FormState>();
-  Map<String, TextEditingController> _controllers = {};
   late TabController _tabController;
+  late LandController _landController;
   bool _isLoading = false;
 
   @override
@@ -31,81 +28,90 @@ class _LandUpdatePageState extends State<LandUpdatePage> with SingleTickerProvid
     super.initState();
     _tabController = TabController(length: 3, vsync: this);
 
-    // Use either landData or land parameter, with landData taking precedence
-    final data = widget.landData ?? widget.land;
+    // Initialize the land controller
+    _landController = Get.put(LandController());
 
-    _controllers = {
-      'landId': TextEditingController(text: data?['landId'] ?? data?['id'] ?? ''),
-      'landName': TextEditingController(text: data?['landName'] ?? data?['name'] ?? ''),
-      'landType': TextEditingController(text: data?['landType'] ?? data?['type'] ?? ''),
-      'landSize': TextEditingController(text: data?['landSize']?.toString() ?? ''),
-      'landAddress': TextEditingController(text: data?['landAddress'] ?? data?['address'] ?? ''),
-      'landCity': TextEditingController(text: data?['landCity'] ?? data?['city'] ?? ''),
-      'landProvince': TextEditingController(text: data?['landProvince'] ?? data?['province'] ?? ''),
-      'purchaseDate': TextEditingController(text: data?['purchaseDate'] ?? ''),
-      'purchasePrice': TextEditingController(text: data?['purchasePrice']?.toString() ?? ''),
-      'landImage': TextEditingController(text: data?['landImage'] ?? data?['imageURL'] ?? ''),
-      'leaseDate': TextEditingController(text: data?['leaseDate'] ?? data?['lease_date'] ?? ''),
-      'leaseValue': TextEditingController(text: data?['leaseValue']?.toString() ?? ''),
-      'taxAmount': TextEditingController(text: data?['taxAmount']?.toString() ?? ''),
-      'landDescription': TextEditingController(text: data?['landDescription'] ?? data?['description'] ?? ''),
-    };
+    // Populate form with land data if available
+    if (widget.landData != null) {
+      _populateForm();
+    }
+  }
+
+  // Fill the form with existing land data
+  void _populateForm() {
+    final data = widget.landData!;
+
+    _landController.landIdController.text = data['landId']?.toString() ?? data['id']?.toString() ?? '';
+    _landController.landNameController.text = data['landName']?.toString() ?? data['name']?.toString() ?? '';
+    _landController.landTypeController.text = data['landType']?.toString() ?? data['type']?.toString() ?? '';
+    _landController.landSizeController.text = data['landSize']?.toString() ?? '';
+    _landController.landAddressController.text = data['landAddress']?.toString() ?? data['address']?.toString() ?? '';
+    _landController.landCityController.text = data['landCity']?.toString() ?? data['city']?.toString() ?? '';
+    _landController.landProvinceController.text = data['landProvince']?.toString() ?? data['province']?.toString() ?? '';
+    _landController.purchaseDateController.text = data['purchaseDate']?.toString() ?? '';
+    _landController.purchasePriceController.text = data['purchasePrice']?.toString() ?? '';
+    _landController.landImageController.text = data['landImage']?.toString() ?? data['imageURL']?.toString() ?? '';
+    _landController.leaseDateController.text = data['leaseDate']?.toString() ?? data['lease_date']?.toString() ?? '';
+    _landController.leaseValueController.text = data['leaseValue']?.toString() ?? '';
   }
 
   @override
   void dispose() {
-    _controllers.forEach((_, controller) => controller.dispose());
     _tabController.dispose();
     super.dispose();
   }
 
-  Future<void> _selectDate(BuildContext context, String field) async {
+  Future<void> _selectDate(BuildContext context, TextEditingController controller) async {
+    DateTime initialDate;
+    try {
+      initialDate = DateTime.tryParse(controller.text) ?? DateTime.now();
+    } catch (e) {
+      initialDate = DateTime.now();
+    }
+
     final DateTime? picked = await showDatePicker(
       context: context,
-      initialDate: DateTime.tryParse(_controllers[field]?.text ?? '') ?? DateTime.now(),
+      initialDate: initialDate,
       firstDate: DateTime(2000),
       lastDate: DateTime(2100),
     );
+
     if (picked != null) {
       setState(() {
-        _controllers[field]?.text = DateFormat('yyyy-MM-dd').format(picked);
+        controller.text = DateFormat('yyyy-MM-dd').format(picked);
       });
     }
   }
 
   void _submitForm() {
-    if (_formKey.currentState!.validate()) {
+    if (_landController.landFormKey.currentState!.validate()) {
       setState(() {
         _isLoading = true;
       });
 
       try {
-        // Create updated data map with compatibility for different key formats
+        // Create updated data map
         final updatedData = {
-          // Primary keys
-          'landId': _controllers['landId']!.text,
-          'id': _controllers['landId']!.text,
-          'landName': _controllers['landName']!.text,
-          'name': _controllers['landName']!.text,
-          'landType': _controllers['landType']!.text,
-          'type': _controllers['landType']!.text,
-          'landSize': _controllers['landSize']!.text,
-          'landAddress': _controllers['landAddress']!.text,
-          'address': _controllers['landAddress']!.text,
-          'landCity': _controllers['landCity']!.text,
-          'city': _controllers['landCity']!.text,
-          'landProvince': _controllers['landProvince']!.text,
-          'province': _controllers['landProvince']!.text,
-          'purchaseDate': _controllers['purchaseDate']!.text,
-          'purchasePrice': _controllers['purchasePrice']!.text,
-          'landImage': _controllers['landImage']!.text,
-          'imageURL': _controllers['landImage']!.text,
-          'leaseDate': _controllers['leaseDate']!.text,
-          'lease_date': _controllers['leaseDate']!.text,
-          'leaseValue': _controllers['leaseValue']!.text,
-          'taxAmount': _controllers['taxAmount']!.text,
-          'landDescription': _controllers['landDescription']!.text,
-          'description': _controllers['landDescription']!.text,
+          'landId': _landController.landIdController.text,
+          'id': _landController.landIdController.text, // For compatibility
+          'landName': _landController.landNameController.text,
+          'name': _landController.landNameController.text, // For compatibility
+          'landType': _landController.landTypeController.text,
+          'type': _landController.landTypeController.text, // For compatibility
+          'landSize': _landController.landSizeController.text,
+          'landAddress': _landController.landAddressController.text,
+          'address': _landController.landAddressController.text, // For compatibility
+          'landCity': _landController.landCityController.text,
+          'city': _landController.landCityController.text, // For compatibility
+          'landProvince': _landController.landProvinceController.text,
+          'province': _landController.landProvinceController.text, // For compatibility
+          'purchaseDate': _landController.purchaseDateController.text,
+          'purchasePrice': _landController.purchasePriceController.text,
+          'landImage': _landController.landImageController.text,
+          'imageURL': _landController.landImageController.text, // For compatibility
+          'leaseDate': _landController.leaseDateController.text,
+          'lease_date': _landController.leaseDateController.text, // For compatibility
+          'leaseValue': _landController.leaseValueController.text,
           'category': 'Land', // Ensure category is set
         };
 
@@ -133,7 +139,7 @@ class _LandUpdatePageState extends State<LandUpdatePage> with SingleTickerProvid
     }
   }
 
-  Widget _buildFormField(String label, String key, {
+  Widget _buildFormField(String label, TextEditingController controller, {
     TextInputType inputType = TextInputType.text,
     bool isDate = false,
     bool isRequired = true,
@@ -143,7 +149,7 @@ class _LandUpdatePageState extends State<LandUpdatePage> with SingleTickerProvid
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8),
       child: TextFormField(
-        controller: _controllers[key],
+        controller: controller,
         keyboardType: inputType,
         readOnly: isDate,
         maxLines: maxLines,
@@ -167,7 +173,7 @@ class _LandUpdatePageState extends State<LandUpdatePage> with SingleTickerProvid
           suffixIcon: isDate
               ? IconButton(
             icon: const Icon(Icons.calendar_today),
-            onPressed: () => _selectDate(context, key),
+            onPressed: () => _selectDate(context, controller),
           )
               : null,
           contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
@@ -181,7 +187,7 @@ class _LandUpdatePageState extends State<LandUpdatePage> with SingleTickerProvid
           }
           return null;
         },
-        onTap: isDate ? () => _selectDate(context, key) : null,
+        onTap: isDate ? () => _selectDate(context, controller) : null,
       ),
     );
   }
@@ -215,15 +221,18 @@ class _LandUpdatePageState extends State<LandUpdatePage> with SingleTickerProvid
 
   List<Widget> _buildBasicInfoFields() {
     return [
+      _buildFormField('Land Name', _landController.landNameController,
+          prefixIcon: Icons.title),
+      _buildFormField('Land Type', _landController.landTypeController,
+          prefixIcon: Icons.category),
+      _buildFormField('Land Size', _landController.landSizeController,
+          inputType: TextInputType.number, prefixIcon: Icons.straighten),
 
-      _buildFormField('Land Name', 'landName', prefixIcon: Icons.title),
-      _buildFormField('Land Type', 'landType', prefixIcon: Icons.category),
-      _buildFormField('Land Size', 'landSize', inputType: TextInputType.number, prefixIcon: Icons.straighten),
 
       const SizedBox(height: 16),
 
       // Image preview
-      if (_controllers['landImage']!.text.isNotEmpty)
+      if (_landController.landImageController.text.isNotEmpty)
         Container(
           width: double.infinity,
           height: 200,
@@ -234,7 +243,7 @@ class _LandUpdatePageState extends State<LandUpdatePage> with SingleTickerProvid
           child: ClipRRect(
             borderRadius: BorderRadius.circular(12),
             child: Image.network(
-              _controllers['landImage']!.text,
+              _landController.landImageController.text,
               fit: BoxFit.cover,
               errorBuilder: (context, error, stackTrace) => Center(
                 child: Column(
@@ -254,10 +263,11 @@ class _LandUpdatePageState extends State<LandUpdatePage> with SingleTickerProvid
 
   List<Widget> _buildLocationFields() {
     return [
-      _buildFormField('Land Address', 'landAddress', prefixIcon: Icons.location_on, maxLines: 3),
-      _buildFormField('City', 'landCity', prefixIcon: Icons.location_city),
-      _buildFormField('Province', 'landProvince', prefixIcon: Icons.map),
-      _buildFormField('Description', 'landDescription', prefixIcon: Icons.description, maxLines: 4, isRequired: false),
+      _buildFormField('Land Address', _landController.landAddressController,
+          prefixIcon: Icons.location_on, maxLines: 3),
+      _buildFormField('City', _landController.landCityController,
+          prefixIcon: Icons.location_city),
+
     ];
   }
 
@@ -266,26 +276,29 @@ class _LandUpdatePageState extends State<LandUpdatePage> with SingleTickerProvid
       Row(
         children: [
           Expanded(
-            child: _buildFormField('Purchase Date', 'purchaseDate', isDate: true, prefixIcon: Icons.date_range),
+            child: _buildFormField('Purchase Date', _landController.purchaseDateController,
+                isDate: true, prefixIcon: Icons.date_range),
           ),
           const SizedBox(width: 16),
           Expanded(
-            child: _buildFormField('Purchase Price', 'purchasePrice', inputType: TextInputType.number, prefixIcon: Icons.attach_money),
+            child: _buildFormField('Purchase Price', _landController.purchasePriceController,
+                inputType: TextInputType.number, prefixIcon: Icons.attach_money),
           ),
         ],
       ),
       Row(
         children: [
           Expanded(
-            child: _buildFormField('Lease Date', 'leaseDate', isDate: true, prefixIcon: Icons.date_range),
+            child: _buildFormField('Lease Date', _landController.leaseDateController,
+                isDate: true, prefixIcon: Icons.date_range),
           ),
           const SizedBox(width: 16),
           Expanded(
-            child: _buildFormField('Lease Value', 'leaseValue', inputType: TextInputType.number, prefixIcon: Icons.attach_money),
+            child: _buildFormField('Lease Value', _landController.leaseValueController,
+                inputType: TextInputType.number, prefixIcon: Icons.attach_money),
           ),
         ],
       ),
-      _buildFormField('Tax Amount', 'taxAmount', inputType: TextInputType.number, prefixIcon: Icons.receipt, isRequired: false),
     ];
   }
 
@@ -315,10 +328,10 @@ class _LandUpdatePageState extends State<LandUpdatePage> with SingleTickerProvid
           labelStyle: const TextStyle(fontWeight: FontWeight.bold),
         ),
       ),
-      body: _isLoading
+      body: Obx(() => _landController.isLoading.value || _isLoading
           ? const Center(child: CircularProgressIndicator())
           : Form(
-        key: _formKey,
+        key: _landController.landFormKey,
         child: TabBarView(
           controller: _tabController,
           children: [
@@ -341,7 +354,7 @@ class _LandUpdatePageState extends State<LandUpdatePage> with SingleTickerProvid
             ),
           ],
         ),
-      ),
+      )),
       bottomNavigationBar: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
@@ -354,8 +367,24 @@ class _LandUpdatePageState extends State<LandUpdatePage> with SingleTickerProvid
             ),
           ],
         ),
-        child: ElevatedButton(
-          onPressed: _isLoading ? null : _submitForm,
+        child: Obx(() => ElevatedButton(
+          onPressed: _landController.isLoading.value || _isLoading
+              ? null
+              : () async {
+            if (_landController.landFormKey.currentState?.validate() ?? false) {
+              await _landController.updateLand(widget.asset);
+            } else {
+              Get.snackbar(
+                "Validation Error",
+                "Please fill all required fields.",
+                backgroundColor: Colors.red[100],
+                colorText: Colors.red[800],
+                snackPosition: SnackPosition.BOTTOM ,
+                margin: EdgeInsets.all(16),
+                borderRadius: 10,
+              );
+            }
+          },
           style: ElevatedButton.styleFrom(
             minimumSize: const Size(double.infinity, 54),
             shape: RoundedRectangleBorder(
@@ -363,14 +392,15 @@ class _LandUpdatePageState extends State<LandUpdatePage> with SingleTickerProvid
             ),
             padding: const EdgeInsets.symmetric(vertical: 12),
           ),
-          child: _isLoading
+          child: _landController.isLoading.value || _isLoading
               ? const CircularProgressIndicator()
               : const Text(
             'Update Land',
             style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
           ),
-        ),
+        )),
       ),
     );
   }
 }
+

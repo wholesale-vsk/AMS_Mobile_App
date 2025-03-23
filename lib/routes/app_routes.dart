@@ -25,7 +25,7 @@ import 'package:hexalyte_ams/screens/login_screen/login_screen.dart';
 import 'package:hexalyte_ams/screens/loading_screen/loading_screen.dart';
 
 
-import '../models/assets/Building/Building_model.dart';
+import '../models/assets/Building/building_model.dart';
 import '../screens/home_screen/assets_screens/add_asset_screen/building_add/add_building_screen.dart';
 import '../screens/home_screen/assets_screens/update_screen/building_update_screen.dart';
 import '../screens/home_screen/assets_screens/update_screen/land_update_screen.dart'
@@ -85,7 +85,7 @@ class AppRoutes {
     GetPage(name: VIEW_ALL_ASSETS_SCREEN, page: () => AssetsViewScreen(), transition: Transition.rightToLeft),
     GetPage(name: VEHICLE_DETAILS_SCREEN, page: () => VehicleDetailsScreen(asset: Get.arguments, vehicle: {},), transition: Transition.rightToLeft),
     GetPage(name: LAND_DETAILS_SCREEN, page: () => LandDetailsScreen(asset: Get.arguments, land: {},), transition: Transition.rightToLeft),
-    GetPage(name: BUILDING_DETAILS_SCREEN, page: () => BuildingDetailsScreen(asset: Get.arguments), transition: Transition.rightToLeft),
+    GetPage(name: BUILDING_DETAILS_SCREEN, page: () => BuildingDetailsScreen(asset: Get.arguments,building: {},), transition: Transition.rightToLeft),
 
     GetPage(name: NOTIFICATION_SCREEN, page: () => NotificationScreen(), transition: Transition.rightToLeft),
     GetPage(name: DASHBOARD_SCREEN, page: () => DashboardScreen(), transition: Transition.rightToLeft),

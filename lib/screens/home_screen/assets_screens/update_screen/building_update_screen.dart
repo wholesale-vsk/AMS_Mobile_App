@@ -3,26 +3,22 @@ import 'package:get/get.dart';
 import 'package:hexalyte_ams/models/assets/building/building_model.dart';
 import 'package:intl/intl.dart';
 
-
 import '../../../../controllers/Building_Controller/building_controller.dart'; // Import the controller
 
 class BuildingUpdatePage extends StatefulWidget {
-  final Building? building;
+  // final Building? building;
   final Map<String, dynamic>? buildingData;
   final dynamic asset;
 
-  const BuildingUpdatePage({
-    super.key,
-    this.building,
-    this.buildingData,
-    this.asset
-  });
+  const BuildingUpdatePage(
+      {super.key, required Map<String, dynamic> building, this.buildingData, this.asset});
 
   @override
   State<BuildingUpdatePage> createState() => _BuildingUpdatePageState();
 }
 
-class _BuildingUpdatePageState extends State<BuildingUpdatePage> with SingleTickerProviderStateMixin {
+class _BuildingUpdatePageState extends State<BuildingUpdatePage>
+    with SingleTickerProviderStateMixin {
   late TabController _tabController;
   late BuildingController _buildingController;
   bool isLoading = true;
@@ -53,15 +49,16 @@ class _BuildingUpdatePageState extends State<BuildingUpdatePage> with SingleTick
       buildingData = widget.buildingData;
     }
     // Then check if we have a building object
-    else if (widget.building != null) {
+    /*else if (widget.building != null) {
       buildingData = _buildingFromModel(widget.building!);
-    }
+    }*/
     // Finally check arguments
     else if (Get.arguments != null && Get.arguments is Map) {
       if (Get.arguments['buildingData'] != null) {
         buildingData = Get.arguments['buildingData'] as Map<String, dynamic>;
       } else if (Get.arguments['building'] != null) {
-        buildingData = _buildingFromModel(Get.arguments['building'] as Building);
+        buildingData =
+            _buildingFromModel(Get.arguments['building'] as Building);
       }
     }
 
@@ -90,7 +87,6 @@ class _BuildingUpdatePageState extends State<BuildingUpdatePage> with SingleTick
   // Convert Building model to Map for controller
   Map<String, dynamic> _buildingFromModel(Building building) {
     return {
-
       'name': building.name,
       'buildingType': building.buildingType,
       'numberOfFloors': building.numberOfFloors?.toString(),
@@ -103,7 +99,8 @@ class _BuildingUpdatePageState extends State<BuildingUpdatePage> with SingleTick
 
       'councilTaxDate': building.councilTaxDate,
       'councilTaxValue': building.councilTaxValue?.toString(),
-      'lease_date': building.leaseDate, // Note: the controller expects 'lease_date' not 'leaseDate'
+      'lease_date': building.leaseDate,
+      // Note: the controller expects 'lease_date' not 'leaseDate'
       'leaseValue': building.leaseValue?.toString(),
       'purchaseDate': building.purchaseDate,
       'purchasePrice': building.purchasePrice?.toString(),
@@ -111,7 +108,8 @@ class _BuildingUpdatePageState extends State<BuildingUpdatePage> with SingleTick
     };
   }
 
-  Future<void> _selectDate(BuildContext context, TextEditingController controller) async {
+  Future<void> _selectDate(
+      BuildContext context, TextEditingController controller) async {
     DateTime initialDate;
     try {
       initialDate = DateTime.tryParse(controller.text) ?? DateTime.now();
@@ -133,7 +131,9 @@ class _BuildingUpdatePageState extends State<BuildingUpdatePage> with SingleTick
     }
   }
 
-  Widget _buildFormField(String label, TextEditingController controller, {
+  Widget _buildFormField(
+    String label,
+    TextEditingController controller, {
     TextInputType inputType = TextInputType.text,
     bool isDate = false,
     bool isRequired = true,
@@ -161,16 +161,18 @@ class _BuildingUpdatePageState extends State<BuildingUpdatePage> with SingleTick
           ),
           focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(12),
-            borderSide: BorderSide(color: Theme.of(context).primaryColor, width: 2),
+            borderSide:
+                BorderSide(color: Theme.of(context).primaryColor, width: 2),
           ),
           prefixIcon: prefixIcon != null ? Icon(prefixIcon) : null,
           suffixIcon: isDate
               ? IconButton(
-            icon: const Icon(Icons.calendar_today),
-            onPressed: () => _selectDate(context, controller),
-          )
+                  icon: const Icon(Icons.calendar_today),
+                  onPressed: () => _selectDate(context, controller),
+                )
               : null,
-          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+          contentPadding:
+              const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
         ),
         validator: (value) {
           if (isRequired && (value == null || value.isEmpty)) {
@@ -212,15 +214,20 @@ class _BuildingUpdatePageState extends State<BuildingUpdatePage> with SingleTick
 
   List<Widget> _buildBasicInfoFields() {
     return [
-      _buildFormField('Building Name', _buildingController.buildingNameController,
+      _buildFormField(
+          'Building Name', _buildingController.buildingNameController,
           prefixIcon: Icons.business),
-      _buildFormField('Building Type', _buildingController.buildingTypeController,
+      _buildFormField(
+          'Building Type', _buildingController.buildingTypeController,
           prefixIcon: Icons.category),
-      _buildFormField('Number of Floors', _buildingController.numberOfFloorsController,
+      _buildFormField(
+          'Number of Floors', _buildingController.numberOfFloorsController,
           inputType: TextInputType.number, prefixIcon: Icons.layers),
-      _buildFormField('Total Area (sq ft)', _buildingController.totalAreaController,
+      _buildFormField(
+          'Total Area (sq ft)', _buildingController.totalAreaController,
           inputType: TextInputType.number, prefixIcon: Icons.square_foot),
-      _buildFormField('Purpose of Use', _buildingController.purposeOfUseController,
+      _buildFormField(
+          'Purpose of Use', _buildingController.purposeOfUseController,
           prefixIcon: Icons.info_outline),
     ];
   }
@@ -232,12 +239,14 @@ class _BuildingUpdatePageState extends State<BuildingUpdatePage> with SingleTick
       Row(
         children: [
           Expanded(
-            child: _buildFormField('City', _buildingController.buildingCityController,
+            child: _buildFormField(
+                'City', _buildingController.buildingCityController,
                 prefixIcon: Icons.location_city),
           ),
           const SizedBox(width: 16),
           Expanded(
-            child: _buildFormField('Province', _buildingController.buildingProvinceController,
+            child: _buildFormField(
+                'Province', _buildingController.buildingProvinceController,
                 prefixIcon: Icons.map),
           ),
         ],
@@ -252,26 +261,32 @@ class _BuildingUpdatePageState extends State<BuildingUpdatePage> with SingleTick
       Row(
         children: [
           Expanded(
-            child: _buildFormField('Purchase Date', _buildingController.purchaseDateController,
+            child: _buildFormField(
+                'Purchase Date', _buildingController.purchaseDateController,
                 isDate: true, prefixIcon: Icons.date_range),
           ),
           const SizedBox(width: 16),
           Expanded(
-            child: _buildFormField('Purchase Price', _buildingController.purchasePriceController,
-                inputType: TextInputType.number, prefixIcon: Icons.attach_money),
+            child: _buildFormField(
+                'Purchase Price', _buildingController.purchasePriceController,
+                inputType: TextInputType.number,
+                prefixIcon: Icons.attach_money),
           ),
         ],
       ),
       Row(
         children: [
           Expanded(
-            child: _buildFormField('Lease Date', _buildingController.leaseDateController,
+            child: _buildFormField(
+                'Lease Date', _buildingController.leaseDateController,
                 isDate: true, prefixIcon: Icons.date_range),
           ),
           const SizedBox(width: 16),
           Expanded(
-            child: _buildFormField('Lease Value', _buildingController.leaseValueController,
-                inputType: TextInputType.number, prefixIcon: Icons.attach_money),
+            child: _buildFormField(
+                'Lease Value', _buildingController.leaseValueController,
+                inputType: TextInputType.number,
+                prefixIcon: Icons.attach_money),
           ),
         ],
       ),
@@ -280,13 +295,16 @@ class _BuildingUpdatePageState extends State<BuildingUpdatePage> with SingleTick
       Row(
         children: [
           Expanded(
-            child: _buildFormField('Council Tax Date', _buildingController.councilTaxDateController,
+            child: _buildFormField('Council Tax Date',
+                _buildingController.councilTaxDateController,
                 isDate: true, prefixIcon: Icons.date_range),
           ),
           const SizedBox(width: 16),
           Expanded(
-            child: _buildFormField('Council Tax Value', _buildingController.councilTaxValueController,
-                inputType: TextInputType.number, prefixIcon: Icons.attach_money),
+            child: _buildFormField('Council Tax Value',
+                _buildingController.councilTaxValueController,
+                inputType: TextInputType.number,
+                prefixIcon: Icons.attach_money),
           ),
         ],
       ),
@@ -295,7 +313,8 @@ class _BuildingUpdatePageState extends State<BuildingUpdatePage> with SingleTick
 
   List<Widget> _buildMediaFields() {
     return [
-      _buildFormField('Building Image URL', _buildingController.buildingImageController,
+      _buildFormField(
+          'Building Image URL', _buildingController.buildingImageController,
           prefixIcon: Icons.image),
       const SizedBox(height: 16),
 
@@ -319,7 +338,8 @@ class _BuildingUpdatePageState extends State<BuildingUpdatePage> with SingleTick
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(Icons.broken_image, size: 48, color: Colors.grey.shade400),
+                      Icon(Icons.broken_image,
+                          size: 48, color: Colors.grey.shade400),
                       const SizedBox(height: 8),
                       const Text('Image not available'),
                     ],
@@ -360,20 +380,22 @@ class _BuildingUpdatePageState extends State<BuildingUpdatePage> with SingleTick
       appBar: AppBar(
         title: const Text('Update Building'),
         actions: [
-          Obx(() => _buildingController.isLoading.value
-              ? const Center(child: Padding(
-            padding: EdgeInsets.symmetric(horizontal: 16),
-            child: SizedBox(
-              width: 20,
-              height: 20,
-              child: CircularProgressIndicator(strokeWidth: 2),
-            ),
-          ))
-              : IconButton(
-            icon: const Icon(Icons.save),
-            onPressed: () => _buildingController.updateBuilding(),
-            tooltip: 'Save Changes',
-          ),
+          Obx(
+            () => _buildingController.isLoading.value
+                ? const Center(
+                    child: Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 16),
+                    child: SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    ),
+                  ))
+                : IconButton(
+                    icon: const Icon(Icons.save),
+                    onPressed: () => _buildingController.updateBuilding(),
+                    tooltip: 'Save Changes',
+                  ),
           ),
         ],
         bottom: TabBar(
@@ -391,19 +413,22 @@ class _BuildingUpdatePageState extends State<BuildingUpdatePage> with SingleTick
             // Basic Info Tab
             SingleChildScrollView(
               padding: const EdgeInsets.all(16),
-              child: _buildFormSection('Basic Information', _buildBasicInfoFields()),
+              child: _buildFormSection(
+                  'Basic Information', _buildBasicInfoFields()),
             ),
 
             // Location Tab
             SingleChildScrollView(
               padding: const EdgeInsets.all(16),
-              child: _buildFormSection('Location Details', _buildLocationFields()),
+              child:
+                  _buildFormSection('Location Details', _buildLocationFields()),
             ),
 
             // Financial Tab
             SingleChildScrollView(
               padding: const EdgeInsets.all(16),
-              child: _buildFormSection('Financial Information', _buildFinancialFields()),
+              child: _buildFormSection(
+                  'Financial Information', _buildFinancialFields()),
             ),
 
             // // Media Tab
@@ -415,36 +440,51 @@ class _BuildingUpdatePageState extends State<BuildingUpdatePage> with SingleTick
         ),
       ),
       bottomNavigationBar: Obx(() => Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.05),
-              blurRadius: 5,
-              offset: const Offset(0, -3),
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.05),
+                  blurRadius: 5,
+                  offset: const Offset(0, -3),
+                ),
+              ],
             ),
-          ],
-        ),
-        child: ElevatedButton(
-          onPressed: _buildingController.isLoading.value
-              ? null
-              : () => _buildingController.updateBuilding(),
-          style: ElevatedButton.styleFrom(
-            minimumSize: const Size(double.infinity, 54),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
+            child: ElevatedButton(
+              onPressed: _buildingController.isLoading.value || isLoading
+                  ? null
+                  : () async {
+                if (_buildingController.buildingFormKey.currentState?.validate() ?? false) {
+                  await _buildingController.updateBuilding();
+                } else {
+                  Get.snackbar(
+                    "Validation Error",
+                    "Please fill all required fields.",
+                    backgroundColor: Colors.red[100],
+                    colorText: Colors.red[800],
+                    snackPosition: SnackPosition.BOTTOM ,
+                    margin: EdgeInsets.all(16),
+                    borderRadius: 10,
+                  );
+                }
+              },
+              style: ElevatedButton.styleFrom(
+                minimumSize: const Size(double.infinity, 54),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                padding: const EdgeInsets.symmetric(vertical: 12),
+              ),
+              child: _buildingController.isLoading.value
+                  ? const CircularProgressIndicator()
+                  : const Text(
+                      'Update Building',
+                      style:
+                          TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                    ),
             ),
-            padding: const EdgeInsets.symmetric(vertical: 12),
-          ),
-          child: _buildingController.isLoading.value
-              ? const CircularProgressIndicator()
-              : const Text(
-            'Update Building',
-            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-          ),
-        ),
-      )),
+          )),
     );
   }
 }

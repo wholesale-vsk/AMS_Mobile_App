@@ -4,7 +4,7 @@ import 'package:hexalyte_ams/services/api_environment.dart';
 import 'package:hexalyte_ams/services/auth/api_response_formatter.dart';
 
 class BuildingService {
-  final Dio dio = Dio(BaseOptions(baseUrl: DataEnvironment.baseURL));
+  final Dio dio = Dio();
   final FlutterSecureStorage _secureStorage = const FlutterSecureStorage();
 
   /// **Update Building Details**
@@ -53,7 +53,8 @@ class BuildingService {
         "ownerName": ownerName,
         "purchasePrice": purchasePrice,
         "purchaseDate": purchaseDate,
-        "buildingImage": buildingImage.isNotEmpty ? buildingImage : null, // ✅ Prevents empty image from being sent
+        "buildingImage": buildingImage.isNotEmpty ? buildingImage : null,
+        // ✅ Prevents empty image from being sent
         "purposeOfUse": purposeOfUse,
         "councilTax": councilTax,
         "councilTaxDate": councilTaxDate,
@@ -61,9 +62,10 @@ class BuildingService {
         "lease_date": leaseDate,
         "leaseValue": leaseValue,
       };
-
+      var url = "https://api.ams.hexalyte.com/asset/assets/$buildingId";
+      print('Updating building with URL: $url');
       final response = await dio.put(
-        '/asset/assets/$buildingId',
+        url,
         data: updateData,
         options: Options(
           headers: {
@@ -117,9 +119,6 @@ class BuildingService {
     required String leaseDate,
     required String purchaseDate,
     required String purchasePrice,
-
-
-
   }) async {
     print(
         'Building Details: $buildingName, $buildingType, $numberOfFloors, $totalArea, $buildingAddress, $buildingCity, $buildingProvince, $ownerName, $purposeOfUse, $councilTax, $councilTaxDate, $councilTaxValue, ');
@@ -148,14 +147,14 @@ class BuildingService {
           "ownerName": ownerName,
           "purchasePrice": purchasePrice,
           "purchaseDate": purchaseDate,
-          "buildingImage": buildingImage.isNotEmpty ? buildingImage : null, // ✅ Prevents empty image from being sent
+          "buildingImage": buildingImage.isNotEmpty ? buildingImage : null,
+          // ✅ Prevents empty image from being sent
           "purposeOfUse": purposeOfUse,
           "councilTax": councilTax,
           "councilTaxDate": councilTaxDate,
           "councilTaxValue": councilTaxValue,
           "lease_date": leaseDate,
           "leaseValue": leaseValue,
-
         },
         options: Options(
           headers: {

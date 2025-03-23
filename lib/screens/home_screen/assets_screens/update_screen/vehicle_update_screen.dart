@@ -430,7 +430,7 @@ class _VehicleUpdatePageState extends State<VehicleUpdatePage> with SingleTicker
                 "Please fill all required fields.",
                 backgroundColor: Colors.red[100],
                 colorText: Colors.red[800],
-                snackPosition: SnackPosition.BOTTOM,
+                snackPosition: SnackPosition.BOTTOM ,
                 margin: EdgeInsets.all(16),
                 borderRadius: 10,
               );

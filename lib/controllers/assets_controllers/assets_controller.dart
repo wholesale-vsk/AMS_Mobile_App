@@ -184,7 +184,6 @@ class AssetController extends GetxController {
       List<Building> buildings = (response['buildings'] ?? []).cast<Building>();
       List<Map<String, dynamic>> buildingAssets = buildings.map((b) => {
         "category": "Building",
-
         "name": (b.name?.trim().isNotEmpty ?? false) ? b.name!.trim() : "N/A",
         "buildingType": b.buildingType ?? "N/A",
         "numberOfFloors": b.numberOfFloors.toString(), // Ensures it's a string
@@ -196,10 +195,10 @@ class AssetController extends GetxController {
         "city": b.city ?? "N/A",
         "ownerName": b.ownerName ?? "N/A",
         "purchasePrice": b.purchasePrice.toString(), // Ensures it's a string
-        "purchaseDate": b.purchaseDate?.toString() ?? "N/A", // Convert DateTime properly
+        "purchaseDate": b.purchaseDate.toString() ?? "N/A", // Convert DateTime properly
         "leaseValue": b.leaseValue.toString(), // Ensures it's a string
-        "lease_date": b.leaseDate?.toString() ?? "N/A", // Convert DateTime properly
-
+        "lease_date": b.leaseDate.toString() ?? "N/A", // Convert DateTime properly
+        "buildingId": Uri.parse(b.link).pathSegments.last,
 
 
 
@@ -278,9 +277,11 @@ class AssetController extends GetxController {
         "city": l.city ?? "N/A",
         "purchaseDate": l.purchaseDate ?? "N/A",
         "purchasePrice": l.purchasePrice ?? "N/A",
-        // 'leaseValue': l.leaseValue ?? "N/A",
+        'leaseValue': l.leaseValue ?? "N/A",
         'lease_date': l.leaseDate ?? "N/A",
         "imageURL": l.imageURL ?? "",
+        "landId": Uri.parse(l.links).pathSegments.last,
+
       }).toList();
 
       _logger.i("🌱 Lands Loaded: ${landAssets.length}");

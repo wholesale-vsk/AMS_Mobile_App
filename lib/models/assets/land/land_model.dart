@@ -8,8 +8,9 @@ class Land {
   final String purchaseDate;
   final double purchasePrice;
   final String leaseDate;
-  // final String leaseValue;
+  final double leaseValue;
   final String imageURL;
+  final String links;
 
   Land({
     required this.name,
@@ -21,8 +22,9 @@ class Land {
     required this.purchaseDate,
     required this.purchasePrice,
     required this.leaseDate,
-    // required this.leaseValue,
+    required this.leaseValue,
     required this.imageURL,
+    required this.links
   });
 
   /// **✅ Convert JSON to `Land` object**
@@ -41,10 +43,18 @@ class Land {
       purchaseDate: json['purchaseDate'] ?? 'N/A',
       purchasePrice: (json['purchasePrice'] is num) ? (json['purchasePrice'] as num).toDouble() : 0.0,
       leaseDate: json['lease_date'] ?? 'N/A',
-      // leaseValue: json['leaseValue'] ?? 'N/A',
+      leaseValue: json['leaseValue'] ?? 'N/A',
       imageURL: json['imageURL'] is String ? json['imageURL'] : "",
+      links: json['_links']['self']['href'] ?? 'N/A',
     );
   }
+
+
+
+
+
+
+
 
   /// **✅ Convert `Land` object to JSON**
   Map<String, dynamic> toJson() {
@@ -58,8 +68,9 @@ class Land {
       'purchaseDate': purchaseDate,
       'purchasePrice': purchasePrice,
       'lease_date': leaseDate,
-      // 'leaseValue': leaseValue,
+      'leaseValue': leaseValue,
       'imageURL': imageURL,
+      'links': links,
       'category': 'Land', // ✅ Ensures filtering works
     };
   }

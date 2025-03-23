@@ -2,24 +2,16 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:hexalyte_ams/models/assets/building/building_model.dart';
 import 'package:hexalyte_ams/utils/theme/font_size.dart';
-import 'package:hexalyte_ams/utils/theme/responsive_size.dart';
+
 import '../../../../../controllers/Building_Controller/building_controller.dart';
 import '../../update_screen/building_update_screen.dart';
 
-class BuildingDetailsScreen extends StatefulWidget {
-  final dynamic asset;
+class BuildingDetailsScreen extends StatelessWidget {
+  final Map<String, dynamic>? building = Get.arguments as Map<String, dynamic>?;
 
-  const BuildingDetailsScreen({super.key, required this.asset});
+  BuildingDetailsScreen({super.key, required asset, required Map building});
 
-  @override
-  _BuildingDetailsScreenState createState() => _BuildingDetailsScreenState();
-}
-
-class _BuildingDetailsScreenState extends State<BuildingDetailsScreen> {
-  Building? building; // Nullable to prevent crashes
-  late BuildingController _buildingController;
-
-  @override
+  /* @override
   void initState() {
     super.initState();
 
@@ -46,14 +38,17 @@ class _BuildingDetailsScreenState extends State<BuildingDetailsScreen> {
       print("Error parsing building data: $e");
       building = null;
     }
-  }
+  }*/
 
   @override
   Widget build(BuildContext context) {
     final Color primaryColor = Theme.of(context).primaryColor;
-    final Color textColor = Theme.of(context).textTheme.bodyLarge?.color ?? Colors.black87;
+    final Color textColor =
+        Theme.of(context).textTheme.bodyLarge?.color ?? Colors.black87;
     final Color backgroundColor = Theme.of(context).scaffoldBackgroundColor;
     final bool isDarkMode = Theme.of(context).brightness == Brightness.dark;
+
+    print("Building Details Screen: $building");
 
     return Scaffold(
       backgroundColor: backgroundColor,
@@ -91,309 +86,293 @@ class _BuildingDetailsScreenState extends State<BuildingDetailsScreen> {
       body: building == null
           ? _buildErrorScreen()
           : Stack(
-        children: [
-          // Hero Image Section
-          _buildBuildingHeroImage(context),
+              children: [
+                // Hero Image Section
+                _buildBuildingHeroImage(context),
 
-          // Details Section with Draggable Sheet
-          DraggableScrollableSheet(
-            initialChildSize: 0.6,
-            minChildSize: 0.5,
-            maxChildSize: 0.9,
-            builder: (context, scrollController) {
-              return Container(
-                decoration: BoxDecoration(
-                  color: backgroundColor,
-                  borderRadius: const BorderRadius.vertical(top: Radius.circular(30)),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.1),
-                      blurRadius: 10,
-                      offset: const Offset(0, -5),
-                    ),
-                  ],
-                ),
-                child: SingleChildScrollView(
-                  controller: scrollController,
-                  padding: const EdgeInsets.only(bottom: 100),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // Drag handle
-                      Center(
-                        child: Container(
-                          margin: const EdgeInsets.only(top: 12, bottom: 16),
-                          height: 4,
-                          width: 40,
-                          decoration: BoxDecoration(
-                            color: Colors.grey.withOpacity(0.3),
-                            borderRadius: BorderRadius.circular(10),
+                // Details Section with Draggable Sheet
+                DraggableScrollableSheet(
+                  initialChildSize: 0.6,
+                  minChildSize: 0.5,
+                  maxChildSize: 0.9,
+                  builder: (context, scrollController) {
+                    return Container(
+                      decoration: BoxDecoration(
+                        color: backgroundColor,
+                        borderRadius: const BorderRadius.vertical(
+                            top: Radius.circular(30)),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.1),
+                            blurRadius: 10,
+                            offset: const Offset(0, -5),
                           ),
-                        ),
+                        ],
                       ),
-
-                      // Building name and type
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 24),
+                      child: SingleChildScrollView(
+                        controller: scrollController,
+                        padding: const EdgeInsets.only(bottom: 100),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Expanded(
-                                  child: Text(
-                                    building?.name ?? 'Unknown Building',
-                                    style: const TextStyle(
-                                      fontSize: FontSizes.extraLarge,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
+                            // Drag handle
+                            Center(
+                              child: Container(
+                                margin:
+                                    const EdgeInsets.only(top: 12, bottom: 16),
+                                height: 4,
+                                width: 40,
+                                decoration: BoxDecoration(
+                                  color: Colors.grey.withOpacity(0.3),
+                                  borderRadius: BorderRadius.circular(10),
                                 ),
-                                Container(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 12,
-                                    vertical: 6,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    color: primaryColor.withOpacity(0.2),
-                                    borderRadius: BorderRadius.circular(20),
-                                  ),
-                                  child: Text(
-                                    building?.buildingType ?? 'Unknown Type',
-                                    style: TextStyle(
-                                      color: primaryColor,
-                                      fontWeight: FontWeight.w600,
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              building?.city ?? 'Unknown Location',
-                              style: TextStyle(
-                                fontSize: FontSizes.medium,
-                                color: textColor.withOpacity(0.7),
                               ),
                             ),
+
+                            // Building name and type
+                            Padding(
+                              padding:
+                                  const EdgeInsets.symmetric(horizontal: 24),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Row(
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      Expanded(
+                                        child: Text(
+                                          building?['name'] ??
+                                              'Unknown Building',
+                                          style: const TextStyle(
+                                            fontSize: FontSizes.extraLarge,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                      ),
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 12,
+                                          vertical: 6,
+                                        ),
+                                        decoration: BoxDecoration(
+                                          color: primaryColor.withOpacity(0.2),
+                                          borderRadius:
+                                              BorderRadius.circular(20),
+                                        ),
+                                        child: Text(
+                                          building?['buildingType'] ??
+                                              'Unknown Type',
+                                          style: TextStyle(
+                                            color: primaryColor,
+                                            fontWeight: FontWeight.w600,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    building?['city'] ?? 'Unknown Location',
+                                    style: TextStyle(
+                                      fontSize: FontSizes.medium,
+                                      color: textColor.withOpacity(0.7),
+                                    ),
+                                  ),
+                                  const SizedBox(height: 24),
+                                ],
+                              ),
+                            ),
+
+                            // Key building stats
+                            Padding(
+                              padding:
+                                  const EdgeInsets.symmetric(horizontal: 16),
+                              child: Row(
+                                children: [
+                                  _buildStatCard(
+                                    context,
+                                    Icons.apartment,
+                                    'Floors',
+                                    building?['numberOfFloors']?.toString() ??
+                                        'N/A',
+                                    primaryColor,
+                                  ),
+                                  _buildStatCard(
+                                    context,
+                                    Icons.square_foot_outlined,
+                                    'Total Area',
+                                    building?['totalArea']?.toString() ?? 'N/A',
+                                    primaryColor,
+                                  ),
+                                  _buildStatCard(
+                                    context,
+                                    Icons.business_center_outlined,
+                                    'Purpose',
+                                    building?['purposeOfUse']?.toString() ??
+                                        'N/A',
+                                    primaryColor,
+                                  ),
+                                ],
+                              ),
+                            ),
+
                             const SizedBox(height: 24),
+
+                            // Details sections
+                            Padding(
+                              padding:
+                                  const EdgeInsets.symmetric(horizontal: 24),
+                              child: Text(
+                                'Building Information',
+                                style: TextStyle(
+                                  fontSize: FontSizes.large,
+                                  fontWeight: FontWeight.bold,
+                                  color: primaryColor,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(height: 16),
+
+                            _buildDetailsSection(
+                              'Property Information',
+                              [
+                                {
+                                  'label': 'Building Name',
+                                  'value': building?['name']
+                                },
+                                {
+                                  'label': 'Building Type',
+                                  'value': building?['buildingType']
+                                },
+                                {
+                                  'label': 'Number of Floors',
+                                  'value': building?['numberOfFloors']
+                                },
+                                {
+                                  'label': 'Total Area',
+                                  'value': building?['totalArea']
+                                },
+                                {
+                                  'label': 'Purpose of Use',
+                                  'value': building?['purposeOfUse']
+                                },
+                              ],
+                              context,
+                            ),
+
+                            _buildDetailsSection(
+                              'Location Information',
+                              [
+                                {
+                                  'label': 'Address',
+                                  'value': building?['address']
+                                },
+                                {'label': 'City', 'value': building?['city']},
+                                {
+                                  'label': 'Owner',
+                                  'value': building?['ownerName']
+                                },
+                              ],
+                              context,
+                            ),
+
+                            _buildDetailsSection(
+                              'Financial Information',
+                              [
+                                {
+                                  'label': 'Purchase Date',
+                                  'value': building?['purchaseDate']
+                                },
+                                {
+                                  'label': 'Purchase Price',
+                                  'value': building?['purchasePrice']
+                                },
+                                {
+                                  'label': 'Lease Date',
+                                  'value': building?['lease_date']
+                                },
+                                {
+                                  'label': 'Lease Value',
+                                  'value': building?['leaseValue']
+                                },
+                                {
+                                  'label': 'Council Tax Date',
+                                  'value': building?['councilTaxDate']
+                                },
+                                {
+                                  'label': 'Council Tax Value',
+                                  'value': building?['councilTaxValue']
+                                },
+                              ],
+                              context,
+                            ),
+
+                            // Additional information section - can be customized
+                            //               Padding(
+                            //                 padding: const EdgeInsets.all(16),
+                            //                 child: Container(
+                            //                   width: double.infinity,
+                            //                   padding: const EdgeInsets.all(16),
+                            //                   decoration: BoxDecoration(
+                            //                     color: primaryColor.withOpacity(0.1),
+                            //                     borderRadius: BorderRadius.circular(16),
+                            //                   ),
+                            //                   child: Column(
+                            //                     crossAxisAlignment: CrossAxisAlignment.start,
+                            //                     children: [
+                            //                       Row(
+                            //                         children: [
+                            //                           Icon(Icons.info_outline, color: primaryColor),
+                            //                           const SizedBox(width: 8),
+                            //                           Text(
+                            //                             'Additional Information',
+                            //                             style: TextStyle(
+                            //                               fontWeight: FontWeight.bold,
+                            //                               color: primaryColor,
+                            //                             ),
+                            //                           ),
+                            //                         ],
+                            //                       ),
+                            //                       const SizedBox(height: 8),
+                            //                       Text(
+                            //                         'This building is part of the organization\'s asset inventory. Tap the edit button to update details or add more information.',
+                            //                         style: TextStyle(
+                            //                           color: textColor.withOpacity(0.7),
+                            //                         ),
+                            //                       ),
+                            //                     ],
+                            //                   ),
+                            //                 ),
+                            //               ),
                           ],
                         ),
                       ),
-
-                      // Key building stats
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 16),
-                        child: Row(
-                          children: [
-                            _buildStatCard(
-                              context,
-                              Icons.apartment,
-                              'Floors',
-                              building?.numberOfFloors?.toString() ?? 'N/A',
-                              primaryColor,
-                            ),
-                            _buildStatCard(
-                              context,
-                              Icons.square_foot_outlined,
-                              'Total Area',
-                              building?.totalArea?.toString() ?? 'N/A',
-                              primaryColor,
-                            ),
-                            _buildStatCard(
-                              context,
-                              Icons.business_center_outlined,
-                              'Purpose',
-                              building?.purposeOfUse?.toString() ?? 'N/A',
-                              primaryColor,
-                            ),
-                          ],
-                        ),
-                      ),
-
-                      const SizedBox(height: 24),
-
-                      // Details sections
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 24),
-                        child: Text(
-                          'Building Information',
-                          style: TextStyle(
-                            fontSize: FontSizes.large,
-                            fontWeight: FontWeight.bold,
-                            color: primaryColor,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-
-                      _buildDetailsSection(
-                        'Property Information',
-                        [
-                          {'label': 'Building Name', 'value': building?.name},
-                          {'label': 'Building Type', 'value': building?.buildingType},
-                          {'label': 'Number of Floors', 'value': building?.numberOfFloors},
-                          {'label': 'Total Area', 'value': building?.totalArea},
-                          {'label': 'Purpose of Use', 'value': building?.purposeOfUse},
-                        ],
-                        context,
-                      ),
-
-                      _buildDetailsSection(
-                        'Location Information',
-                        [
-                          {'label': 'Address', 'value': building?.address},
-                          {'label': 'City', 'value': building?.city},
-                          {'label': 'Owner', 'value': building?.ownerName},
-                        ],
-                        context,
-                      ),
-
-                      _buildDetailsSection(
-                        'Financial Information',
-                        [
-                          {'label': 'Purchase Date', 'value': building?.purchaseDate},
-                          {'label': 'Purchase Price', 'value': building?.purchasePrice},
-                          {'label': 'Lease Date', 'value': building?.leaseDate},
-                          {'label': 'Lease Value', 'value': building?.leaseValue},
-                          {'label': 'Council Tax Date', 'value': building?.councilTaxDate},
-                          {'label': 'Council Tax Value', 'value': building?.councilTaxValue},
-                        ],
-                        context,
-                      ),
-
-                      // Additional information section - can be customized
-        //               Padding(
-        //                 padding: const EdgeInsets.all(16),
-        //                 child: Container(
-        //                   width: double.infinity,
-        //                   padding: const EdgeInsets.all(16),
-        //                   decoration: BoxDecoration(
-        //                     color: primaryColor.withOpacity(0.1),
-        //                     borderRadius: BorderRadius.circular(16),
-        //                   ),
-        //                   child: Column(
-        //                     crossAxisAlignment: CrossAxisAlignment.start,
-        //                     children: [
-        //                       Row(
-        //                         children: [
-        //                           Icon(Icons.info_outline, color: primaryColor),
-        //                           const SizedBox(width: 8),
-        //                           Text(
-        //                             'Additional Information',
-        //                             style: TextStyle(
-        //                               fontWeight: FontWeight.bold,
-        //                               color: primaryColor,
-        //                             ),
-        //                           ),
-        //                         ],
-        //                       ),
-        //                       const SizedBox(height: 8),
-        //                       Text(
-        //                         'This building is part of the organization\'s asset inventory. Tap the edit button to update details or add more information.',
-        //                         style: TextStyle(
-        //                           color: textColor.withOpacity(0.7),
-        //                         ),
-        //                       ),
-        //                     ],
-        //                   ),
-        //                 ),
-        //               ),
-                     ],
-                   ),
+                    );
+                  },
                 ),
-               );
-             },
-          ),
-        ],
-      ),
+              ],
+            ),
       floatingActionButton: building != null
           ? FloatingActionButton.extended(
-        onPressed: () async {
-          try {
-            // Prepare building data for the controller
-            if (building != null) {
-              var buildingData = _buildingToMap(building!);
+              onPressed: (){
+                Get.to(() => BuildingUpdatePage(
+                  building: building!,
+                  buildingData: building,
 
-              // Populate controller with current building data
-              _buildingController.populateFormForEditing(buildingData);
-
-              // Navigate to the BuildingUpdatePage
-              final result = await Get.to(
-                    () => BuildingUpdatePage(
-                  building: building,
-                  asset: widget.asset,
-                ),
-                transition: Transition.rightToLeft,
-              );
-
-              if (result != null) {
-                // Update local building with returned data
-                setState(() {
-                  if (result is Building) {
-                    building = result;
-                  } else if (result is Map<String, dynamic>) {
-                    try {
-                      // Try to update the building from the returned map
-                      building = Building.fromJson(result);
-
-                      // Also update the controller with this data for consistency
-                      _buildingController.populateFormForEditing(result);
-                    } catch (e) {
-                      print("Error parsing building data: $e");
-                    }
-                  }
-                });
-
-                Get.snackbar(
-                  'Success',
-                  'Building details updated successfully!',
-                  snackPosition: SnackPosition.TOP,
-                );
-              }
-            }
-          } catch (e) {
-            print("Error updating building: $e");
-            Get.snackbar(
-              'Error',
-              'Failed to update building details: $e',
-              snackPosition: SnackPosition.TOP,
-              backgroundColor: Colors.red.withOpacity(0.1),
-              colorText: Colors.red,
-            );
-          }
-        },
-        backgroundColor: primaryColor,
-        icon: const Icon(Icons.edit, color: Colors.white),
-        label: const Text("Edit Building"),
-      )
+                  asset: null,
+                ));
+              },
+              backgroundColor: primaryColor,
+              icon: const Icon(Icons.edit, color: Colors.white),
+              label: const Text("Edit Building"),
+            )
           : null, // Hide button if no building data
     );
   }
 
-  // Convert Building model to Map for controller
-  Map<String, dynamic> _buildingToMap(Building building) {
-    return {
-      'name': building.name,
-      'buildingType': building.buildingType,
-      'numberOfFloors': building.numberOfFloors?.toString(),
-      'totalArea': building.totalArea?.toString(),
-      'address': building.address,
-      'city': building.city,
-      'ownerName': building.ownerName,
-      'purposeOfUse': building.purposeOfUse,
-      'councilTaxDate': building.councilTaxDate,
-      'councilTaxValue': building.councilTaxValue?.toString(),
-      'lease_date': building.leaseDate, // Note: the controller expects 'lease_date' not 'leaseDate'
-      'leaseValue': building.leaseValue?.toString(),
-      'purchaseDate': building.purchaseDate,
-      'purchasePrice': building.purchasePrice?.toString(),
-      'buildingImage': building.imageURL,
-    };
-  }
 
   /// Error Screen (Handles Null Building)
   Widget _buildErrorScreen() {
@@ -429,12 +408,13 @@ class _BuildingDetailsScreenState extends State<BuildingDetailsScreen> {
         fit: StackFit.expand,
         children: [
           // Building Image
-          building?.imageURL != null && building!.imageURL.isNotEmpty
+          building?['imageURL'] != null && building!['imageURL'].isNotEmpty
               ? Image.network(
-            building!.imageURL,
-            fit: BoxFit.cover,
-            errorBuilder: (context, error, stackTrace) => _defaultBuildingImage(),
-          )
+                  building!['imageURL'],
+                  fit: BoxFit.cover,
+                  errorBuilder: (context, error, stackTrace) =>
+                      _defaultBuildingImage(),
+                )
               : _defaultBuildingImage(),
 
           // Gradient overlay
@@ -464,7 +444,7 @@ class _BuildingDetailsScreenState extends State<BuildingDetailsScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        building?.name ?? 'Unknown Building',
+                        building?['name'] ?? 'Unknown Building',
                         style: const TextStyle(
                           color: Colors.white,
                           fontSize: FontSizes.extraLarge,
@@ -475,7 +455,7 @@ class _BuildingDetailsScreenState extends State<BuildingDetailsScreen> {
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        building?.buildingType ?? 'Unknown Type',
+                        building?['buildingType'] ?? 'Unknown Type',
                         style: TextStyle(
                           color: Colors.white.withOpacity(0.8),
                           fontSize: FontSizes.medium,
@@ -499,7 +479,8 @@ class _BuildingDetailsScreenState extends State<BuildingDetailsScreen> {
     );
   }
 
-  Widget _buildStatCard(BuildContext context, IconData icon, String label, String value, Color primaryColor) {
+  Widget _buildStatCard(BuildContext context, IconData icon, String label,
+      String value, Color primaryColor) {
     return Expanded(
       child: Card(
         elevation: 0,
@@ -538,7 +519,8 @@ class _BuildingDetailsScreenState extends State<BuildingDetailsScreen> {
     );
   }
 
-  Widget _buildDetailsSection(String title, List<Map<String, dynamic>> details, BuildContext context) {
+  Widget _buildDetailsSection(
+      String title, List<Map<String, dynamic>> details, BuildContext context) {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       padding: const EdgeInsets.all(16),
@@ -563,10 +545,10 @@ class _BuildingDetailsScreenState extends State<BuildingDetailsScreen> {
           ),
           const Divider(),
           ...details.map((detail) => _buildDetailItem(
-            detail['label'] ?? '',
-            detail['value']?.toString() ?? 'N/A',
-            context,
-          )),
+                detail['label'] ?? '',
+                detail['value']?.toString() ?? 'N/A',
+                context,
+              )),
         ],
       ),
     );
@@ -581,7 +563,11 @@ class _BuildingDetailsScreenState extends State<BuildingDetailsScreen> {
           Text(
             label,
             style: TextStyle(
-              color: Theme.of(context).textTheme.bodyMedium?.color?.withOpacity(0.7),
+              color: Theme.of(context)
+                  .textTheme
+                  .bodyMedium
+                  ?.color
+                  ?.withOpacity(0.7),
             ),
           ),
           Text(

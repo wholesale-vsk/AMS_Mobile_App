@@ -36,7 +36,7 @@ class BuildingController extends GetxController {
       return;
     }
 
-    isLoading(true);
+    // isLoading(true);
 
     try {
       final response = await buildingService.updateBuilding(
