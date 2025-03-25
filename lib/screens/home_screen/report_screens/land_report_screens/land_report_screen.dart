@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../../../controllers/assets_controllers/assets_controller.dart';
+
 import '../../../../services/local/pdf_service/pdf_generate_for_single_asset.dart';
 import '../../../../utils/theme/font_size.dart';
 
@@ -207,13 +208,31 @@ class _LandReportScreenState extends State<LandReportScreen>
                 onPressed: () async {
                   try {
                     final landData = [land];
-                    await PdfGenerator.generatePdf(context, 'Land',
-                        data: landData);
-                    Get.snackbar("Success", "PDF generated for $name",
-                        backgroundColor: Colors.green, colorText: Colors.white);
+                    await ModernPdfGenerator.generateReport(
+                        context,
+                        'Land Details',
+                        data: landData,
+                        companyName: 'Hexalyte Technology'
+                    );
+                    Get.snackbar(
+                        "Success",
+                        "PDF generated for $name",
+                        backgroundColor: Colors.green.shade700,
+                        colorText: Colors.white,
+                        borderRadius: 10,
+                        margin: const EdgeInsets.all(8),
+                        icon: const Icon(Icons.check_circle, color: Colors.white)
+                    );
                   } catch (e) {
-                    Get.snackbar("Error", "Failed to generate PDF: $e",
-                        backgroundColor: Colors.red, colorText: Colors.white);
+                    Get.snackbar(
+                        "Error",
+                        "Failed to generate PDF: $e",
+                        backgroundColor: Colors.red.shade700,
+                        colorText: Colors.white,
+                        borderRadius: 10,
+                        margin: const EdgeInsets.all(8),
+                        icon: const Icon(Icons.error, color: Colors.white)
+                    );
                   }
                 },
                 icon: const Icon(Icons.picture_as_pdf, size: 20),
@@ -472,10 +491,11 @@ class _LandReportScreenState extends State<LandReportScreen>
                   .where((asset) => asset['category'] == 'Land')
                   .toList();
 
-              await PdfGenerator.generatePdf(
+              await ModernPdfGenerator.generateReport(
                   context,
-                  'Land',
-                  data: landData
+                  'Land Properties Inventory',
+                  data: landData,
+                  companyName: 'Hexalyte Technology'
               );
 
               Get.snackbar(

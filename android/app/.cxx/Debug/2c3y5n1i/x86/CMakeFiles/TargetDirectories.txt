@@ -1,0 +1,2 @@
+C:/Users/akila/StudioProjects/AMS-Mobile-App-master-main/android/app/.cxx/Debug/2c3y5n1i/x86/CMakeFiles/edit_cache.dir
+C:/Users/akila/StudioProjects/AMS-Mobile-App-master-main/android/app/.cxx/Debug/2c3y5n1i/x86/CMakeFiles/rebuild_cache.dir

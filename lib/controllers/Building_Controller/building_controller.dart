@@ -1,13 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:hexalyte_ams/services/data/building_service.dart';
+import 'package:logger/logger.dart';
 
 class BuildingController extends GetxController {
   final BuildingService buildingService = BuildingService();
+  final Logger _logger = Logger();
 
   final buildingFormKey = GlobalKey<FormState>();
 
-  // Text Controllers (same as before)
+  // Text Controllers
   final TextEditingController buildingIdController = TextEditingController();
   final TextEditingController buildingNameController = TextEditingController();
   final TextEditingController buildingTypeController = TextEditingController();
@@ -29,6 +31,52 @@ class BuildingController extends GetxController {
 
   var isLoading = false.obs;
 
+  /// **Add New Building**
+  Future<void> addBuilding() async {
+    if (!buildingFormKey.currentState!.validate()) {
+      Get.snackbar('Validation Error', 'Please fill in all required fields.');
+      return;
+    }
+
+    isLoading(true);
+
+    try {
+      final response = await buildingService.addBuilding(
+        buildingId: buildingIdController.text.trim(),
+        buildingName: buildingNameController.text.trim(),
+        buildingType: buildingTypeController.text.trim().toUpperCase(),
+        numberOfFloors: numberOfFloorsController.text.trim(),
+        totalArea: totalAreaController.text.trim(),
+        buildingAddress: buildingAddressController.text.trim(),
+        buildingCity: buildingCityController.text.trim(),
+        buildingProvince: buildingProvinceController.text.trim(),
+        ownerName: ownerNameController.text.trim(),
+        purchasePrice: purchasePriceController.text.trim(),
+        purchaseDate: purchaseDateController.text.trim(),
+        buildingImage: getSelectedImagePath(buildingImageController),
+        purposeOfUse: purposeOfUseController.text.trim(),
+        councilTax: councilTaxController.text.trim(),
+        councilTaxDate: councilTaxDateController.text.trim(),
+        councilTaxValue: councilTaxValueController.text.trim(),
+        leaseDate: leaseDateController.text.trim(),
+        leaseValue: leaseValueController.text.trim(), image: '',
+      );
+
+      if (response.isSuccess) {
+        Get.snackbar('Success', response.message ?? 'Building added successfully.');
+        clearForm();
+      } else {
+        Get.snackbar('Error', response.message ?? 'Failed to add building.');
+      }
+    } catch (e, stackTrace) {
+      debugPrint("Exception in addBuilding: $e");
+      debugPrint("StackTrace: $stackTrace");
+      Get.snackbar('Error', 'An unexpected error occurred.');
+    } finally {
+      isLoading(false);
+    }
+  }
+
   /// **Update Existing Building**
   Future<void> updateBuilding() async {
     if (!buildingFormKey.currentState!.validate()) {
@@ -36,7 +84,7 @@ class BuildingController extends GetxController {
       return;
     }
 
-    // isLoading(true);
+    isLoading(true);
 
     try {
       final response = await buildingService.updateBuilding(
@@ -59,6 +107,7 @@ class BuildingController extends GetxController {
         leaseDate: leaseDateController.text.trim(),
         leaseValue: leaseValueController.text.trim(),
       );
+      _logger.i('Response for test: $response');
 
       if (response.isSuccess) {
         Get.snackbar('Success', response.message ?? 'Building updated successfully.');
@@ -160,12 +209,6 @@ class BuildingController extends GetxController {
       controller.dispose();
     }
 
-    buildingFormKey.currentState?.dispose();
-
     super.onClose();
   }
-
-  addBuilding() {}
-
-
 }

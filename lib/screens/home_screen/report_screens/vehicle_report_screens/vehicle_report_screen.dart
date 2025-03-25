@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../../../controllers/assets_controllers/assets_controller.dart';
+
 import '../../../../services/local/pdf_service/pdf_generate_for_single_asset.dart';
 import '../../../../utils/theme/font_size.dart';
 
@@ -278,13 +279,31 @@ class VehicleReportScreen extends StatelessWidget {
                 onPressed: () async {
                   try {
                     final vehicleData = [vehicle];
-                    await PdfGenerator.generatePdf(context, 'Vehicle',
-                        data: vehicleData);
-                    Get.snackbar("Success", "PDF generated for $registrationNo",
-                        backgroundColor: Colors.green, colorText: Colors.white);
+                    await ModernPdfGenerator.generateReport(
+                        context,
+                        'Vehicle Details',
+                        data: vehicleData,
+                        companyName: 'Hexalyte Technology'
+                    );
+                    Get.snackbar(
+                        "Success",
+                        "PDF generated for $registrationNo",
+                        backgroundColor: Colors.green.shade700,
+                        colorText: Colors.white,
+                        margin: const EdgeInsets.all(8),
+                        borderRadius: 10,
+                        icon: const Icon(Icons.check_circle, color: Colors.white)
+                    );
                   } catch (e) {
-                    Get.snackbar("Error", "Failed to generate PDF: $e",
-                        backgroundColor: Colors.red, colorText: Colors.white);
+                    Get.snackbar(
+                        "Error",
+                        "Failed to generate PDF: $e",
+                        backgroundColor: Colors.red.shade700,
+                        colorText: Colors.white,
+                        margin: const EdgeInsets.all(8),
+                        borderRadius: 10,
+                        icon: const Icon(Icons.error, color: Colors.white)
+                    );
                   }
                 },
                 icon: const Icon(Icons.picture_as_pdf, size: 20),
@@ -588,10 +607,11 @@ class VehicleReportScreen extends StatelessWidget {
                   .where((asset) => asset['category'] == 'Vehicle')
                   .toList();
 
-              await PdfGenerator.generatePdf(
+              await ModernPdfGenerator.generateReport(
                   context,
-                  'Vehicle',
-                  data: vehicleData
+                  'Vehicle Fleet Inventory',
+                  data: vehicleData,
+                  companyName: 'Hexalyte Technology'
               );
 
               Get.snackbar(

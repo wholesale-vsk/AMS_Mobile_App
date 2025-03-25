@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../../../controllers/assets_controllers/assets_controller.dart';
+
 import '../../../../services/local/pdf_service/pdf_generate_for_single_asset.dart';
 import '../../../../utils/theme/font_size.dart';
 
@@ -204,13 +205,31 @@ class _BuildingReportScreenState extends State<BuildingReportScreen>
                 onPressed: () async {
                   try {
                     final buildingData = [building];
-                    await PdfGenerator.generatePdf(context, 'Building',
-                        data: buildingData);
-                    Get.snackbar("Success", "PDF generated for $name",
-                        backgroundColor: Colors.green, colorText: Colors.white);
+                    await ModernPdfGenerator.generateReport(
+                        context,
+                        'Building',
+                        data: buildingData,
+                        companyName: 'Hexalyte Technology'
+                    );
+                    Get.snackbar(
+                        "Success",
+                        "PDF generated for $name",
+                        backgroundColor: Colors.green.shade700,
+                        colorText: Colors.white,
+                        borderRadius: 10,
+                        margin: const EdgeInsets.all(8),
+                        icon: const Icon(Icons.check_circle, color: Colors.white)
+                    );
                   } catch (e) {
-                    Get.snackbar("Error", "Failed to generate PDF: $e",
-                        backgroundColor: Colors.red, colorText: Colors.white);
+                    Get.snackbar(
+                        "Error",
+                        "Failed to generate PDF: $e",
+                        backgroundColor: Colors.red.shade700,
+                        colorText: Colors.white,
+                        borderRadius: 10,
+                        margin: const EdgeInsets.all(8),
+                        icon: const Icon(Icons.error, color: Colors.white)
+                    );
                   }
                 },
                 icon: const Icon(Icons.picture_as_pdf, size: 20),
@@ -469,10 +488,11 @@ class _BuildingReportScreenState extends State<BuildingReportScreen>
                   .where((asset) => asset['category'] == 'Building')
                   .toList();
 
-              await PdfGenerator.generatePdf(
+              await ModernPdfGenerator.generateReport(
                   context,
-                  'Building',
-                  data: buildingsData
+                  'Buildings Inventory',
+                  data: buildingsData,
+                  companyName: 'Hexalyte Technology'
               );
 
               Get.snackbar(

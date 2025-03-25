@@ -79,6 +79,9 @@ class AddBuildingScreen extends StatelessWidget {
                       _buildTextField('City', buildingController.buildingCityController,
                           prefixIcon: Icons.location_city),
                       const SizedBox(height: 16),
+                      _buildTextField('Province', buildingController.buildingProvinceController,
+                          prefixIcon: Icons.map),
+                      const SizedBox(height: 16),
                       _buildTextField('Owner Name', buildingController.ownerNameController,
                           prefixIcon: Icons.person),
                       const SizedBox(height: 16),
@@ -114,6 +117,9 @@ class AddBuildingScreen extends StatelessWidget {
                   context,
                   Column(
                     children: [
+                      _buildTextField('Council Tax', buildingController.councilTaxController,
+                          prefixIcon: Icons.account_balance_wallet),
+                      const SizedBox(height: 16),
                       _buildTextField('Council Cost', buildingController.councilTaxValueController,
                           prefixIcon: Icons.construction, isNumeric: true),
                       const SizedBox(height: 16),
@@ -230,7 +236,7 @@ class AddBuildingScreen extends StatelessWidget {
             color: Colors.grey.withOpacity(0.1),
             spreadRadius: 1,
             blurRadius: 5,
-            offset: const Offset(0, 3),
+            offset: const Offset(0, 8),
           ),
         ],
       ),
