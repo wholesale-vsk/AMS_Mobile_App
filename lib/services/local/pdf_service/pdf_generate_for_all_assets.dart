@@ -10,10 +10,8 @@ import '../../../controllers/assets_controllers/assets_controller.dart';
 class PdfGeneratorForAll {
   static Future<void> generatePdf(BuildContext context, String reportType, {required List<Map<String, dynamic>> data}) async {
     try {
-      final AssetController assetsController = Get.put(AssetController());
-      final allAssets = assetsController.filteredAssets;
-
-      if (allAssets.isEmpty) {
+      // No need to reinitialize the controller as we're using passed data
+      if (data.isEmpty) {
         Get.snackbar(
           'No Data', 'No assets available to generate the report.',
           backgroundColor: Colors.red, colorText: Colors.white,
@@ -21,7 +19,7 @@ class PdfGeneratorForAll {
         return;
       }
 
-      final tables = getAssetSummaryData(allAssets);
+      final tables = getAssetSummaryData(data);
 
       // Create PDF document
       PdfDocument document = PdfDocument()
@@ -32,10 +30,10 @@ class PdfGeneratorForAll {
       final graphics = page.graphics;
       final pageWidth = page.getClientSize().width;
 
-      // **Add Header with Background**
+      // Add Header with Background
       final headerRect = Rect.fromLTWH(0, 0, pageWidth, 50);
       graphics.drawRectangle(
-        brush: PdfSolidBrush(PdfColor(0, 51, 102)), // Dark Blue Header
+        brush: PdfSolidBrush(PdfColor(0, 128, 128)), // Teal to match UI color scheme
         bounds: headerRect,
       );
 
@@ -66,6 +64,7 @@ class PdfGeneratorForAll {
       print('PDF generated successfully: $reportType Report');
     } catch (e) {
       print('Error generating PDF: $e');
+      rethrow; // Rethrow to allow the caller to handle the error
     }
   }
 
@@ -73,16 +72,12 @@ class PdfGeneratorForAll {
   static List<Map<String, dynamic>> getAssetSummaryData(List<dynamic> assets) {
     List<Map<String, dynamic>> tables = [];
 
-    // Grouping assets
-    Map<String, List<dynamic>> assetGroups = {
-      'Building': [],
-      'Land': [],
-      'Vehicle': [],
-      'Equipment': [],
-    };
+    // Grouping assets by category
+    Map<String, List<dynamic>> assetGroups = {};
 
     for (var asset in assets) {
-      String type = asset['c-type']?.toString() ?? 'Unknown';
+      // Use 'category' field as in the UI code, with fallback
+      String type = asset['category']?.toString() ?? 'Unknown';
       assetGroups.update(type, (list) => list..add(asset), ifAbsent: () => [asset]);
     }
 
@@ -91,9 +86,12 @@ class PdfGeneratorForAll {
       return NumberFormat("#,###.00").format(value);
     }
 
-    double calculateTotalValue(List<dynamic> assetsList) {
+    double calculateTotalValue(List<dynamic>? assetsList) {
+      if (assetsList == null || assetsList.isEmpty) return 0.0;
+
       return assetsList.fold(0.0, (sum, asset) {
-        dynamic value = asset['value'];
+        // Use 'purchasePrice' field as in the UI code, with fallback
+        dynamic value = asset['purchasePrice'] ?? asset['value'] ?? 0.0;
         double parsedValue = value is num
             ? value.toDouble()
             : double.tryParse(value.toString().replaceAll(',', '')) ?? 0.0;
@@ -101,15 +99,23 @@ class PdfGeneratorForAll {
       });
     }
 
+    // Prepare table data
+    List<List<String>> tableData = [
+      ['Asset Type', 'Total Count', 'Total Value'],
+    ];
+
+    // Add a row for each asset category
+    assetGroups.forEach((category, categoryAssets) {
+      tableData.add([
+        category,
+        categoryAssets.length.toString(),
+        formatNumber(calculateTotalValue(categoryAssets))
+      ]);
+    });
+
     tables.add({
       'title': 'Asset Summary',
-      'data': [
-        ['Asset Type', 'Total Count', 'Total Value '],
-        ['Building', assetGroups['Building']!.length.toString(), formatNumber(calculateTotalValue(assetGroups['Building']!))],
-        ['Land', assetGroups['Land']!.length.toString(), formatNumber(calculateTotalValue(assetGroups['Land']!))],
-        ['Vehicle', assetGroups['Vehicle']!.length.toString(), formatNumber(calculateTotalValue(assetGroups['Vehicle']!))],
-        ['Equipment', assetGroups['Equipment']!.length.toString(), formatNumber(calculateTotalValue(assetGroups['Equipment']!))],
-      ]
+      'data': tableData
     });
 
     return tables;
@@ -123,7 +129,7 @@ class PdfGeneratorForAll {
         final graphics = page.graphics;
         final pageWidth = page.getClientSize().width;
 
-        // **Draw Table Title with Underline**
+        // Draw Table Title with Underline
         graphics.drawString(
           table['title'],
           PdfStandardFont(PdfFontFamily.helvetica, 18, style: PdfFontStyle.bold),
@@ -131,25 +137,25 @@ class PdfGeneratorForAll {
           format: PdfStringFormat(alignment: PdfTextAlignment.left),
         );
         currentY += 30;
-        graphics.drawLine(PdfPen(PdfColor(0, 51, 102)), Offset(0, currentY), Offset(pageWidth, currentY));
+        graphics.drawLine(PdfPen(PdfColor(0, 128, 128)), Offset(0, currentY), Offset(pageWidth, currentY));
         currentY += 10;
 
-        // **Create Table Grid**
+        // Create Table Grid
         PdfGrid grid = PdfGrid();
         grid.columns.add(count: table['data'][0].length);
 
-        // **Create Header Row with Blue Background**
+        // Create Header Row with Teal Background to match UI
         PdfGridRow header = grid.headers.add(1)[0];
         for (int i = 0; i < table['data'][0].length; i++) {
           header.cells[i].value = table['data'][0][i];
         }
         header.style = PdfGridCellStyle(
-          backgroundBrush: PdfBrushes.darkBlue,
+          backgroundBrush: PdfSolidBrush(PdfColor(0, 128, 128)), // Teal to match UI
           textBrush: PdfBrushes.white,
           font: PdfStandardFont(PdfFontFamily.helvetica, 12, style: PdfFontStyle.bold),
         );
 
-        // **Add Data Rows with Alternating Colors**
+        // Add Data Rows with Alternating Colors
         for (int i = 1; i < table['data'].length; i++) {
           PdfGridRow row = grid.rows.add();
           for (int j = 0; j < table['data'][i].length; j++) {
@@ -157,17 +163,17 @@ class PdfGeneratorForAll {
           }
 
           if (i % 2 == 0) {
-            row.style.backgroundBrush = PdfBrushes.lightGray;
+            row.style.backgroundBrush = PdfSolidBrush(PdfColor(230, 230, 230));
           }
         }
 
-        // **Set Grid Style**
+        // Set Grid Style
         grid.style = PdfGridStyle(
           cellPadding: PdfPaddings(left: 10, right: 10, top: 5, bottom: 5),
           font: PdfStandardFont(PdfFontFamily.helvetica, 10),
         );
 
-        // **Draw Grid and Update Position**
+        // Draw Grid and Update Position
         final result = grid.draw(
           page: page,
           bounds: Rect.fromLTWH(0, currentY, pageWidth, 0),
@@ -177,7 +183,7 @@ class PdfGeneratorForAll {
       return currentY;
     } catch (e) {
       print('Error in addAssetSummaryTable: $e');
-      return currentY;
+      rethrow; // Rethrow to allow proper error handling
     }
   }
 }

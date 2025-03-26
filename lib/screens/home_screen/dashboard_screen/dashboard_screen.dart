@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:get/get.dart';
+import 'package:hexalyte_ams/routes/app_routes.dart';
 import '../../../controllers/assets_controllers/assets_controller.dart';
 import '../../../utils/theme/app_theme_management.dart';
 import '../../../utils/theme/responsive_size.dart';
@@ -471,19 +472,19 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
                 'Building',
                 Icons.apartment_rounded,
                 const Color(0xFF3498DB),
-                    () => Get.toNamed('/add-building'),
+                    () => Get.toNamed(AppRoutes.ADD_BUILDING_SCREEN),
               ),
               _buildAssetTypeButton(
                 'Land',
                 Icons.landscape_rounded,
                 const Color(0xFF2ECC71),
-                    () => Get.toNamed('/add-land'),
+                    () => Get.toNamed(AppRoutes.ADD_LAND_SCREEN),
               ),
               _buildAssetTypeButton(
                 'Vehicle',
                 Icons.directions_car_rounded,
                 const Color(0xFFE67E22),
-                    () => Get.toNamed('/add-vehicle'),
+                    () => Get.toNamed(AppRoutes.ADD_VEHICLE_SCREEN),
               ),
             ],
           ),

@@ -98,9 +98,8 @@ class _AssetsViewScreenState extends State<AssetsViewScreen> {
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
-
           // Add navigation to asset creation screen
-          // Get.toNamed(AppRoutes.CREATE_ASSET_SCREEN);
+          Get.toNamed(AppRoutes.ADD_ASSET_SCREEN);
         },
         backgroundColor: Colors.blue,
         child: const Icon(Icons.add, color: Colors.white),
