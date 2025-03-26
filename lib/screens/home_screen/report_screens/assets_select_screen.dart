@@ -9,95 +9,302 @@ class AssetsSelectForReports extends StatefulWidget {
   _AssetsSelectForReportsState createState() => _AssetsSelectForReportsState();
 }
 
-class _AssetsSelectForReportsState extends State<AssetsSelectForReports> {
-  double opacity = 0.0;
+class _AssetsSelectForReportsState extends State<AssetsSelectForReports> with SingleTickerProviderStateMixin {
+  late AnimationController _animationController;
+  late Animation<double> _fadeAnimation;
+  late Animation<Offset> _slideAnimation;
+
+  final List<ReportOption> reportOptions = [
+    ReportOption(
+      title: "Vehicle Reports",
+      icon: Icons.directions_car_rounded,
+      route: AppRoutes.VEHICLE_REPORT_SCREEN,
+      description: "Analyze and track all vehicle assets",
+      color: Colors.blue,
+    ),
+    ReportOption(
+      title: "Land Reports",
+      icon: Icons.landscape_rounded,
+      route: AppRoutes.LAND_REPORT_SCREEN,
+      description: "View details about land properties",
+      color: Colors.green,
+    ),
+    ReportOption(
+      title: "Building Reports",
+      icon: Icons.apartment_rounded,
+      route: AppRoutes.BUILDING_REPORT_SCREEN,
+      description: "Get insights on building assets",
+      color: Colors.orange,
+    ),
+    ReportOption(
+      title: "Total Assets Overview",
+      icon: Icons.dashboard_rounded,
+      route: AppRoutes.TOTAL_ASSETS_REPORT_SCREEN,
+      description: "Complete overview of all assets",
+      color: Colors.purple,
+    ),
+  ];
 
   @override
   void initState() {
     super.initState();
+    _animationController = AnimationController(
+      vsync: this,
+      duration: Duration(milliseconds: 800),
+    );
+
+    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(
+        parent: _animationController,
+        curve: Interval(0.0, 0.5, curve: Curves.easeOut),
+      ),
+    );
+
+    _slideAnimation = Tween<Offset>(
+      begin: Offset(0, 0.2),
+      end: Offset.zero,
+    ).animate(
+      CurvedAnimation(
+        parent: _animationController,
+        curve: Interval(0.0, 0.5, curve: Curves.easeOut),
+      ),
+    );
+
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      setState(() {
-        opacity = 1.0;
-      });
+      _animationController.forward();
     });
+  }
+
+  @override
+  void dispose() {
+    _animationController.dispose();
+    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     bool isDarkMode = Get.isDarkMode;
-    final Color primaryColor = Theme.of(context).primaryColor;
-    final Color backgroundColor = isDarkMode ? Colors.black : Colors.white;
+    final Color backgroundColor = isDarkMode
+        ? Color(0xFF121212)
+        : Color(0xFFF5F7FA);
+    final Color cardColor = isDarkMode
+        ? Color(0xFF1E1E1E)
+        : Colors.white;
+    final Color textColor = isDarkMode
+        ? Colors.white
+        : Color(0xFF2D3142);
+    final Color subtitleColor = isDarkMode
+        ? Colors.grey[400]!
+        : Color(0xFF9A9A9A);
 
     return Scaffold(
+      backgroundColor: backgroundColor,
+      extendBodyBehindAppBar: true,
       appBar: AppBar(
-        backgroundColor: backgroundColor,
+        backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
-          icon: Icon(Icons.arrow_back, color: isDarkMode ? Colors.white : Colors.black),
+          icon: Icon(
+            Icons.arrow_back_ios_new_rounded,
+            color: isDarkMode ? Colors.white : Colors.black87,
+          ),
           onPressed: () => Get.back(),
         ),
-        title: Text(
-          "Asset Reports",
-          style: TextStyle(
-            fontSize: 22,
-            fontWeight: FontWeight.bold,
-            color: isDarkMode ? Colors.white : Colors.black,
+        // actions: [
+        //   IconButton(
+        //     icon: Icon(
+        //       isDarkMode ? Icons.light_mode_outlined : Icons.dark_mode_outlined,
+        //       color: isDarkMode ? Colors.white : Colors.black87,
+        //     ),
+        //     onPressed: () => Get.changeThemeMode(
+        //       isDarkMode ? ThemeMode.light : ThemeMode.dark,
+        //     ),
+        //   ),
+        //   SizedBox(width: 8),
+        // ],
+      ),
+      body: SafeArea(
+        child: FadeTransition(
+          opacity: _fadeAnimation,
+          child: SlideTransition(
+            position: _slideAnimation,
+            child: CustomScrollView(
+              physics: BouncingScrollPhysics(),
+              slivers: [
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: EdgeInsets.fromLTRB(24, 20, 24, 0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          "Asset Reports",
+                          style: TextStyle(
+                            fontSize: 28,
+                            fontWeight: FontWeight.bold,
+                            color: textColor,
+                          ),
+                        ),
+                        SizedBox(height: 8),
+                        Text(
+                          "Select a category to generate detailed reports",
+                          style: TextStyle(
+                            fontSize: 16,
+                            color: subtitleColor,
+                          ),
+                        ),
+                        SizedBox(height: 30),
+                        Row(
+                          children: [
+
+                            Spacer(),
+
+                          ],
+                        ),
+                        SizedBox(height: 16),
+                      ],
+                    ),
+                  ),
+                ),
+                SliverPadding(
+                  padding: EdgeInsets.symmetric(horizontal: 24),
+                  sliver: SliverList(
+                    delegate: SliverChildBuilderDelegate(
+                          (context, index) {
+                        // Staggered animations for list items
+                        return AnimatedBuilder(
+                          animation: _animationController,
+                          builder: (context, child) {
+                            final itemAnimation = Tween<double>(
+                              begin: 0.0,
+                              end: 1.0,
+                            ).animate(
+                              CurvedAnimation(
+                                parent: _animationController,
+                                curve: Interval(
+                                  0.4 + (index * 0.1),
+                                  0.7 + (index * 0.1),
+                                  curve: Curves.easeOut,
+                                ),
+                              ),
+                            );
+
+                            return FadeTransition(
+                              opacity: itemAnimation,
+                              child: SlideTransition(
+                                position: Tween<Offset>(
+                                  begin: Offset(0, 0.2),
+                                  end: Offset.zero,
+                                ).animate(
+                                  CurvedAnimation(
+                                    parent: _animationController,
+                                    curve: Interval(
+                                      0.4 + (index * 0.1),
+                                      0.7 + (index * 0.1),
+                                      curve: Curves.easeOut,
+                                    ),
+                                  ),
+                                ),
+                                child: child,
+                              ),
+                            );
+                          },
+                          child: _buildReportCard(
+                            reportOptions[index],
+                            isDarkMode,
+                            cardColor,
+                            textColor,
+                            subtitleColor,
+                          ),
+                        );
+                      },
+                      childCount: reportOptions.length,
+                    ),
+                  ),
+                ),
+                SliverToBoxAdapter(
+                  child: SizedBox(height: 24),
+                ),
+              ],
+            ),
           ),
         ),
-        centerTitle: true,
       ),
-      body: AnimatedOpacity(
-        opacity: opacity,
-        duration: Duration(milliseconds: 500),
-        child: Container(
+
+
+    );
+  }
+
+  // Removed Total Assets Value section
+
+  Widget _buildReportCard(
+      ReportOption option,
+      bool isDarkMode,
+      Color cardColor,
+      Color textColor,
+      Color subtitleColor,
+      ) {
+    return Container(
+      margin: EdgeInsets.only(bottom: 16),
+      child: InkWell(
+        onTap: () => Get.toNamed(option.route),
+        borderRadius: BorderRadius.circular(16),
+        child: Ink(
           decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: isDarkMode
-                  ? [Colors.black, Colors.grey[900]!]
-                  : [Colors.white, Colors.grey[200]!],
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-            ),
+            color: cardColor,
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.05),
+                blurRadius: 10,
+                offset: Offset(0, 4),
+              ),
+            ],
           ),
           child: Padding(
-            padding: EdgeInsets.symmetric(
-              horizontal: 20.0,
-              vertical: 25.0,
-            ),
-            child: Column(
+            padding: EdgeInsets.all(20),
+            child: Row(
               children: [
-                _buildHeader(context),
-                SizedBox(height: 30),
+                Container(
+                  padding: EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: option.color.withOpacity(0.15),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Icon(
+                    option.icon,
+                    color: option.color,
+                    size: 26,
+                  ),
+                ),
+                SizedBox(width: 16),
                 Expanded(
-                  child: ListView(
-                    physics: BouncingScrollPhysics(),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      ReportCard(
-                        title: "Vehicle Reports",
-                        icon: Icons.directions_car_rounded,
-                        route: AppRoutes.VEHICLE_REPORT_SCREEN,
-                        primaryColor: primaryColor,
+                      Text(
+                        option.title,
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                          color: textColor,
+                        ),
                       ),
-                      ReportCard(
-                        title: "Land Reports",
-                        icon: Icons.landscape_rounded,
-                        route: AppRoutes.LAND_REPORT_SCREEN,
-                        primaryColor: primaryColor,
-                      ),
-                      ReportCard(
-                        title: "Building Reports",
-                        icon: Icons.apartment_rounded,
-                        route: AppRoutes.BUILDING_REPORT_SCREEN,
-                        primaryColor: primaryColor,
-                      ),
-                      ReportCard(
-                        title: "Total Assets Overview",
-                        icon: Icons.dashboard_rounded,
-                        route: AppRoutes.TOTAL_ASSETS_REPORT_SCREEN,
-                        primaryColor: primaryColor,
+                      SizedBox(height: 4),
+                      Text(
+                        option.description,
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: subtitleColor,
+                        ),
                       ),
                     ],
                   ),
+                ),
+                Icon(
+                  Icons.chevron_right_rounded,
+                  color: option.color,
+                  size: 28,
                 ),
               ],
             ),
@@ -106,103 +313,20 @@ class _AssetsSelectForReportsState extends State<AssetsSelectForReports> {
       ),
     );
   }
-
-  Widget _buildHeader(BuildContext context) {
-    bool isDarkMode = Get.isDarkMode;
-    return Column(
-      children: [
-        CircleAvatar(
-          radius: 40,
-          backgroundColor: Colors.blue.withOpacity(0.2),
-          child: Icon(Icons.analytics_rounded, size: 50, color: Colors.blue),
-        ),
-        SizedBox(height: 15),
-        Text(
-          "View & Analyze Reports",
-          style: TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.w600,
-            color: isDarkMode ? Colors.white : Colors.black87,
-          ),
-        ),
-        SizedBox(height: 5),
-        Text(
-          "Select a category to generate reports",
-          style: TextStyle(
-            fontSize: 14,
-            color: isDarkMode ? Colors.grey[400] : Colors.black54,
-          ),
-        ),
-      ],
-    );
-  }
 }
 
-class ReportCard extends StatelessWidget {
+class ReportOption {
   final String title;
   final IconData icon;
   final String route;
-  final Color primaryColor;
+  final String description;
+  final Color color;
 
-  const ReportCard({
+  ReportOption({
     required this.title,
     required this.icon,
     required this.route,
-    required this.primaryColor,
-    Key? key,
-  }) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    bool isDarkMode = Get.isDarkMode;
-    Color cardColor = isDarkMode ? Colors.grey[850]! : Colors.white;
-    Color textColor = isDarkMode ? Colors.white : Colors.black87;
-    Color iconBackgroundColor = primaryColor.withOpacity(0.2);
-
-    return GestureDetector(
-      onTap: () => Get.toNamed(route),
-      child: AnimatedContainer(
-        duration: Duration(milliseconds: 300),
-        curve: Curves.easeInOut,
-        margin: EdgeInsets.only(bottom: 20.0),
-        padding: EdgeInsets.all(18.0),
-        decoration: BoxDecoration(
-          color: cardColor,
-          borderRadius: BorderRadius.circular(18),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black12,
-              blurRadius: 10,
-              spreadRadius: 3,
-              offset: Offset(0, 4),
-            ),
-          ],
-        ),
-        child: Row(
-          children: [
-            Container(
-              padding: EdgeInsets.all(14),
-              decoration: BoxDecoration(
-                color: iconBackgroundColor,
-                shape: BoxShape.circle,
-              ),
-              child: Icon(icon, color: primaryColor, size: 30),
-            ),
-            SizedBox(width: 18),
-            Expanded(
-              child: Text(
-                title,
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w600,
-                  color: textColor,
-                ),
-              ),
-            ),
-            Icon(Icons.arrow_forward_ios, color: primaryColor, size: 20),
-          ],
-        ),
-      ),
-    );
-  }
+    required this.description,
+    required this.color,
+  });
 }
