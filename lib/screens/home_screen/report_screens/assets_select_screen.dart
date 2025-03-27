@@ -1,85 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import '../../../routes/app_routes.dart';
-import '../../../utils/theme/app_theme_management.dart';
-import '../../../utils/theme/responsive_size.dart';
+import 'package:intl/intl.dart';
+import '../../../controllers/Asset_Report_Controller/Asset_Report_Controller.dart';
+import '../../../controllers/assets/asset_controller.dart';
+import '../../../controllers/assets_controllers/assets_controller.dart';
 
-class AssetsSelectForReports extends StatefulWidget {
-  @override
-  _AssetsSelectForReportsState createState() => _AssetsSelectForReportsState();
-}
-
-class _AssetsSelectForReportsState extends State<AssetsSelectForReports> with SingleTickerProviderStateMixin {
-  late AnimationController _animationController;
-  late Animation<double> _fadeAnimation;
-  late Animation<Offset> _slideAnimation;
-
-  final List<ReportOption> reportOptions = [
-    ReportOption(
-      title: "Vehicle Reports",
-      icon: Icons.directions_car_rounded,
-      route: AppRoutes.VEHICLE_REPORT_SCREEN,
-      description: "Analyze and track all vehicle assets",
-      color: Colors.blue,
-    ),
-    ReportOption(
-      title: "Land Reports",
-      icon: Icons.landscape_rounded,
-      route: AppRoutes.LAND_REPORT_SCREEN,
-      description: "View details about land properties",
-      color: Colors.green,
-    ),
-    ReportOption(
-      title: "Building Reports",
-      icon: Icons.apartment_rounded,
-      route: AppRoutes.BUILDING_REPORT_SCREEN,
-      description: "Get insights on building assets",
-      color: Colors.orange,
-    ),
-    ReportOption(
-      title: "Total Assets Overview",
-      icon: Icons.dashboard_rounded,
-      route: AppRoutes.TOTAL_ASSETS_REPORT_SCREEN,
-      description: "Complete overview of all assets",
-      color: Colors.purple,
-    ),
-  ];
-
-  @override
-  void initState() {
-    super.initState();
-    _animationController = AnimationController(
-      vsync: this,
-      duration: Duration(milliseconds: 800),
-    );
-
-    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(
-        parent: _animationController,
-        curve: Interval(0.0, 0.5, curve: Curves.easeOut),
-      ),
-    );
-
-    _slideAnimation = Tween<Offset>(
-      begin: Offset(0, 0.2),
-      end: Offset.zero,
-    ).animate(
-      CurvedAnimation(
-        parent: _animationController,
-        curve: Interval(0.0, 0.5, curve: Curves.easeOut),
-      ),
-    );
-
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _animationController.forward();
-    });
-  }
-
-  @override
-  void dispose() {
-    _animationController.dispose();
-    super.dispose();
-  }
+class AssetsSelectForReports extends StatelessWidget {
+  final AssetReportController _reportController = Get.put(AssetReportController());
+  final AssetController _assetController = Get.find<AssetController>();
 
   @override
   Widget build(BuildContext context) {
@@ -99,10 +27,16 @@ class _AssetsSelectForReportsState extends State<AssetsSelectForReports> with Si
 
     return Scaffold(
       backgroundColor: backgroundColor,
-      extendBodyBehindAppBar: true,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
+        title: Text(
+          'Generate Asset Report',
+          style: TextStyle(
+            color: isDarkMode ? Colors.white : Colors.black87,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
         leading: IconButton(
           icon: Icon(
             Icons.arrow_back_ios_new_rounded,
@@ -110,223 +44,548 @@ class _AssetsSelectForReportsState extends State<AssetsSelectForReports> with Si
           ),
           onPressed: () => Get.back(),
         ),
-        // actions: [
-        //   IconButton(
-        //     icon: Icon(
-        //       isDarkMode ? Icons.light_mode_outlined : Icons.dark_mode_outlined,
-        //       color: isDarkMode ? Colors.white : Colors.black87,
-        //     ),
-        //     onPressed: () => Get.changeThemeMode(
-        //       isDarkMode ? ThemeMode.light : ThemeMode.dark,
-        //     ),
-        //   ),
-        //   SizedBox(width: 8),
-        // ],
       ),
       body: SafeArea(
-        child: FadeTransition(
-          opacity: _fadeAnimation,
-          child: SlideTransition(
-            position: _slideAnimation,
-            child: CustomScrollView(
+        child: Obx(() => Stack(
+          children: [
+            SingleChildScrollView(
               physics: BouncingScrollPhysics(),
-              slivers: [
-                SliverToBoxAdapter(
-                  child: Padding(
-                    padding: EdgeInsets.fromLTRB(24, 20, 24, 0),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          "Asset Reports",
-                          style: TextStyle(
-                            fontSize: 28,
-                            fontWeight: FontWeight.bold,
-                            color: textColor,
-                          ),
-                        ),
-                        SizedBox(height: 8),
-                        Text(
-                          "Select a category to generate detailed reports",
-                          style: TextStyle(
-                            fontSize: 16,
-                            color: subtitleColor,
-                          ),
-                        ),
-                        SizedBox(height: 30),
-                        Row(
-                          children: [
+              padding: EdgeInsets.symmetric(horizontal: 20, vertical: 20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _buildSectionTitle('Select Asset Types', Icons.category_rounded, textColor),
+                  SizedBox(height: 12),
+                  _buildAssetTypeSelector(cardColor, textColor),
+                  SizedBox(height: 24),
 
-                            Spacer(),
+                  _buildSectionTitle('Select Property Types', Icons.home_work_rounded, textColor),
+                  SizedBox(height: 12),
+                  _buildBuildingTypeSelector(cardColor, textColor),
+                  SizedBox(height: 24),
 
-                          ],
-                        ),
-                        SizedBox(height: 16),
-                      ],
-                    ),
-                  ),
-                ),
-                SliverPadding(
-                  padding: EdgeInsets.symmetric(horizontal: 24),
-                  sliver: SliverList(
-                    delegate: SliverChildBuilderDelegate(
-                          (context, index) {
-                        // Staggered animations for list items
-                        return AnimatedBuilder(
-                          animation: _animationController,
-                          builder: (context, child) {
-                            final itemAnimation = Tween<double>(
-                              begin: 0.0,
-                              end: 1.0,
-                            ).animate(
-                              CurvedAnimation(
-                                parent: _animationController,
-                                curve: Interval(
-                                  0.4 + (index * 0.1),
-                                  0.7 + (index * 0.1),
-                                  curve: Curves.easeOut,
-                                ),
-                              ),
-                            );
+                  _buildSectionTitle('Report Type', Icons.description_rounded, textColor),
+                  SizedBox(height: 12),
+                  _buildReportTypeSelector(cardColor, textColor, subtitleColor),
+                  SizedBox(height: 24),
 
-                            return FadeTransition(
-                              opacity: itemAnimation,
-                              child: SlideTransition(
-                                position: Tween<Offset>(
-                                  begin: Offset(0, 0.2),
-                                  end: Offset.zero,
-                                ).animate(
-                                  CurvedAnimation(
-                                    parent: _animationController,
-                                    curve: Interval(
-                                      0.4 + (index * 0.1),
-                                      0.7 + (index * 0.1),
-                                      curve: Curves.easeOut,
-                                    ),
-                                  ),
-                                ),
-                                child: child,
-                              ),
-                            );
-                          },
-                          child: _buildReportCard(
-                            reportOptions[index],
-                            isDarkMode,
-                            cardColor,
-                            textColor,
-                            subtitleColor,
-                          ),
-                        );
-                      },
-                      childCount: reportOptions.length,
-                    ),
-                  ),
-                ),
-                SliverToBoxAdapter(
-                  child: SizedBox(height: 24),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
+                  _buildSectionTitle('Date Range', Icons.calendar_today_rounded, textColor),
+                  SizedBox(height: 12),
+                  _buildDateRangeSelector(context, cardColor, textColor, subtitleColor),
+                  SizedBox(height: 24),
 
+                  _buildSectionTitle('Additional Options', Icons.tune_rounded, textColor),
+                  SizedBox(height: 12),
+                  _buildAdditionalOptions(cardColor, textColor, subtitleColor),
+                  SizedBox(height: 36),
 
-    );
-  }
-
-  // Removed Total Assets Value section
-
-  Widget _buildReportCard(
-      ReportOption option,
-      bool isDarkMode,
-      Color cardColor,
-      Color textColor,
-      Color subtitleColor,
-      ) {
-    return Container(
-      margin: EdgeInsets.only(bottom: 16),
-      child: InkWell(
-        onTap: () => Get.toNamed(option.route),
-        borderRadius: BorderRadius.circular(16),
-        child: Ink(
-          decoration: BoxDecoration(
-            color: cardColor,
-            borderRadius: BorderRadius.circular(16),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.05),
-                blurRadius: 10,
-                offset: Offset(0, 4),
+                  _buildGenerateButton(context),
+                  SizedBox(height: 24),
+                ],
               ),
-            ],
-          ),
-          child: Padding(
-            padding: EdgeInsets.all(20),
-            child: Row(
-              children: [
-                Container(
-                  padding: EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: option.color.withOpacity(0.15),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Icon(
-                    option.icon,
-                    color: option.color,
-                    size: 26,
-                  ),
-                ),
-                SizedBox(width: 16),
-                Expanded(
+            ),
+            if (_reportController.isGeneratingReport.value)
+              Container(
+                color: Colors.black.withOpacity(0.5),
+                child: Center(
                   child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
                     children: [
-                      Text(
-                        option.title,
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                          color: textColor,
-                        ),
+                      CircularProgressIndicator(
+                        value: _reportController.reportProgress.value,
+                        valueColor: AlwaysStoppedAnimation<Color>(Get.theme.primaryColor),
                       ),
-                      SizedBox(height: 4),
+                      SizedBox(height: 20),
                       Text(
-                        option.description,
+                        'Generating Report...',
                         style: TextStyle(
-                          fontSize: 14,
-                          color: subtitleColor,
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
                         ),
                       ),
                     ],
                   ),
                 ),
-                Icon(
-                  Icons.chevron_right_rounded,
-                  color: option.color,
-                  size: 28,
-                ),
-              ],
-            ),
+              ),
+          ],
+        )),
+      ),
+    );
+  }
+
+  Widget _buildSectionTitle(String title, IconData icon, Color textColor) {
+    return Row(
+      children: [
+        Icon(
+          icon,
+          color: Get.theme.primaryColor,
+          size: 22,
+        ),
+        SizedBox(width: 8),
+        Text(
+          title,
+          style: TextStyle(
+            color: textColor,
+            fontSize: 16,
+            fontWeight: FontWeight.bold,
           ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildAssetTypeSelector(Color cardColor, Color textColor) {
+    return Obx(() {
+      // Add null check for categories
+      final categories = _assetController.categories ?? [];
+      final filteredCategories = categories
+          .where((category) => category != null && category != 'All')
+          .cast<String>()
+          .toList();
+
+      return Card(
+        elevation: 0,
+        color: cardColor,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Select the types of assets to include in the report',
+                style: TextStyle(
+                  color: textColor.withOpacity(0.7),
+                  fontSize: 14,
+                ),
+              ),
+              SizedBox(height: 16),
+              Wrap(
+                spacing: 10,
+                runSpacing: 10,
+                children: filteredCategories
+                    .map((assetType) => _buildAssetTypeChip(assetType))
+                    .toList(),
+              ),
+            ],
+          ),
+        ),
+      );
+    });
+  }
+
+  Widget _buildBuildingTypeSelector(Color cardColor, Color textColor) {
+    return Obx(() {
+      final buildingTypes = _reportController.buildingTypes;
+
+      return Card(
+        elevation: 0,
+        color: cardColor,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Select the property types to include in the report',
+                style: TextStyle(
+                  color: textColor.withOpacity(0.7),
+                  fontSize: 14,
+                ),
+              ),
+              SizedBox(height: 8),
+              Text(
+                'These filters apply to Building and Land assets only',
+                style: TextStyle(
+                  color: textColor.withOpacity(0.5),
+                  fontSize: 12,
+                  fontStyle: FontStyle.italic,
+                ),
+              ),
+              SizedBox(height: 16),
+              Wrap(
+                spacing: 10,
+                runSpacing: 10,
+                children: buildingTypes
+                    .map((buildingType) => _buildBuildingTypeChip(buildingType))
+                    .toList(),
+              ),
+            ],
+          ),
+        ),
+      );
+    });
+  }
+
+  Widget _buildAssetTypeChip(String assetType) {
+    Color chipColor = _getColorForAssetType(assetType);
+    bool isSelected = _reportController.selectedAssetTypes.contains(assetType);
+
+    return FilterChip(
+      selected: isSelected,
+      label: Text(assetType),
+      labelStyle: TextStyle(
+        color: isSelected ? Colors.white : Get.isDarkMode ? Colors.white : Colors.black87,
+        fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+      ),
+      selectedColor: chipColor,
+      backgroundColor: Get.isDarkMode ? Colors.black12 : Colors.grey[100],
+      checkmarkColor: Colors.white,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(8),
+        side: BorderSide(
+          color: isSelected ? Colors.transparent : chipColor.withOpacity(0.5),
+          width: 1,
+        ),
+      ),
+      onSelected: (selected) {
+        _reportController.toggleAssetType(assetType);
+      },
+    );
+  }
+
+  Widget _buildBuildingTypeChip(String buildingType) {
+    Color chipColor = _getColorForBuildingType(buildingType);
+    bool isSelected = _reportController.selectedBuildingTypes.contains(buildingType);
+
+    return FilterChip(
+      selected: isSelected,
+      label: Text(buildingType),
+      labelStyle: TextStyle(
+        color: isSelected ? Colors.white : Get.isDarkMode ? Colors.white : Colors.black87,
+        fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+      ),
+      selectedColor: chipColor,
+      backgroundColor: Get.isDarkMode ? Colors.black12 : Colors.grey[100],
+      checkmarkColor: Colors.white,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(8),
+        side: BorderSide(
+          color: isSelected ? Colors.transparent : chipColor.withOpacity(0.5),
+          width: 1,
+        ),
+      ),
+      onSelected: (selected) {
+        _reportController.toggleBuildingType(buildingType);
+      },
+    );
+  }
+
+  Color _getColorForAssetType(String assetType) {
+    switch (assetType) {
+      case 'Building':
+        return Colors.orange;
+      case 'Vehicle':
+        return Colors.blue;
+      case 'Land':
+        return Colors.green;
+      default:
+        return Colors.purple;
+    }
+  }
+
+  Color _getColorForBuildingType(String buildingType) {
+    switch (buildingType) {
+      case 'RESIDENTIAL':
+        return Colors.blue;
+      case 'COMMERCIAL':
+        return Colors.purple;
+      case 'INDUSTRIAL':
+        return Colors.orange;
+      case 'AGRICULTURAL':
+        return Colors.green;
+      default:
+        return Colors.teal;
+    }
+  }
+
+  Widget _buildReportTypeSelector(Color cardColor, Color textColor, Color subtitleColor) {
+    return Card(
+      elevation: 0,
+      color: cardColor,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Choose the type of report to generate',
+              style: TextStyle(
+                color: textColor.withOpacity(0.7),
+                fontSize: 14,
+              ),
+            ),
+            SizedBox(height: 16),
+            Obx(() => Column(
+              children: _reportController.reportTypes.map((type) =>
+                  RadioListTile<String>(
+                    title: Text(
+                      type,
+                      style: TextStyle(
+                        color: textColor,
+                        fontSize: 15,
+                      ),
+                    ),
+                    subtitle: Text(
+                      _getReportTypeDescription(type),
+                      style: TextStyle(
+                        color: subtitleColor,
+                        fontSize: 12,
+                      ),
+                    ),
+                    value: type,
+                    groupValue: _reportController.reportType.value,
+                    onChanged: (value) {
+                      if (value != null) {
+                        _reportController.setReportType(value);
+                      }
+                    },
+                    activeColor: Get.theme.primaryColor,
+                    dense: true,
+                    contentPadding: EdgeInsets.symmetric(horizontal: 8),
+                  ),
+              ).toList(),
+            )),
+          ],
         ),
       ),
     );
   }
-}
 
-class ReportOption {
-  final String title;
-  final IconData icon;
-  final String route;
-  final String description;
-  final Color color;
+  String _getReportTypeDescription(String reportType) {
+    switch (reportType) {
+      case 'Summary Report':
+        return 'A brief overview of all assets with basic information';
+      case 'Detailed Report':
+        return 'Comprehensive breakdown of all asset properties and details';
+      case 'Financial Analysis':
+        return 'Analysis of asset values, purchase costs, and financial metrics';
+      case 'Maintenance Report':
+        return 'Status of vehicle maintenance, MOT dates, and service records';
+      default:
+        return '';
+    }
+  }
 
-  ReportOption({
-    required this.title,
-    required this.icon,
-    required this.route,
-    required this.description,
-    required this.color,
-  });
+  Widget _buildDateRangeSelector(BuildContext context, Color cardColor, Color textColor, Color subtitleColor) {
+    return Card(
+      elevation: 0,
+      color: cardColor,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Select date range for asset purchase dates',
+              style: TextStyle(
+                color: textColor.withOpacity(0.7),
+                fontSize: 14,
+              ),
+            ),
+            SizedBox(height: 16),
+            Obx(() => InkWell(
+              onTap: () => _selectDateRange(context),
+              borderRadius: BorderRadius.circular(8),
+              child: Container(
+                padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                decoration: BoxDecoration(
+                  color: Get.isDarkMode ? Colors.black12 : Colors.grey[100],
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(
+                    color: Get.isDarkMode ? Colors.grey[800]! : Colors.grey[300]!,
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.date_range,
+                      color: Get.theme.primaryColor,
+                      size: 20,
+                    ),
+                    SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'From',
+                            style: TextStyle(
+                              color: subtitleColor,
+                              fontSize: 12,
+                            ),
+                          ),
+                          Text(
+                            DateFormat('MMM dd, yyyy').format(_reportController.startDate.value),
+                            style: TextStyle(
+                              color: textColor,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Container(
+                      height: 30,
+                      width: 1,
+                      color: Get.isDarkMode ? Colors.grey[700] : Colors.grey[300],
+                    ),
+                    SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'To',
+                            style: TextStyle(
+                              color: subtitleColor,
+                              fontSize: 12,
+                            ),
+                          ),
+                          Text(
+                            DateFormat('MMM dd, yyyy').format(_reportController.endDate.value),
+                            style: TextStyle(
+                              color: textColor,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            )),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<void> _selectDateRange(BuildContext context) async {
+    final DateTimeRange? picked = await showDateRangePicker(
+      context: context,
+      initialDateRange: DateTimeRange(
+        start: _reportController.startDate.value,
+        end: _reportController.endDate.value,
+      ),
+      firstDate: DateTime(2000),
+      lastDate: DateTime.now(),
+      builder: (context, child) {
+        return Theme(
+          data: Theme.of(context).copyWith(
+            colorScheme: ColorScheme.light(
+              primary: Get.theme.primaryColor,
+              onPrimary: Colors.white,
+              onSurface: Get.isDarkMode ? Colors.white : Colors.black,
+            ),
+            textButtonTheme: TextButtonThemeData(
+              style: TextButton.styleFrom(
+                foregroundColor: Get.theme.primaryColor,
+              ),
+            ),
+          ),
+          child: child!,
+        );
+      },
+    );
+
+    if (picked != null) {
+      _reportController.setDateRange(picked.start, picked.end);
+    }
+  }
+
+  Widget _buildAdditionalOptions(Color cardColor, Color textColor, Color subtitleColor) {
+    return Card(
+      elevation: 0,
+      color: cardColor,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Additional report options',
+              style: TextStyle(
+                color: textColor.withOpacity(0.7),
+                fontSize: 14,
+              ),
+            ),
+            SizedBox(height: 16),
+            Obx(() => SwitchListTile(
+              title: Text(
+                'Include Charts & Graphs',
+                style: TextStyle(
+                  color: textColor,
+                  fontSize: 15,
+                ),
+              ),
+              subtitle: Text(
+                'Add visual representations of data to the report',
+                style: TextStyle(
+                  color: subtitleColor,
+                  fontSize: 12,
+                ),
+              ),
+              value: _reportController.includeCharts.value,
+              onChanged: (value) {
+                _reportController.toggleIncludeCharts();
+              },
+              activeColor: Get.theme.primaryColor,
+              contentPadding: EdgeInsets.zero,
+            )),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildGenerateButton(BuildContext context) {
+    return Obx(() => ElevatedButton(
+      onPressed: _reportController.isGeneratingReport.value
+          ? null
+          : () => _reportController.generateReport(),
+      style: ElevatedButton.styleFrom(
+        backgroundColor: Get.theme.primaryColor,
+        padding: EdgeInsets.symmetric(vertical: 16),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+        ),
+        elevation: 0,
+      ),
+      child: Container(
+        width: double.infinity,
+        alignment: Alignment.center,
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(Icons.description, size: 20),
+            SizedBox(width: 8),
+            Text(
+              'Generate Report',
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ],
+        ),
+      ),
+    ));
+  }
 }
