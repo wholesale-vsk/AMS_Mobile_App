@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
@@ -50,19 +51,16 @@ class AssetReportController extends GetxController {
   void onInit() {
     super.onInit();
     // Initialize with all asset types selected by default
-    // Added null check for categories
-    final categories = assetController.categories ?? [];
-    selectedAssetTypes.value = categories
-        .where((category) => category != null && category != 'All')
-        .cast<String>() // Ensure we have a List<String>
+    selectedAssetTypes.value = assetController.categories
+        .where((category) => category != 'All')
         .toList();
 
     // Initialize with some building types selected
     selectedBuildingTypes.value = ['RESIDENTIAL', 'COMMERCIAL'];
   }
 
-  void toggleAssetType(String? assetType) {
-    if (assetType == null) return; // Null check
+  void toggleAssetType(String assetType) {
+    if (assetType == null) return;
 
     if (selectedAssetTypes.contains(assetType)) {
       selectedAssetTypes.remove(assetType);
@@ -77,7 +75,10 @@ class AssetReportController extends GetxController {
   }
 
   void setReportType(String type) {
-    if (type != null) reportType.value = type;
+    if (type != null) {
+      reportType.value = type;
+      _logger.i("📊 Report type set to: $type");
+    }
   }
 
   void toggleIncludeCharts() {
@@ -88,13 +89,8 @@ class AssetReportController extends GetxController {
   List<Map<String, dynamic>> getFilteredAssets() {
     if (selectedAssetTypes.isEmpty) return [];
 
-    // Added null check for assets
-    final assets = assetController.assets ?? [];
-
-    // Use cast to ensure the correct return type
-    return assets.where((asset) {
-      if (asset == null) return false; // Skip null assets
-      if (asset is! Map<String, dynamic>) return false; // Skip non-map assets
+    return assetController.assets.where((asset) {
+      if (asset == null) return false;
 
       // Filter by asset type
       final category = asset['category'];
@@ -102,12 +98,22 @@ class AssetReportController extends GetxController {
         return false;
       }
 
-      // Apply building type filter for Building and Land assets
-      if ((category == 'Building' || category == 'Land') &&
+      // Apply building type filter for Building assets
+      if (category == 'Building' &&
           selectedBuildingTypes.isNotEmpty &&
-          asset.containsKey('propertyType')) {
-        String? propertyType = asset['propertyType'] as String?;
-        if (propertyType == null || !selectedBuildingTypes.contains(propertyType)) {
+          asset.containsKey('buildingType')) {
+        String? buildingType = asset['buildingType'] as String?;
+        if (buildingType == null || !selectedBuildingTypes.contains(buildingType)) {
+          return false;
+        }
+      }
+
+      // Apply property type filter for Land assets
+      if (category == 'Land' &&
+          selectedBuildingTypes.isNotEmpty &&
+          asset.containsKey('landType')) {
+        String? landType = asset['landType'] as String?;
+        if (landType == null || !selectedBuildingTypes.contains(landType)) {
           return false;
         }
       }
@@ -131,14 +137,14 @@ class AssetReportController extends GetxController {
               purchaseDate.isBefore(endDate.value.add(Duration(days: 1)));
         } catch (e) {
           // If date parsing fails, include the asset anyway
-          _logger.w("⚠️ Could not parse date for asset: ${asset['name'] ?? 'Unknown'}");
+          _logger.w("⚠️ Could not parse date for asset: ${asset['name'] ?? asset['model'] ?? 'Unknown'}");
           return true;
         }
       }
 
       // Include assets without purchase date
       return true;
-    }).cast<Map<String, dynamic>>().toList();
+    }).toList();
   }
 
   // Generate report in PDF format
@@ -175,8 +181,8 @@ class AssetReportController extends GetxController {
 
       reportProgress(0.3);
 
-      // Create PDF document
-      final pdf = await _createPdfReport(filteredAssets);
+      // Create PDF document based on report type
+      final pdf = await _createPdfReport(filteredAssets, reportType.value);
 
       reportProgress(0.7);
 
@@ -221,41 +227,278 @@ class AssetReportController extends GetxController {
   }
 
   // Create PDF document
-  Future<pw.Document> _createPdfReport(List<Map<String, dynamic>> assets) async {
+  Future<pw.Document> _createPdfReport(List<Map<String, dynamic>> assets, String type) async {
     final pdf = pw.Document();
 
     // Load fonts
     final font = await PdfGoogleFonts.nunitoRegular();
     final fontBold = await PdfGoogleFonts.nunitoBold();
 
+    // Choose columns based on report type
+    List<String> columns = [];
+    List<dynamic> Function(Map<String, dynamic>) rowBuilder;
+
+    switch (type) {
+      case 'Summary Report':
+        columns = ['Asset Name', 'Category', 'Type', 'Purchase Price'];
+        rowBuilder = (asset) => [
+          _getValue(asset, 'name') ?? _getValue(asset, 'model') ?? 'N/A',
+          _getValue(asset, 'category') ?? 'N/A',
+          _getTypeValue(asset),
+          _formatCurrency(_getValue(asset, 'purchasePrice')),
+        ];
+        break;
+      case 'Detailed Report':
+        columns = ['Asset Name', 'Category', 'Type', 'Purchase Date', 'Purchase Price', 'Location'];
+        rowBuilder = (asset) => [
+          _getValue(asset, 'name') ?? _getValue(asset, 'model') ?? 'N/A',
+          _getValue(asset, 'category') ?? 'N/A',
+          _getTypeValue(asset),
+          _formatDate(_getValue(asset, 'purchaseDate')),
+          _formatCurrency(_getValue(asset, 'purchasePrice')),
+          _getLocationValue(asset),
+        ];
+        break;
+      case 'Financial Analysis':
+        columns = ['Asset Name', 'Category', 'Purchase Price', 'Current Value', 'Depreciation'];
+        rowBuilder = (asset) => [
+          _getValue(asset, 'name') ?? _getValue(asset, 'model') ?? 'N/A',
+          _getValue(asset, 'category') ?? 'N/A',
+          _formatCurrency(_getValue(asset, 'purchasePrice')),
+          _formatCurrency(_calculateCurrentValue(asset)),
+          _calculateDepreciation(asset),
+        ];
+        break;
+      case 'Maintenance Report':
+        columns = ['Asset Name', 'Category', 'Type', 'Last Maintenance', 'Status', 'Notes'];
+        rowBuilder = (asset) => [
+          _getValue(asset, 'name') ?? _getValue(asset, 'model') ?? 'N/A',
+          _getValue(asset, 'category') ?? 'N/A',
+          _getTypeValue(asset),
+          _formatDate(_getValue(asset, 'lastMaintenance') ?? 'N/A'),
+          _getMaintenanceStatus(asset),
+          _getValue(asset, 'maintenanceNotes') ?? 'No notes',
+        ];
+        break;
+      default:
+        columns = ['Asset Name', 'Category', 'Type', 'Purchase Date', 'Purchase Price'];
+        rowBuilder = (asset) => [
+          _getValue(asset, 'name') ?? _getValue(asset, 'model') ?? 'N/A',
+          _getValue(asset, 'category') ?? 'N/A',
+          _getTypeValue(asset),
+          _formatDate(_getValue(asset, 'purchaseDate')),
+          _formatCurrency(_getValue(asset, 'purchasePrice')),
+        ];
+    }
+
     // Add report pages
     pdf.addPage(
       pw.MultiPage(
         pageFormat: PdfPageFormat.a4,
         margin: pw.EdgeInsets.all(40),
-        header: (context) => _buildReportHeader(context, reportType.value, fontBold),
+        header: (context) => _buildReportHeader(context, type, fontBold),
         footer: (context) => _buildReportFooter(context, font),
         build: (context) => [
           _buildReportFilters(font, fontBold),
           pw.SizedBox(height: 20),
-          _buildAssetTable(
-              assets,
-              ['Asset Name', 'Category', 'Type','Purchase Date', 'Purchase Price'],
-                  (asset) => [
-                _getValue(asset, 'name') ?? (_getValue(asset, 'model') ?? 'N/A'),
-                _getValue(asset, 'category') ?? 'N/A',
-                    _getValue(asset, 'type') ?? 'N/A',
-                _formatDate(_getValue(asset, 'purchaseDate')),
-                _formatCurrency(_getValue(asset, 'purchasePrice')),
-              ],
-              font,
-              fontBold
-          ),
+          _buildSummaryStats(assets, font, fontBold),
+          pw.SizedBox(height: 20),
+          _buildAssetTable(assets, columns, rowBuilder, font, fontBold),
+          if (includeCharts.value) ...[
+            pw.SizedBox(height: 30),
+            _buildCharts(assets, font, fontBold),
+          ],
         ],
       ),
     );
 
     return pdf;
+  }
+
+  // Build summary statistics section
+  pw.Widget _buildSummaryStats(List<Map<String, dynamic>> assets, pw.Font font, pw.Font fontBold) {
+    // Calculate total value
+    double totalValue = 0;
+    for (var asset in assets) {
+      var price = _getValue(asset, 'purchasePrice');
+      if (price != null && price != 'N/A') {
+        double? numValue = _parseNumber(price);
+        if (numValue != null) {
+          totalValue += numValue;
+        }
+      }
+    }
+
+    // Count by category
+    Map<String, int> categoryCounts = {};
+    for (var asset in assets) {
+      String category = _getValue(asset, 'category') ?? 'Unknown';
+      categoryCounts[category] = (categoryCounts[category] ?? 0) + 1;
+    }
+
+    return pw.Container(
+      padding: pw.EdgeInsets.all(12),
+      decoration: pw.BoxDecoration(
+        color: PdfColors.blue50,
+        borderRadius: pw.BorderRadius.circular(4),
+        border: pw.Border.all(color: PdfColors.blue200),
+      ),
+      child: pw.Column(
+        crossAxisAlignment: pw.CrossAxisAlignment.start,
+        children: [
+          pw.Text(
+            'Summary Statistics',
+            style: pw.TextStyle(
+              font: fontBold,
+              fontSize: 14,
+              color: PdfColors.blue800,
+            ),
+          ),
+          pw.SizedBox(height: 10),
+          pw.Row(
+            mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+            children: [
+              _buildStatItem('Total Assets', '${assets.length}', font, fontBold),
+              _buildStatItem('Total Value', _formatCurrency(totalValue), font, fontBold),
+              _buildStatItem('Date Range', '${_formatDate(startDate.value)} - ${_formatDate(endDate.value)}', font, fontBold),
+            ],
+          ),
+          pw.SizedBox(height: 10),
+          pw.Text(
+            'Assets by Category',
+            style: pw.TextStyle(
+              font: fontBold,
+              fontSize: 12,
+              color: PdfColors.blue800,
+            ),
+          ),
+          pw.SizedBox(height: 5),
+          pw.Row(
+            children: categoryCounts.entries.map((entry) =>
+                _buildStatItem(entry.key, '${entry.value}', font, fontBold, flex: 1)
+            ).toList(),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // Build charts section
+  pw.Widget _buildCharts(List<Map<String, dynamic>> assets, pw.Font font, pw.Font fontBold) {
+    // Count by category
+    Map<String, int> categoryCounts = {};
+    for (var asset in assets) {
+      String category = _getValue(asset, 'category') ?? 'Unknown';
+      categoryCounts[category] = (categoryCounts[category] ?? 0) + 1;
+    }
+
+    // Simple bar chart - we'll simulate it with rectangles
+    return pw.Container(
+      padding: pw.EdgeInsets.all(12),
+      decoration: pw.BoxDecoration(
+        borderRadius: pw.BorderRadius.circular(4),
+        border: pw.Border.all(color: PdfColors.grey300),
+      ),
+      child: pw.Column(
+        crossAxisAlignment: pw.CrossAxisAlignment.start,
+        children: [
+          pw.Text(
+            'Asset Distribution by Category',
+            style: pw.TextStyle(
+              font: fontBold,
+              fontSize: 14,
+            ),
+          ),
+          pw.SizedBox(height: 20),
+          pw.Row(
+            crossAxisAlignment: pw.CrossAxisAlignment.end,
+            children: categoryCounts.entries.map((entry) {
+              // Calculate bar height proportional to count
+              final maxHeight = 100.0;
+              final maxCount = categoryCounts.values.reduce((a, b) => a > b ? a : b);
+              final barHeight = (entry.value / maxCount) * maxHeight;
+
+              return pw.Expanded(
+                child: pw.Column(
+                  children: [
+                    pw.Container(
+                      height: barHeight,
+                      margin: pw.EdgeInsets.symmetric(horizontal: 8),
+                      decoration: pw.BoxDecoration(
+                        color: _getCategoryColor(entry.key),
+                        borderRadius: pw.BorderRadius.vertical(
+                          top: pw.Radius.circular(4),
+                        ),
+                      ),
+                    ),
+                    pw.SizedBox(height: 5),
+                    pw.Text(
+                      entry.key,
+                      style: pw.TextStyle(
+                        font: font,
+                        fontSize: 10,
+                      ),
+                    ),
+                    pw.Text(
+                      '${entry.value}',
+                      style: pw.TextStyle(
+                        font: fontBold,
+                        fontSize: 12,
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            }).toList(),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // Get category color for charts
+  PdfColor _getCategoryColor(String category) {
+    switch (category) {
+      case 'Building':
+        return PdfColors.blue400;
+      case 'Vehicle':
+        return PdfColors.green400;
+      case 'Land':
+        return PdfColors.amber400;
+      default:
+        return PdfColors.grey400;
+    }
+  }
+
+  // Build stat item
+  pw.Widget _buildStatItem(String label, String value, pw.Font font, pw.Font fontBold, {int flex = 1}) {
+    return pw.Expanded(
+      flex: flex,
+      child: pw.Padding(
+        padding: pw.EdgeInsets.symmetric(horizontal: 5),
+        child: pw.Column(
+          crossAxisAlignment: pw.CrossAxisAlignment.start,
+          children: [
+            pw.Text(
+              label,
+              style: pw.TextStyle(
+                font: font,
+                fontSize: 10,
+                color: PdfColors.grey700,
+              ),
+            ),
+            pw.SizedBox(height: 3),
+            pw.Text(
+              value,
+              style: pw.TextStyle(
+                font: fontBold,
+                fontSize: 12,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   // Show PDF preview dialog
@@ -275,7 +518,7 @@ class AssetReportController extends GetxController {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(
-                      'Report Preview',
+                      '${reportType.value} Preview',
                       style: TextStyle(
                         color: Colors.white,
                         fontWeight: FontWeight.bold,
@@ -330,7 +573,7 @@ class AssetReportController extends GetxController {
                       icon: Icon(Icons.print),
                       label: Text('Print'),
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.deepPurple,
+                        backgroundColor: Colors.white,
                       ),
                     ),
                   ],
@@ -406,13 +649,23 @@ class AssetReportController extends GetxController {
             ),
             alignment: pw.Alignment.center,
             child: pw.Text(
-              title ?? 'Asset Report', // Added null check
+              title,
               style: pw.TextStyle(
                 font: fontBold,
                 fontSize: 16,
                 color: PdfColors.white,
               ),
             ),
+          ),
+          pw.SizedBox(height: 5),
+          pw.Text(
+            _getReportTypeDescription(title),
+            style: pw.TextStyle(
+              fontSize: 11,
+              color: PdfColors.grey700,
+              fontStyle: pw.FontStyle.italic,
+            ),
+            textAlign: pw.TextAlign.center,
           ),
           pw.Divider(thickness: 1),
         ],
@@ -448,9 +701,6 @@ class AssetReportController extends GetxController {
 
   // Report Filters Section
   pw.Widget _buildReportFilters(pw.Font font, pw.Font fontBold) {
-    // Add null check for selectedAssetTypes
-    final assetTypes = selectedAssetTypes.toList();
-
     return pw.Container(
       padding: pw.EdgeInsets.all(10),
       decoration: pw.BoxDecoration(
@@ -474,7 +724,7 @@ class AssetReportController extends GetxController {
               pw.Expanded(
                 child: _buildFilterItem(
                   'Asset Types',
-                  assetTypes.isNotEmpty ? assetTypes.join(', ') : 'None',
+                  selectedAssetTypes.isNotEmpty ? selectedAssetTypes.join(', ') : 'None',
                   font,
                   fontBold,
                 ),
@@ -482,7 +732,7 @@ class AssetReportController extends GetxController {
               pw.Expanded(
                 child: _buildFilterItem(
                   'Report Type',
-                  reportType.value ?? 'Summary Report',
+                  reportType.value,
                   font,
                   fontBold,
                 ),
@@ -535,7 +785,7 @@ class AssetReportController extends GetxController {
         crossAxisAlignment: pw.CrossAxisAlignment.start,
         children: [
           pw.Text(
-            label ?? 'Filter', // Added null check
+            label,
             style: pw.TextStyle(
               font: fontBold,
               fontSize: 10,
@@ -544,7 +794,7 @@ class AssetReportController extends GetxController {
           ),
           pw.SizedBox(height: 3),
           pw.Text(
-            value ?? 'N/A', // Added null check
+            value,
             style: pw.TextStyle(
               font: font,
               fontSize: 12,
@@ -555,33 +805,29 @@ class AssetReportController extends GetxController {
     );
   }
 
-  // Build asset table for the report - FIXED to handle null values
+  // Build asset table for the report
   pw.Widget _buildAssetTable(
       List<Map<String, dynamic>> assets,
       List<String> columns,
-      List<String> Function(Map<String, dynamic>) rowBuilder,
+      List<dynamic> Function(Map<String, dynamic>) rowBuilder,
       pw.Font font,
       pw.Font fontBold,
       ) {
-    // Add null checks
-    final safeAssets = assets ?? [];
-    final safeColumns = columns ?? [];
-
     return pw.Table(
       border: pw.TableBorder.all(color: PdfColors.grey400),
       columnWidths: {
-        for (int i = 0; i < safeColumns.length; i++)
+        for (int i = 0; i < columns.length; i++)
           i: pw.FlexColumnWidth(1),
       },
       children: [
         // Header row
         pw.TableRow(
           decoration: pw.BoxDecoration(color: PdfColors.grey200),
-          children: safeColumns.map((col) =>
+          children: columns.map((col) =>
               pw.Padding(
                 padding: pw.EdgeInsets.all(8),
                 child: pw.Text(
-                  col ?? '',
+                  col,
                   style: pw.TextStyle(
                     font: fontBold,
                     fontSize: 11,
@@ -591,34 +837,15 @@ class AssetReportController extends GetxController {
               )
           ).toList(),
         ),
-        // Data rows with null check
-        ...safeAssets.map((asset) {
-          if (asset == null) {
-            // Handle null asset
-            return pw.TableRow(
-              children: List.generate(
-                  safeColumns.length,
-                      (_) => pw.Padding(
-                    padding: pw.EdgeInsets.all(8),
-                    child: pw.Text(
-                      'N/A',
-                      style: pw.TextStyle(
-                        font: font,
-                        fontSize: 10,
-                      ),
-                    ),
-                  )
-              ),
-            );
-          }
-
+        // Data rows
+        ...assets.map((asset) {
           final rowData = rowBuilder(asset);
           return pw.TableRow(
-            children: (rowData ?? []).map((value) =>
+            children: rowData.map((value) =>
                 pw.Padding(
                   padding: pw.EdgeInsets.all(8),
                   child: pw.Text(
-                    value ?? 'N/A',
+                    value?.toString() ?? 'N/A',
                     style: pw.TextStyle(
                       font: font,
                       fontSize: 10,
@@ -633,9 +860,34 @@ class AssetReportController extends GetxController {
   }
 
   // Helper functions
-  dynamic _getValue(Map<String, dynamic>? asset, String key) {
-    if (asset == null) return null;
+  dynamic _getValue(Map<String, dynamic> asset, String key) {
     return asset[key];
+  }
+
+  String _getTypeValue(Map<String, dynamic> asset) {
+    final category = asset['category'];
+    if (category == 'Building') {
+      return asset['buildingType'] ?? 'N/A';
+    } else if (category == 'Vehicle') {
+      return asset['vehicle_type'] ?? asset['type'] ?? 'N/A';
+    } else if (category == 'Land') {
+      return asset['landType'] ?? 'N/A';
+    }
+    return 'N/A';
+  }
+
+  String _getLocationValue(Map<String, dynamic> asset) {
+    final category = asset['category'];
+    if (category == 'Building' || category == 'Land') {
+      if (asset['address'] != null && asset['city'] != null) {
+        return '${asset['address']}, ${asset['city']}';
+      } else if (asset['address'] != null) {
+        return asset['address'];
+      } else if (asset['city'] != null) {
+        return asset['city'];
+      }
+    }
+    return 'N/A';
   }
 
   String _formatDate(dynamic date) {
@@ -654,22 +906,41 @@ class AssetReportController extends GetxController {
     }
   }
 
-  String _formatCurrency(dynamic value) {
-    if (value == null || value == 'N/A') return 'N/A';
+  double? _parseNumber(dynamic value) {
+    if (value == null || value == 'N/A') return null;
 
     try {
-      double numValue;
       if (value is num) {
-        numValue = value.toDouble();
+        return value.toDouble();
       } else {
         // Try to parse string value
         final sanitizedValue = value.toString().replaceAll(RegExp(r'[^\d.]'), '');
-        if (sanitizedValue.isEmpty) return 'N/A';
-        numValue = double.parse(sanitizedValue);
+        if (sanitizedValue.isEmpty) return null;
+        return double.parse(sanitizedValue);
       }
-      return '\$${NumberFormat('#,##0.00').format(numValue)}';
     } catch (e) {
-      return value.toString();
+      return null;
+    }
+  }
+
+  String _formatCurrency(dynamic value) {
+    final numValue = _parseNumber(value);
+    if (numValue == null) return 'N/A';
+    return '\$${NumberFormat('#,##0.00').format(numValue)}';
+  }
+
+  String _getReportTypeDescription(String reportType) {
+    switch (reportType) {
+      case 'Summary Report':
+        return 'A brief overview of all assets with basic information';
+      case 'Detailed Report':
+        return 'Comprehensive breakdown of all asset properties and details';
+      case 'Financial Analysis':
+        return 'Analysis of asset values, purchase costs, and financial metrics';
+      case 'Maintenance Report':
+        return 'Status of vehicle maintenance, MOT dates, and service records';
+      default:
+        return '';
     }
   }
 
@@ -681,5 +952,90 @@ class AssetReportController extends GetxController {
     } else {
       selectedBuildingTypes.add(buildingType);
     }
+  }
+
+  // Calculate current value based on purchase date and depreciation
+  double _calculateCurrentValue(Map<String, dynamic> asset) {
+    double? purchasePrice = _parseNumber(_getValue(asset, 'purchasePrice'));
+    if (purchasePrice == null) return 0.0;
+
+    // Default to 80% of purchase price if we can't calculate better
+    double currentValue = purchasePrice * 0.8;
+
+    try {
+      var purchaseDateStr = _getValue(asset, 'purchaseDate');
+      if (purchaseDateStr != null && purchaseDateStr != 'N/A') {
+        DateTime purchaseDate = DateTime.parse(purchaseDateStr.toString());
+        int ageInYears = DateTime.now().difference(purchaseDate).inDays ~/ 365;
+
+        // Apply different depreciation rates based on asset type
+        String category = _getValue(asset, 'category') ?? '';
+        double depreciationRate = 0.0;
+
+        switch (category) {
+          case 'Vehicle':
+            depreciationRate = 0.15; // 15% per year for vehicles
+            break;
+          case 'Building':
+            depreciationRate = 0.03; // 3% per year for buildings
+            break;
+          case 'Land':
+            depreciationRate = -0.02; // Land appreciates 2% per year
+            break;
+          default:
+            depreciationRate = 0.10; // 10% for other assets
+        }
+
+        // Calculate current value with compound depreciation/appreciation
+        currentValue = purchasePrice * pow((1 - depreciationRate), ageInYears);
+      }
+    } catch (e) {
+      _logger.w("Cannot calculate precise current value for asset: $e");
+    }
+
+    return currentValue;
+  }
+
+  // Calculate depreciation percentage
+  String _calculateDepreciation(Map<String, dynamic> asset) {
+    double? purchasePrice = _parseNumber(_getValue(asset, 'purchasePrice'));
+    if (purchasePrice == null || purchasePrice == 0) return 'N/A';
+
+    double currentValue = _calculateCurrentValue(asset);
+    double depreciationPct = ((purchasePrice - currentValue) / purchasePrice) * 100;
+
+    // If negative, it's appreciation
+    if (depreciationPct < 0) {
+      return '${NumberFormat('#,##0.0').format(depreciationPct.abs())}% appreciation';
+    } else {
+      return '${NumberFormat('#,##0.0').format(depreciationPct)}%';
+    }
+  }
+
+  // Get maintenance status for maintenance report
+  String _getMaintenanceStatus(Map<String, dynamic> asset) {
+    // For vehicles we can use MOT date to determine status
+    String category = _getValue(asset, 'category') ?? '';
+
+    if (category == 'Vehicle') {
+      var motDate = _getValue(asset, 'motExpiredDate') ?? _getValue(asset, 'motDate');
+      if (motDate != null && motDate != 'N/A') {
+        try {
+          DateTime expiryDate = DateTime.parse(motDate.toString());
+          if (expiryDate.isBefore(DateTime.now())) {
+            return 'OVERDUE';
+          } else if (expiryDate.isBefore(DateTime.now().add(Duration(days: 30)))) {
+            return 'DUE SOON';
+          } else {
+            return 'VALID';
+          }
+        } catch (e) {
+          return 'UNKNOWN';
+        }
+      }
+    }
+
+    // For other assets
+    return 'N/A';
   }
 }

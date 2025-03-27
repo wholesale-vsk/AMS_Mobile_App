@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 import '../../../controllers/Asset_Report_Controller/Asset_Report_Controller.dart';
-import '../../../controllers/assets/asset_controller.dart';
 import '../../../controllers/assets_controllers/assets_controller.dart';
 
 class AssetsSelectForReports extends StatelessWidget {
@@ -85,31 +84,43 @@ class AssetsSelectForReports extends StatelessWidget {
               ),
             ),
             if (_reportController.isGeneratingReport.value)
-              Container(
-                color: Colors.black.withOpacity(0.5),
-                child: Center(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      CircularProgressIndicator(
-                        value: _reportController.reportProgress.value,
-                        valueColor: AlwaysStoppedAnimation<Color>(Get.theme.primaryColor),
-                      ),
-                      SizedBox(height: 20),
-                      Text(
-                        'Generating Report...',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 16,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
+              _buildLoadingOverlay(),
           ],
         )),
+      ),
+    );
+  }
+
+  Widget _buildLoadingOverlay() {
+    return Container(
+      color: Colors.black.withOpacity(0.5),
+      child: Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            CircularProgressIndicator(
+              value: _reportController.reportProgress.value,
+              valueColor: AlwaysStoppedAnimation<Color>(Get.theme.primaryColor),
+            ),
+            SizedBox(height: 20),
+            Text(
+              'Generating ${_reportController.reportType.value}...',
+              style: TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+                fontSize: 16,
+              ),
+            ),
+            SizedBox(height: 8),
+            Text(
+              '${(_reportController.reportProgress.value * 100).toInt()}%',
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 14,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -137,11 +148,8 @@ class AssetsSelectForReports extends StatelessWidget {
 
   Widget _buildAssetTypeSelector(Color cardColor, Color textColor) {
     return Obx(() {
-      // Add null check for categories
-      final categories = _assetController.categories ?? [];
-      final filteredCategories = categories
-          .where((category) => category != null && category != 'All')
-          .cast<String>()
+      final filteredCategories = _assetController.categories
+          .where((category) => category != 'All')
           .toList();
 
       return Card(
@@ -556,36 +564,57 @@ class AssetsSelectForReports extends StatelessWidget {
   }
 
   Widget _buildGenerateButton(BuildContext context) {
-    return Obx(() => ElevatedButton(
-      onPressed: _reportController.isGeneratingReport.value
-          ? null
-          : () => _reportController.generateReport(),
-      style: ElevatedButton.styleFrom(
-        backgroundColor: Get.theme.primaryColor,
-        padding: EdgeInsets.symmetric(vertical: 16),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
+    return Obx(() {
+      final bool canGenerate = !_reportController.isGeneratingReport.value &&
+          _reportController.selectedAssetTypes.isNotEmpty;
+
+      return ElevatedButton(
+        onPressed: canGenerate
+            ? () => _reportController.generateReport()
+            : null,
+        style: ElevatedButton.styleFrom(
+          backgroundColor: Get.theme.primaryColor,
+          disabledBackgroundColor: Get.isDarkMode ? Colors.grey[800] : Colors.white,
+          padding: EdgeInsets.symmetric(vertical: 16),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+          elevation: 0,
         ),
-        elevation: 0,
-      ),
-      child: Container(
-        width: double.infinity,
-        alignment: Alignment.center,
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(Icons.description, size: 20),
-            SizedBox(width: 8),
-            Text(
-              'Generate Report',
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
+        child: Container(
+          width: double.infinity,
+          alignment: Alignment.center,
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(_getReportTypeIcon(_reportController.reportType.value), size: 20),
+              SizedBox(width: 8),
+              Text(
+                'Generate ${_reportController.reportType.value}',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
-      ),
-    ));
+      );
+    });
+  }
+
+  IconData _getReportTypeIcon(String reportType) {
+    switch (reportType) {
+      case 'Summary Report':
+        return Icons.summarize;
+      case 'Detailed Report':
+        return Icons.description;
+      case 'Financial Analysis':
+        return Icons.trending_up;
+      case 'Maintenance Report':
+        return Icons.build;
+      default:
+        return Icons.description;
+    }
   }
 }
