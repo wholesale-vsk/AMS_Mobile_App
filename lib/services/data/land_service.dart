@@ -33,6 +33,7 @@ class LandService {
       final updateData = {
         "name": landName,
         "landSize": landSize,
+        "landType": landType,
         "address": landAddress,
         "city": landCity,
         "purchaseDate": purchaseDate,
@@ -98,6 +99,7 @@ class LandService {
         data: {
           "name": landName,
           "landSize": landSize,
+          "landType": landType,
           "address": landAddress,
           "city": landCity,
           "purchaseDate": purchaseDate,

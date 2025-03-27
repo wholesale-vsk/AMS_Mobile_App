@@ -50,7 +50,7 @@ class AddBuildingScreen extends StatelessWidget {
                           prefixIcon: Icons.home),
                       const SizedBox(height: 16),
                       CustomDropdown(
-                        label: 'Land Type',
+                        label: 'Building Type',
                         options: const ['RESIDENTIAL', 'COMMERCIAL', 'INDUSTRIAL', 'AGRICULTURAL'],
                         controller: buildingController.buildingTypeController,
                         onChanged: (value) {
@@ -120,9 +120,7 @@ class AddBuildingScreen extends StatelessWidget {
                       _buildTextField('Council Tax', buildingController.councilTaxController,
                           prefixIcon: Icons.account_balance_wallet),
                       const SizedBox(height: 16),
-                      _buildTextField('Council Cost', buildingController.councilTaxValueController,
-                          prefixIcon: Icons.construction, isNumeric: true),
-                      const SizedBox(height: 16),
+                      
                       CalendarField(
                         controller: buildingController.councilTaxDateController,
                         hintText: 'Council Tax Date',

@@ -230,9 +230,9 @@ class AssetController extends GetxController {
         "vrn": v.vrn,
         "motValue": v.motValue,
         "insuranceValue": v.insuranceValue,
-        "vehicle_type": v.vehicletype,
+        "vehicle_type": v.vehicleType,
         "owner_name": v.ownerName,
-        "isActive": v.isActive,
+
         "purchasePrice": v.purchasePrice, // Keep as double, no "N/A"
         "purchaseDate":(v.purchaseDate),
         "motDate": (v.motDate),
@@ -242,7 +242,7 @@ class AssetController extends GetxController {
         "createdDate": (v.createdDate),
         "lastModifiedBy": v.lastModifiedBy,
         "lastModifiedDate": (v.lastModifiedDate),
-        "milage": v.milage,
+        "mileage": v.mileage,
         "vehicleId": Uri.parse(v.links).pathSegments.last,
         "motExpiredDate": (v.motExpiredDate),
         "type": "Vehicle", // ✅ Ensures type is set for filtering
@@ -271,8 +271,8 @@ class AssetController extends GetxController {
       List<Map<String, dynamic>> landAssets = lands.map((l) => {
         "category": "Land",
         "name": l.name ?? "Unknown",
-        "type": l.type ?? "N/A",
-        "landSize": l.size ?? "N/A",
+        "landType": l.landType ?? "N/A",
+        "landSize": l.landSize ?? "N/A",
         "address": l.address ?? "N/A",
         "city": l.city ?? "N/A",
         "purchaseDate": l.purchaseDate ?? "N/A",

@@ -52,6 +52,7 @@ class AddLandScreen extends StatelessWidget {
                       _buildTextField('Land Name', landController.landNameController,
                           prefixIcon: Icons.title),
                       const SizedBox(height: 16),
+
                       CustomDropdown(
                         label: 'Land Type',
                         options: const ['RESIDENTIAL', 'COMMERCIAL', 'INDUSTRIAL', 'AGRICULTURAL'],
@@ -61,6 +62,17 @@ class AddLandScreen extends StatelessWidget {
                         },
                         selectedItem: landController.landTypeController.text,
                       ),
+                      
+
+                      // CustomDropdown(
+                      //   label: 'Land Type',
+                      //   options: const ['RESIDENTIAL', 'COMMERCIAL', 'INDUSTRIAL', 'AGRICULTURAL'],
+                      //   controller: landController.landTypeController,
+                      //   onChanged: (value) {
+                      //     landController.landTypeController.text = value!;
+                      //   },
+                      //   selectedItem: landController.landTypeController.text,
+                      // ),
                       const SizedBox(height: 16),
                       _buildTextField('Land Size (in sq. ft.)', landController.landSizeController,
                           isNumeric: true, prefixIcon: Icons.square_foot),

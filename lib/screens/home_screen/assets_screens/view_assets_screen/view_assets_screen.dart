@@ -352,14 +352,19 @@ class _AssetsViewScreenState extends State<AssetsViewScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    asset['name'] ?? asset['vrn'] ?? 'Unknown Asset',
+                    asset['name'] ?? asset['vrn'] ??asset['type'] ?? 'Unknown Asset',
                     style: const TextStyle(
                       fontWeight: FontWeight.bold,
                       fontSize: 16,
+
                     ),
+
+
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
+
+                  
                   const SizedBox(height: 4),
                   Row(
                     children: [

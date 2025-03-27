@@ -3,13 +3,12 @@ class Vehicle {
   final String vrn;
   final String motValue;
   final String insuranceValue;
-  final String vehicletype;
+  final String vehicleType;
   final String ownerName;
-  final bool isActive;
   final double purchasePrice;
   final String purchaseDate;
   final String motDate;
-  final double milage;
+  final double mileage;
   final String insuranceDate;
   final String imageURL;
   final String createdBy;
@@ -17,6 +16,7 @@ class Vehicle {
   final String lastModifiedBy;
   final String lastModifiedDate;
   final String motExpiredDate;
+  final String id;
   final String links;
 
   Vehicle({
@@ -25,8 +25,7 @@ class Vehicle {
     required this.motValue,
     required this.insuranceValue,
     required this.ownerName,
-    required this.vehicletype,
-    required this.isActive,
+    required this.vehicleType,
     required this.purchasePrice,
     required this.purchaseDate,
     required this.motDate,
@@ -36,33 +35,51 @@ class Vehicle {
     required this.createdDate,
     required this.lastModifiedBy,
     required this.lastModifiedDate,
-    required this.milage,
+    required this.mileage,
     required this.motExpiredDate,
-    required this.links
+    required this.links,
+    required this.id,
   });
 
   /// **✅ Convert JSON to `Vehicle` object**
   factory Vehicle.fromJson(Map<String, dynamic>? json) {
+    if (json == null) {
+      throw ArgumentError("JSON cannot be null");
+    }
+
+    // Safely extract the ID from links
+    String extractedId = '';
+    try {
+      if (json['_links'] != null &&
+          json['_links']['self'] != null &&
+          json['_links']['self']['href'] != null) {
+        final href = json['_links']['self']['href'] as String;
+        extractedId = Uri.parse(href).pathSegments.last;
+      }
+    } catch (e) {
+      extractedId = 'unknown-id';
+    }
+
     return Vehicle(
-      model: json?['model'] ?? 'Unknown',
-      vehicletype: json?['vehicle_type'] ?? 'Unknown',
-      vrn: json?['vrn'] ?? 'Unknown',
-      motValue: json?['motValue'] ?? 'N/A',
-      insuranceValue: json?['insuranceValue'] ?? 'N/A',
-      ownerName: json?['owner_name'] ?? 'N/A',
-      isActive: json?['isActive'] ?? false,
-      purchasePrice: (json?['purchasePrice'] as num?)?.toDouble() ?? 0.0,
-      purchaseDate: json?['purchaseDate'] ?? 'N/A',
-      motDate: json?['motDate'] ?? 'N/A',
-      insuranceDate: json?['insuranceDate'] ?? 'N/A',
-      imageURL: json?['imageURL'] ?? '',
-      createdBy: json?['createdBy'] ?? 'Unknown',
-      createdDate: json?['createdDate'] ?? 'N/A',
-      lastModifiedBy: json?['lastModifiedBy'] ?? 'Unknown',
-      lastModifiedDate: json?['lastModifiedDate'] ?? 'N/A',
-      motExpiredDate: json?['motExpiredDate'] ?? 'N/A',
-      links: json?['_links']['self']['href'] ?? 'N/A',
-      milage: json?['milage'] ?? 'N/A',
+      model: json['model'] ?? 'Unknown',
+      vehicleType: json['vehicle_type'] ?? 'Unknown',
+      vrn: json['vrn'] ?? 'Unknown',
+      motValue: json['motValue'] ?? 'N/A',
+      insuranceValue: json['insuranceValue'] ?? 'N/A',
+      ownerName: json['owner_name'] ?? 'N/A',
+      purchasePrice: (json['purchasePrice'] as num?)?.toDouble() ?? 0.0,
+      purchaseDate: json['purchaseDate'] ?? 'N/A',
+      motDate: json['motDate'] ?? 'N/A',
+      insuranceDate: json['insuranceDate'] ?? 'N/A',
+      imageURL: json['imageURL'] ?? '',
+      createdBy: json['createdBy'] ?? 'Unknown',
+      createdDate: json['createdDate'] ?? 'N/A',
+      lastModifiedBy: json['lastModifiedBy'] ?? 'Unknown',
+      lastModifiedDate: json['lastModifiedDate'] ?? 'N/A',
+      motExpiredDate: json['motExpiredDate'] ?? 'N/A',
+      links: json['_links']?['self']?['href'] ?? 'N/A',
+      mileage: (json['mileage'] as num?)?.toDouble() ?? 0.0, // Fixed the field name from 'milage' to 'mileage'
+      id: json['id'] ?? extractedId, // Use the provided ID or extract from links
     );
   }
 
@@ -73,9 +90,8 @@ class Vehicle {
       'vrn': vrn,
       'motValue': motValue,
       'insuranceValue': insuranceValue,
-      'vehicle_type': vehicletype,
-      'owner_name': ownerName, // ✅ Ensures correct key format
-      'isActive': isActive,
+      'vehicle_type': vehicleType,
+      'owner_name': ownerName,
       'purchasePrice': purchasePrice,
       'purchaseDate': purchaseDate,
       'motDate': motDate,
@@ -85,14 +101,9 @@ class Vehicle {
       'createdDate': createdDate,
       'lastModifiedBy': lastModifiedBy,
       'lastModifiedDate': lastModifiedDate,
-      'milage': milage,
+      'mileage': mileage,
       'motExpiredDate': motExpiredDate,
-      'links': links,
-      'type': 'Vehicle', // ✅ Ensures type is set for filtering
+      'id': id
     };
   }
-
-  get rating => null;
-
-
 }

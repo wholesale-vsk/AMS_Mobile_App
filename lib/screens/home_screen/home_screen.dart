@@ -278,7 +278,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [
               _buildActionButton(Icons.add, 'New Asset', Color(0xFF6B46C1), AppRoutes.ADD_ASSET_SCREEN),
-              _buildActionButton(Icons.history, 'History', Color(0xFF38B2AC), AppRoutes.UPDATE_VEHICLE_SCREEN),
+              // _buildActionButton(Icons.history, 'History', Color(0xFF38B2AC), AppRoutes.ASSET_HISTORY_SCREEN),
               _buildActionButton(Icons.notifications, 'Alerts', Color(0xFFDD6B20), AppRoutes.NOTIFICATION_SCREEN),
             ],
           ),

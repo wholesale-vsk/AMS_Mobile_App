@@ -1,7 +1,7 @@
 class Land {
   final String name;
-  final String type;
-  final double size;
+  final String landType;
+  final double landSize;
   final String address;
   final String city;
   final String province;
@@ -14,8 +14,8 @@ class Land {
 
   Land({
     required this.name,
-    required this.type,
-    required this.size,
+    required this.landType,
+    required this.landSize,
     required this.address,
     required this.city,
     required this.province,
@@ -35,8 +35,8 @@ class Land {
 
     return Land(
       name: json['name'] ?? 'Unknown',
-      type: json['type'] ?? 'Unknown',
-      size: (json['landSize'] is num) ? (json['landSize'] as num).toDouble() : 0.0,
+      landType: json['landType'] ?? 'Unknown',
+      landSize: (json['landSize'] is num) ? (json['landSize'] as num).toDouble() : 0.0,
       address: json['address'] ?? 'Unknown',
       city: json['city'] ?? 'Unknown',
       province: json['province'] ?? 'Unknown',
@@ -46,8 +46,15 @@ class Land {
       leaseValue: json['leaseValue'] ?? 'N/A',
       imageURL: json['imageURL'] is String ? json['imageURL'] : "",
       links: json['_links']['self']['href'] ?? 'N/A',
+      
     );
   }
+
+
+
+
+
+ 
 
 
 
@@ -60,8 +67,8 @@ class Land {
   Map<String, dynamic> toJson() {
     return {
       'name': name,
-      'type': type,
-      'landSize': size,
+      'type': landType,
+      'landSize': landSize,
       'address': address,
       'city': city,
       'province': province,

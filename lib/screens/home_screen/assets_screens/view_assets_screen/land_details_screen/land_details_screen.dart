@@ -157,7 +157,7 @@ class LandDetailsScreen extends StatelessWidget {
                                     borderRadius: BorderRadius.circular(20),
                                   ),
                                   child: Text(
-                                    land!['type'] ?? 'Unknown Type',
+                                    land!['landType'] ?? 'Unknown Type',
                                     style: TextStyle(
                                       color: primaryColor,
                                       fontWeight: FontWeight.w600,
@@ -228,7 +228,7 @@ class LandDetailsScreen extends StatelessWidget {
                       _buildDetailsSection(
                         'Property Information',
                         [
-                          {'label': 'Land Type', 'value': land!['type']},
+                          {'label': 'Land Type', 'value': land!['landType']},
                           {'label': 'Size', 'value': '${land!['landSize']} acres'},
                           {'label': 'Location', 'value': land!['city']},
                           {'label': 'Full Address', 'value': land!['address']},
@@ -247,39 +247,39 @@ class LandDetailsScreen extends StatelessWidget {
                         context,
                       ),
 
-                      // Map section - placeholder for future enhancement
-                      Padding(
-                        padding: const EdgeInsets.all(16),
-                        child: Container(
-                          height: 200,
-                          width: double.infinity,
-                          decoration: BoxDecoration(
-                            color: Colors.grey.withOpacity(0.2),
-                            borderRadius: BorderRadius.circular(16),
-                            border: Border.all(color: Colors.grey.withOpacity(0.3)),
-                          ),
-                          child: Center(
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Icon(
-                                  Icons.map_outlined,
-                                  size: 48,
-                                  color: primaryColor.withOpacity(0.6),
-                                ),
-                                const SizedBox(height: 8),
-                                Text(
-                                  'Map View',
-                                  style: TextStyle(
-                                    color: textColor.withOpacity(0.7),
-                                    fontWeight: FontWeight.w500,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ),
+                      // // Map section - placeholder for future enhancement
+                      // Padding(
+                      //   padding: const EdgeInsets.all(16),
+                      //   child: Container(
+                      //     height: 200,
+                      //     width: double.infinity,
+                      //     decoration: BoxDecoration(
+                      //       color: Colors.grey.withOpacity(0.2),
+                      //       borderRadius: BorderRadius.circular(16),
+                      //       border: Border.all(color: Colors.grey.withOpacity(0.3)),
+                      //     ),
+                      //     child: Center(
+                      //       child: Column(
+                      //         mainAxisAlignment: MainAxisAlignment.center,
+                      //         children: [
+                      //           Icon(
+                      //             Icons.map_outlined,
+                      //             size: 48,
+                      //             color: primaryColor.withOpacity(0.6),
+                      //           ),
+                      //           const SizedBox(height: 8),
+                      //           Text(
+                      //             'Map View',
+                      //             style: TextStyle(
+                      //               color: textColor.withOpacity(0.7),
+                      //               fontWeight: FontWeight.w500,
+                      //             ),
+                      //           ),
+                      //         ],
+                      //       ),
+                      //     ),
+                      //   ),
+                      // ),
                     ],
                   ),
                 ),

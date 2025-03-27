@@ -10,7 +10,6 @@ class VehicleService {
 
   /// **Update Vehicle Details**
   Future<ApiResponse> updateVehicle({
-
     required String registrationNumber,
     required String vehicleType,
     required String vehicleModel,
@@ -18,10 +17,10 @@ class VehicleService {
     required String ownerName,
     required String motValue,
     required String motDate,
-    required String milage,
+    required double mileage,
     required String motExpiredDate,
     required String purchaseDate,
-    required String purchasePrice,
+    required double purchasePrice,  // Changed from String to double to match addVehicle
     required String insuranceValue,
     required String insuranceDate,
     required String vehicleImage,
@@ -44,14 +43,14 @@ class VehicleService {
         "imageURL": vehicleImage.isNotEmpty ? vehicleImage : null,
         "motValue": motValue,
         "motDate": motDate,
-        "milage": milage,
+        "mileage": mileage,
         "insuranceValue": insuranceValue,
         "insuranceDate": insuranceDate,
         "motExpiredDate": motExpiredDate
       };
 
       final response = await dio.put(
-        'https://api.ams.hexalyte.com/vehicle/vehicles/$vehicleId', // ✅ Changed from POST to PUT
+        '/vehicle/vehicles/$vehicleId',  // Use relative URL with baseURL
         data: updateData,
         options: Options(
           headers: {
@@ -64,6 +63,7 @@ class VehicleService {
         isSuccess: true,
         statusCode: response.statusCode,
         message: 'Vehicle details updated successfully!',
+        data: response.data,  // Added data field to match addVehicle
       );
     } on DioException catch (e) {
       debugPrint("🚨 DioException in updateVehicle: ${e.response?.data}");
@@ -92,14 +92,13 @@ class VehicleService {
     required String ownerName,
     required String motValue,
     required String motDate,
-    required String milage,
+    required double mileage,
     required String motExpiredDate,
     required String purchaseDate,
-    required String purchasePrice,
+    required double purchasePrice,
     required String insuranceValue,
     required String insuranceDate,
     required String vehicleImage,
-
   }) async {
     try {
       String? accessToken = await _secureStorage.read(key: 'access_token');
@@ -109,7 +108,7 @@ class VehicleService {
       }
 
       final response = await dio.post(
-        'https://api.ams.hexalyte.com/vehicle/vehicles',
+        '/vehicle/vehicles',  // Use relative URL with baseURL
         data: {
           "vrn": registrationNumber,
           "vehicle_type": vehicleType,
@@ -120,7 +119,7 @@ class VehicleService {
           "imageURL": vehicleImage.isNotEmpty ? vehicleImage : null,
           "motValue": motValue,
           "motDate": motDate,
-          "milage": milage,
+          "mileage": mileage,
           "insuranceValue": insuranceValue,
           "insuranceDate": insuranceDate,
           "motExpiredDate": motExpiredDate
@@ -169,7 +168,7 @@ class VehicleService {
       }
 
       final response = await dio.get(
-        'https://api.ams.hexalyte.com/vehicle/vehicles',
+        '/vehicle/vehicles',  // Use relative URL with baseURL
         options: Options(
           headers: {
             'Authorization': 'Bearer $accessToken',

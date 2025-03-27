@@ -51,19 +51,19 @@ class VehicleController extends GetxController {
         motExpiredDate: _validateInput(motExpiredDateController.text),
         insuranceDate: _validateInput(insuranceDateController.text),
         insuranceValue: _validateInput(insuranceValueController.text, defaultValue: '0'),
-        milage: _validateInput(mileageController.text),
-        purchaseDate: _validateInput(purchaseDateController.text),
-        purchasePrice: _validateInput(purchasePriceController.text, defaultValue: '0'),
+        mileage: double.tryParse(_validateInput(mileageController.text)) ?? 0.0,
+        purchasePrice: double.tryParse(_validateInput(purchasePriceController.text, defaultValue: '0')) ?? 0.0,
         motValue: _validateInput(motValueController.text, defaultValue: '0'),
         ownerName: _validateInput(ownerNameController.text),
+        purchaseDate: _validateInput(purchaseDateController.text),
       );
 
-      print('Response for test: $response');
+      _logger.i('Response for test: $response');
 
       if (response.isSuccess) {
         Get.snackbar('Success', response.message.toString(),
             duration: const Duration(seconds: 3));
-        clearForm(); // ✅ Clears form after success
+        clearForm();
       } else {
         Get.snackbar('Error', response.message ?? 'Failed to add vehicle.',
             duration: const Duration(seconds: 3));
@@ -71,7 +71,54 @@ class VehicleController extends GetxController {
     } catch (e, stackTrace) {
       Get.snackbar('Error', 'An unexpected error occurred. Please try again.',
           duration: const Duration(seconds: 3));
-      debugPrint("🚨 Error in addVehicle: $e\nStackTrace: $stackTrace");
+      _logger.e("Error in addVehicle", error: e, stackTrace: stackTrace);
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
+  /// **UPDATE VEHICLE FUNCTION**
+  Future<void> updateVehicle() async {
+    if (!vehicleFormKey.currentState!.validate()) {
+      Get.snackbar('Validation Error', 'Please fill in all required fields.',
+          duration: const Duration(seconds: 3));
+      return;
+    }
+
+    isLoading.value = true;
+
+    try {
+      final response = await _vehicleService.updateVehicle(
+        registrationNumber: _validateInput(registrationNumberController.text),
+        vehicleModel: _validateInput(vehicleModelController.text),
+        vehicleType: _validateInput(vehicleTypeController.text),
+        vehicleImage: _validateInput(vehicleImageController.text),
+        motDate: _validateInput(motDateController.text),
+        motExpiredDate: _validateInput(motExpiredDateController.text),
+        insuranceDate: _validateInput(insuranceDateController.text),
+        insuranceValue: _validateInput(insuranceValueController.text, defaultValue: '0'),
+        mileage: double.tryParse(_validateInput(mileageController.text)) ?? 0.0,
+        purchaseDate: _validateInput(purchaseDateController.text),
+        purchasePrice: double.tryParse(_validateInput(purchasePriceController.text, defaultValue: '0')) ?? 0.0, // Changed to double to match service
+        motValue: _validateInput(motValueController.text, defaultValue: '0'),
+        ownerName: _validateInput(ownerNameController.text),
+        vehicleId: _validateInput(vehicleIdController.text),
+      );
+
+      _logger.i('Response for update: $response');
+
+      if (response.isSuccess) {
+        Get.snackbar('Success', response.message.toString(),
+            duration: const Duration(seconds: 3));
+        clearForm();
+      } else {
+        Get.snackbar('Error', response.message ?? 'Failed to update vehicle.',
+            duration: const Duration(seconds: 3));
+      }
+    } catch (e, stackTrace) {
+      Get.snackbar('Error', 'An unexpected error occurred. Please try again.',
+          duration: const Duration(seconds: 3));
+      _logger.e("Error in updateVehicle", error: e, stackTrace: stackTrace);
     } finally {
       isLoading.value = false;
     }
@@ -81,6 +128,7 @@ class VehicleController extends GetxController {
   void clearForm() {
     brandController.clear();
     registrationNumberController.clear();
+    vehicleCategoryController.clear();
     vehicleModelController.clear();
     vehicleTypeController.clear();
     vehicleImageController.clear();
@@ -93,7 +141,8 @@ class VehicleController extends GetxController {
     insuranceValueController.clear();
     motValueController.clear();
     ownerNameController.clear();
-    mileageController.clear(); // ✅ Ensure mileageController is cleared too
+    mileageController.clear();
+    vehicleIdController.clear(); // Added to clear vehicle ID
   }
 
   //:::::::::::::::::::::::::::::::::<< HELPER FUNCTION TO HANDLE NULL VALUES >>::::::::::::::::::::::::::::::::://
@@ -103,9 +152,10 @@ class VehicleController extends GetxController {
 
   @override
   void onClose() {
-    // ✅ Ensured controllers are disposed of correctly
+    // Dispose all controllers
     brandController.dispose();
     registrationNumberController.dispose();
+    vehicleCategoryController.dispose();
     vehicleModelController.dispose();
     vehicleTypeController.dispose();
     vehicleImageController.dispose();
@@ -118,45 +168,8 @@ class VehicleController extends GetxController {
     insuranceValueController.dispose();
     motValueController.dispose();
     ownerNameController.dispose();
-    mileageController.dispose(); // ✅ Added missing disposal
+    mileageController.dispose();
+    vehicleIdController.dispose(); // Added to dispose vehicle ID controller
     super.onClose();
-  }
-
-  updateVehicle() async {
-    try {
-      final response = await _vehicleService.updateVehicle(
-        registrationNumber: _validateInput(registrationNumberController.text),
-        vehicleModel: _validateInput(vehicleModelController.text),
-        vehicleType: _validateInput(vehicleTypeController.text),
-        vehicleImage: _validateInput(vehicleImageController.text),
-        motDate: _validateInput(motDateController.text),
-        motExpiredDate: _validateInput(motExpiredDateController.text),
-        insuranceDate: _validateInput(insuranceDateController.text),
-        insuranceValue: _validateInput(insuranceValueController.text, defaultValue: '0'),
-        milage: _validateInput(mileageController.text),
-        purchaseDate: _validateInput(purchaseDateController.text),
-        purchasePrice: _validateInput(purchasePriceController.text, defaultValue: '0'),
-        motValue: _validateInput(motValueController.text, defaultValue: '0'),
-        ownerName: _validateInput(ownerNameController.text),
-        vehicleId: _validateInput(vehicleIdController.text),
-      );
-
-      _logger.i('Response for test: $response');
-
-      if (response.isSuccess) {
-        Get.snackbar('Success', response.message.toString(),
-            duration: const Duration(seconds: 3));
-        clearForm(); // ✅ Clears form after success
-      } else {
-        Get.snackbar('Error', response.message ?? 'Failed to add vehicle.',
-            duration: const Duration(seconds: 3));
-      }
-    } catch (e, stackTrace) {
-      Get.snackbar('Error', 'An unexpected error occurred. Please try again.',
-          duration: const Duration(seconds: 3));
-      debugPrint("🚨 Error in addVehicle: $e\nStackTrace: $stackTrace");
-    } finally {
-      isLoading.value = false;
-    }
   }
 }

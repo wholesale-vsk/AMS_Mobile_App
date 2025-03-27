@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../../../controllers/assets_controllers/assets_controller.dart';
@@ -5,14 +6,199 @@ import '../../../../controllers/assets_controllers/assets_controller.dart';
 import '../../../../services/local/pdf_service/pdf_generate_for_single_asset.dart';
 import '../../../../utils/theme/font_size.dart';
 
-class VehicleReportScreen extends StatelessWidget {
-  VehicleReportScreen({super.key});
+class VehicleReportScreen extends StatefulWidget {
+  const VehicleReportScreen({super.key});
 
+  @override
+  State<VehicleReportScreen> createState() => _VehicleReportScreenState();
+}
+
+class _VehicleReportScreenState extends State<VehicleReportScreen> {
   final AssetController assetsController = Get.put(AssetController());
   final RxString _selectedFilter = "All".obs;
 
-  Future<void> _refreshData() async {
-    await assetsController.fetchAllAssets(); // Ensure accurate data refresh
+  // Timer for auto-refresh functionality
+  Timer? _autoRefreshTimer;
+  // RxBool to track if auto-refresh is enabled
+  final RxBool _isAutoRefreshEnabled = false.obs;
+  // Default refresh interval in seconds
+  final RxInt _refreshInterval = 60.obs; // 1 minute
+
+  // Refresh data and show a snackbar with refresh status
+  Future<void> _refreshData({bool showSnackbar = false}) async {
+    try {
+      await assetsController.fetchAllAssets(); // Ensure accurate data refresh
+
+      if (showSnackbar) {
+        Get.snackbar(
+            "Refreshed",
+            "Vehicle data updated successfully",
+            backgroundColor: Colors.green.shade700,
+            colorText: Colors.white,
+            margin: const EdgeInsets.all(8),
+            duration: const Duration(seconds: 2),
+            borderRadius: 10,
+            icon: const Icon(Icons.check_circle, color: Colors.white)
+        );
+      }
+    } catch (e) {
+      if (showSnackbar) {
+        Get.snackbar(
+            "Refresh Failed",
+            "Could not update data: $e",
+            backgroundColor: Colors.red.shade700,
+            colorText: Colors.white,
+            margin: const EdgeInsets.all(8),
+            duration: const Duration(seconds: 3),
+            borderRadius: 10,
+            icon: const Icon(Icons.error, color: Colors.white)
+        );
+      }
+    }
+  }
+
+  // Toggle auto-refresh functionality
+  void _toggleAutoRefresh() {
+    if (_isAutoRefreshEnabled.value) {
+      // Disable auto-refresh
+      _autoRefreshTimer?.cancel();
+      _autoRefreshTimer = null;
+      _isAutoRefreshEnabled.value = false;
+
+      Get.snackbar(
+          "Auto-Refresh Disabled",
+          "Manual refresh is now required",
+          backgroundColor: Colors.grey.shade700,
+          colorText: Colors.white,
+          margin: const EdgeInsets.all(8),
+          duration: const Duration(seconds: 2),
+          borderRadius: 10
+      );
+    } else {
+      // Enable auto-refresh
+      _isAutoRefreshEnabled.value = true;
+      _startAutoRefreshTimer();
+
+      Get.snackbar(
+          "Auto-Refresh Enabled",
+          "Data will refresh every ${_refreshInterval.value} seconds",
+          backgroundColor: Colors.blue.shade700,
+          colorText: Colors.white,
+          margin: const EdgeInsets.all(8),
+          duration: const Duration(seconds: 2),
+          borderRadius: 10
+      );
+    }
+  }
+
+  // Start the auto-refresh timer with the current interval
+  void _startAutoRefreshTimer() {
+    _autoRefreshTimer?.cancel();
+    _autoRefreshTimer = Timer.periodic(
+        Duration(seconds: _refreshInterval.value),
+            (_) => _refreshData(showSnackbar: true)
+    );
+  }
+
+  // Show a dialog to configure the refresh interval
+  void _showRefreshIntervalDialog() {
+    final TextEditingController intervalController = TextEditingController(
+        text: _refreshInterval.value.toString()
+    );
+
+    Get.dialog(
+      AlertDialog(
+        title: const Text('Set Refresh Interval'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text('Enter refresh interval in seconds:'),
+            const SizedBox(height: 16),
+            TextField(
+              controller: intervalController,
+              keyboardType: TextInputType.number,
+              decoration: const InputDecoration(
+                border: OutlineInputBorder(),
+                labelText: 'Seconds',
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Get.back(),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              final int? newInterval = int.tryParse(intervalController.text);
+              if (newInterval != null && newInterval > 0) {
+                _refreshInterval.value = newInterval;
+                if (_isAutoRefreshEnabled.value) {
+                  _startAutoRefreshTimer(); // Restart timer with new interval
+                }
+                Get.back();
+                Get.snackbar(
+                    "Interval Updated",
+                    "Refresh interval set to $_refreshInterval seconds",
+                    backgroundColor: Colors.blue.shade700,
+                    colorText: Colors.white,
+                    margin: const EdgeInsets.all(8),
+                    duration: const Duration(seconds: 2),
+                    borderRadius: 10
+                );
+              } else {
+                Get.snackbar(
+                    "Invalid Value",
+                    "Please enter a positive number",
+                    backgroundColor: Colors.red.shade700,
+                    colorText: Colors.white,
+                    margin: const EdgeInsets.all(8),
+                    duration: const Duration(seconds: 2),
+                    borderRadius: 10
+                );
+              }
+            },
+            child: const Text('Save'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // Get filtered vehicles based on selected filter
+  List<Map<String, dynamic>> _getFilteredVehicles() {
+    final vehicleAssets = assetsController.filteredAssets
+        .where((asset) => asset['category'] == 'Vehicle')
+        .toList();
+
+    if (_selectedFilter.value == 'All') {
+      return vehicleAssets;
+    }
+
+    // Convert filter names to lowercase for case-insensitive comparison
+    String filterType = _selectedFilter.value.toLowerCase();
+    if (filterType == 'cars') {
+      return vehicleAssets.where((v) =>
+      (v['vehicle_type']?.toString().toLowerCase() ?? '').contains('car') ||
+          // Also include vehicles where type might not explicitly say "car" but is a car model
+          !(v['vehicle_type']?.toString().toLowerCase() ?? '').contains('truck') &&
+              !(v['vehicle_type']?.toString().toLowerCase() ?? '').contains('bike') &&
+              !(v['vehicle_type']?.toString().toLowerCase() ?? '').contains('motorcycle')
+      ).toList();
+    } else if (filterType == 'trucks') {
+      return vehicleAssets.where((v) =>
+      (v['vehicle_type']?.toString().toLowerCase() ?? '').contains('truck') ||
+          (v['vehicle_type']?.toString().toLowerCase() ?? '').contains('lorry')
+      ).toList();
+    } else if (filterType == 'motorcycles') {
+      return vehicleAssets.where((v) =>
+      (v['vehicle_type']?.toString().toLowerCase() ?? '').contains('bike') ||
+          (v['vehicle_type']?.toString().toLowerCase() ?? '').contains('motorcycle')
+      ).toList();
+    }
+
+    return vehicleAssets;
   }
 
   Widget _buildSummaryCard({
@@ -414,12 +600,44 @@ class VehicleReportScreen extends StatelessWidget {
       child: Scaffold(
         backgroundColor: Colors.grey.shade50,
         appBar: AppBar(
-          title: const Text(
-            'Vehicle Reports',
-            style: TextStyle(
-              color: Colors.black87,
-              fontWeight: FontWeight.bold,
-            ),
+          title: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text(
+                'Vehicle Reports',
+                style: TextStyle(
+                  color: Colors.black87,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(width: 8),
+              // Show auto-refresh indicator if enabled
+              Obx(() => _isAutoRefreshEnabled.value
+                  ? Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                decoration: BoxDecoration(
+                  color: Colors.blue.shade100,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.sync, size: 14, color: Colors.blue.shade800),
+                    const SizedBox(width: 4),
+                    Text(
+                      '${_refreshInterval.value}s',
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.blue.shade800,
+                      ),
+                    ),
+                  ],
+                ),
+              )
+                  : const SizedBox.shrink()
+              ),
+            ],
           ),
           centerTitle: true,
           elevation: 0,
@@ -431,12 +649,90 @@ class VehicleReportScreen extends StatelessWidget {
           actions: [
             IconButton(
               icon: const Icon(Icons.refresh, color: Colors.black87),
-              onPressed: _refreshData,
+              onPressed: () => _refreshData(showSnackbar: true),
+              tooltip: 'Manual Refresh',
+            ),
+            Obx(() => IconButton(
+              icon: Icon(
+                _isAutoRefreshEnabled.value
+                    ? Icons.timer : Icons.timer_off,
+                color: _isAutoRefreshEnabled.value
+                    ? Colors.blue.shade700 : Colors.black87,
+              ),
+              onPressed: _toggleAutoRefresh,
+              tooltip: _isAutoRefreshEnabled.value
+                  ? 'Disable Auto-refresh'
+                  : 'Enable Auto-refresh',
+            )),
+            IconButton(
+              icon: const Icon(Icons.timelapse, color: Colors.black87),
+              onPressed: _showRefreshIntervalDialog,
+              tooltip: 'Set Refresh Interval',
             ),
             IconButton(
               icon: const Icon(Icons.filter_list, color: Colors.black87),
               onPressed: () {
-                // Open filter options
+                // Show filter options dialog
+                Get.dialog(
+                  AlertDialog(
+                    title: const Text('Filter Vehicles'),
+                    content: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        ListTile(
+                          title: const Text('All Vehicles'),
+                          leading: Radio<String>(
+                            value: 'All',
+                            groupValue: _selectedFilter.value,
+                            onChanged: (value) {
+                              _selectedFilter.value = value!;
+                              Get.back();
+                            },
+                          ),
+                        ),
+                        ListTile(
+                          title: const Text('Cars'),
+                          leading: Radio<String>(
+                            value: 'Cars',
+                            groupValue: _selectedFilter.value,
+                            onChanged: (value) {
+                              _selectedFilter.value = value!;
+                              Get.back();
+                            },
+                          ),
+                        ),
+                        ListTile(
+                          title: const Text('Trucks'),
+                          leading: Radio<String>(
+                            value: 'Trucks',
+                            groupValue: _selectedFilter.value,
+                            onChanged: (value) {
+                              _selectedFilter.value = value!;
+                              Get.back();
+                            },
+                          ),
+                        ),
+                        ListTile(
+                          title: const Text('Motorcycles'),
+                          leading: Radio<String>(
+                            value: 'Motorcycles',
+                            groupValue: _selectedFilter.value,
+                            onChanged: (value) {
+                              _selectedFilter.value = value!;
+                              Get.back();
+                            },
+                          ),
+                        ),
+                      ],
+                    ),
+                    actions: [
+                      TextButton(
+                        onPressed: () => Get.back(),
+                        child: const Text('Close'),
+                      ),
+                    ],
+                  ),
+                );
               },
             ),
           ],
@@ -452,11 +748,10 @@ class VehicleReportScreen extends StatelessWidget {
                   );
                 }
 
-                final vehicleAssets = assetsController.filteredAssets
-                    .where((asset) => asset['category'] == 'Vehicle')
-                    .toList();
+                // Get filtered vehicle list based on selected filter
+                final filteredVehicles = _getFilteredVehicles();
 
-                if (vehicleAssets.isEmpty) {
+                if (filteredVehicles.isEmpty) {
                   return Center(
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
@@ -468,7 +763,9 @@ class VehicleReportScreen extends StatelessWidget {
                         ),
                         const SizedBox(height: 16),
                         Text(
-                          'No Vehicles Available',
+                          _selectedFilter.value == 'All'
+                              ? 'No Vehicles Available'
+                              : 'No ${_selectedFilter.value} Available',
                           style: TextStyle(
                             fontSize: FontSizes.medium,
                             color: Colors.grey.shade600,
@@ -490,11 +787,12 @@ class VehicleReportScreen extends StatelessWidget {
                   );
                 }
 
-                final int totalVehicles = assetsController.totalVehicles.value;
+                // Calculate summary statistics for the filtered vehicles
+                final int totalVehicles = filteredVehicles.length;
 
                 // Calculate total purchase price
                 double totalValue = 0.0;
-                for (var vehicle in vehicleAssets) {
+                for (var vehicle in filteredVehicles) {
                   if (vehicle['purchasePrice'] != null) {
                     String valueString = vehicle['purchasePrice'].toString().replaceAll(',', '');
                     totalValue += double.tryParse(valueString) ?? 0.0;
@@ -503,7 +801,7 @@ class VehicleReportScreen extends StatelessWidget {
 
                 // Count different vehicle types
                 int cars = 0, trucks = 0, bikes = 0;
-                for (var vehicle in vehicleAssets) {
+                for (var vehicle in filteredVehicles) {
                   final type = (vehicle['vehicle_type'] ?? '').toString().toLowerCase();
                   if (type.contains('car')) {
                     cars++;
@@ -531,9 +829,15 @@ class VehicleReportScreen extends StatelessWidget {
                             SizedBox(
                               width: constraints.maxWidth * 0.45,
                               child: _buildSummaryCard(
-                                title: 'Total Vehicles',
+                                title: 'Total ${_selectedFilter.value == "All" ? "Vehicles" : _selectedFilter.value}',
                                 value: totalVehicles.toString(),
-                                icon: Icons.directions_car,
+                                icon: _selectedFilter.value == 'Cars'
+                                    ? Icons.directions_car
+                                    : _selectedFilter.value == 'Trucks'
+                                    ? Icons.local_shipping
+                                    : _selectedFilter.value == 'Motorcycles'
+                                    ? Icons.two_wheeler
+                                    : Icons.directions_car_filled,
                                 color: Colors.indigo.shade700,
                               ),
                             ),
@@ -571,16 +875,38 @@ class VehicleReportScreen extends StatelessWidget {
 
                       const SizedBox(height: 16),
 
-                      // Section Title
+                      // Section Title with count
                       Padding(
                         padding: const EdgeInsets.only(left: 4, bottom: 8),
-                        child: Text(
-                          'Vehicle List',
-                          style: TextStyle(
-                            fontSize: FontSizes.medium,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.black87,
-                          ),
+                        child: Row(
+                          children: [
+                            Text(
+                              _selectedFilter.value == 'All'
+                                  ? 'Vehicle List'
+                                  : '${_selectedFilter.value} List',
+                              style: TextStyle(
+                                fontSize: FontSizes.medium,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.black87,
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                              decoration: BoxDecoration(
+                                color: Colors.indigo.shade100,
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: Text(
+                                '$totalVehicles',
+                                style: TextStyle(
+                                  fontSize: FontSizes.small,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.indigo.shade800,
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
                       ),
 
@@ -588,9 +914,9 @@ class VehicleReportScreen extends StatelessWidget {
                       ListView.builder(
                         shrinkWrap: true,
                         physics: const NeverScrollableScrollPhysics(),
-                        itemCount: vehicleAssets.length,
+                        itemCount: filteredVehicles.length,
                         itemBuilder: (context, index) {
-                          return _buildVehicleCard(vehicleAssets[index], context);
+                          return _buildVehicleCard(filteredVehicles[index], context);
                         },
                       ),
                     ],
@@ -603,13 +929,17 @@ class VehicleReportScreen extends StatelessWidget {
         floatingActionButton: FloatingActionButton.extended(
           onPressed: () async {
             try {
-              final vehicleData = assetsController.filteredAssets
-                  .where((asset) => asset['category'] == 'Vehicle')
-                  .toList();
+              // Get the filtered vehicles based on current filter
+              final vehicleData = _getFilteredVehicles();
+
+              // Generate report title based on the filter
+              final reportTitle = _selectedFilter.value == 'All'
+                  ? 'Vehicle Fleet Inventory'
+                  : '${_selectedFilter.value} Fleet Inventory';
 
               await ModernPdfGenerator.generateReport(
                   context,
-                  'Vehicle Fleet Inventory',
+                  reportTitle,
                   data: vehicleData,
                   companyName: 'Hexalyte Technology'
               );
@@ -635,7 +965,12 @@ class VehicleReportScreen extends StatelessWidget {
               );
             }
           },
-          label: const Text("Generate Full Report", style: TextStyle(color: Colors.white)),
+          label: Text(
+              _selectedFilter.value == 'All'
+                  ? "Generate Full Report"
+                  : "Generate ${_selectedFilter.value} Report",
+              style: const TextStyle(color: Colors.white)
+          ),
           icon: const Icon(Icons.picture_as_pdf, color: Colors.white),
           backgroundColor: Colors.indigo.shade700,
           elevation: 4,

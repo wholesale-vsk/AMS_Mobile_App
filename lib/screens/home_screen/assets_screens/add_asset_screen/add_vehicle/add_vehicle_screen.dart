@@ -1,11 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:image_picker/image_picker.dart';
 import 'package:hexalyte_ams/controllers/vehicle_controller/vehicle_controller.dart';
 import 'package:hexalyte_ams/controllers/image_picker_controller/image_picker_controller.dart';
 import 'package:hexalyte_ams/utils/widgets/calander/calender_field.dart';
-import 'package:hexalyte_ams/utils/widgets/drop_down_field/custom_drop_down.dart';
-import 'dart:io';
+
+
 
 class AddVehicleScreen extends StatelessWidget {
   final VehicleController vehicleController = Get.put(VehicleController());
@@ -54,6 +53,9 @@ class AddVehicleScreen extends StatelessWidget {
                     children: [
                       _buildTextField('Model', vehicleController.vehicleModelController,
                           prefixIcon: Icons.model_training),
+                      const SizedBox(height: 16),
+                      _buildTextField('Type', vehicleController.vehicleTypeController,
+                          prefixIcon: Icons.branding_watermark),
                       const SizedBox(height: 16),
                       _buildTextField('Brand', vehicleController.brandController,
                           prefixIcon: Icons.branding_watermark),
