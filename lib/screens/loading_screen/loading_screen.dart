@@ -14,7 +14,7 @@ class _LoadingScreenState extends State<LoadingScreen> {
     super.initState();
 
     // Navigate to Login Screen after Lottie animation duration
-    Future.delayed(const Duration(seconds: 6), () {
+    Future.delayed(const Duration(seconds: 8), () {
       if (mounted) {
         Get.offNamed(AppRoutes.LOGIN_SCREEN);
       }

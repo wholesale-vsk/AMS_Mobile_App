@@ -623,7 +623,7 @@ class AssetReportController extends GetxController {
             mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
             children: [
               pw.Text(
-                'Hexalyte AMS',
+                'Vynix',
                 style: pw.TextStyle(
                   font: fontBold,
                   fontSize: 20,

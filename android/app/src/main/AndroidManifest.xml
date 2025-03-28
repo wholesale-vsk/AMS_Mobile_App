@@ -10,7 +10,7 @@
 
 
     <application
-        android:label="AMS"
+        android:label="Vynix"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         <activity
