@@ -53,7 +53,7 @@ class BuildingService {
         "ownerName": ownerName,
         "purchasePrice": purchasePrice,
         "purchaseDate": purchaseDate,
-        "buildingImage": buildingImage.isNotEmpty ? buildingImage : null,
+        "imageURL": buildingImage.isNotEmpty ? buildingImage : null,
         // ✅ Prevents empty image from being sent
         "purposeOfUse": purposeOfUse,
         "councilTax": councilTax,
@@ -147,7 +147,7 @@ class BuildingService {
           "ownerName": ownerName,
           "purchasePrice": purchasePrice,
           "purchaseDate": purchaseDate,
-          "buildingImage": buildingImage.isNotEmpty ? buildingImage : null,
+          "imageURL": buildingImage.isNotEmpty ? buildingImage : null,
           // ✅ Prevents empty image from being sent
           "purposeOfUse": purposeOfUse,
           "councilTax": councilTax,

@@ -9,7 +9,6 @@ import 'dart:io';
 class AddVehicleScreen extends StatelessWidget {
   final VehicleController vehicleController = Get.put(VehicleController());
   final ImagePickerController imagePickerController = Get.put(ImagePickerController());
-  final RxBool isPickingImage = false.obs;
 
   @override
   Widget build(BuildContext context) {
@@ -161,7 +160,7 @@ class AddVehicleScreen extends StatelessWidget {
 
                 const SizedBox(height: 32),
                 Obx(() => ElevatedButton(
-                  onPressed: (vehicleController.isLoading.value || isPickingImage.value)
+                  onPressed: vehicleController.isLoading.value
                       ? null
                       : () async {
                     if (vehicleController.vehicleFormKey.currentState?.validate() ?? false) {
@@ -190,7 +189,7 @@ class AddVehicleScreen extends StatelessWidget {
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      (vehicleController.isLoading.value || isPickingImage.value)
+                      vehicleController.isLoading.value
                           ? SizedBox(
                         height: 20,
                         width: 20,
@@ -202,11 +201,7 @@ class AddVehicleScreen extends StatelessWidget {
                           : Icon(Icons.save),
                       SizedBox(width: 10),
                       Text(
-                        vehicleController.isLoading.value
-                            ? 'Saving...'
-                            : isPickingImage.value
-                            ? 'Processing...'
-                            : 'Save Vehicle',
+                        vehicleController.isLoading.value ? 'Saving...' : 'Save Vehicle',
                         style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
                       ),
                     ],
@@ -296,13 +291,15 @@ class AddVehicleScreen extends StatelessWidget {
   }
 
   Widget _buildImagePicker(BuildContext context) {
-    // Create an RxString to track image path changes
-    final imagePath = vehicleController.vehicleImageController.text.obs;
+    // Add an RxString to track image path changes
+    final imagePath = vehicleController.vehicleImageController?.text.obs ?? ''.obs;
 
-    // Add a listener to keep it in sync with the TextEditingController
-    vehicleController.vehicleImageController.addListener(() {
-      imagePath.value = vehicleController.vehicleImageController.text;
-    });
+    // Add a listener to keep it in sync with the TextEditingController if it exists
+    if (vehicleController.vehicleImageController != null) {
+      vehicleController.vehicleImageController!.addListener(() {
+        imagePath.value = vehicleController.vehicleImageController!.text;
+      });
+    }
 
     return Obx(() => Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -327,26 +324,7 @@ class AddVehicleScreen extends StatelessWidget {
               width: 1,
             ),
           ),
-          child: isPickingImage.value
-              ? Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                CircularProgressIndicator(
-                  color: Colors.blue[700],
-                ),
-                const SizedBox(height: 16),
-                Text(
-                  'Processing image...',
-                  style: TextStyle(
-                    color: Colors.grey[700],
-                    fontSize: 14,
-                  ),
-                ),
-              ],
-            ),
-          )
-              : imagePath.value.isEmpty
+          child: imagePath.value.isEmpty
               ? Center(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -382,15 +360,12 @@ class AddVehicleScreen extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             ElevatedButton.icon(
-              onPressed: isPickingImage.value
-                  ? null
-                  : () => _getImage(ImageSource.camera),
+              onPressed: () => _getImage(ImageSource.camera),
               icon: const Icon(Icons.camera_alt),
               label: const Text('Camera'),
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.green[600],
                 foregroundColor: Colors.white,
-                disabledBackgroundColor: Colors.grey[400],
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(5),
                 ),
@@ -399,26 +374,25 @@ class AddVehicleScreen extends StatelessWidget {
             ),
             const SizedBox(width: 12),
             ElevatedButton.icon(
-              onPressed: isPickingImage.value
-                  ? null
-                  : () => _getImage(ImageSource.gallery),
+              onPressed: () => _getImage(ImageSource.gallery),
               icon: const Icon(Icons.photo_library),
               label: const Text('Gallery'),
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.blue[600],
                 foregroundColor: Colors.white,
-                disabledBackgroundColor: Colors.grey[400],
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(5),
                 ),
                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               ),
             ),
-            if (imagePath.value.isNotEmpty && !isPickingImage.value) ...[
+            if (imagePath.value.isNotEmpty) ...[
               const SizedBox(width: 12),
               ElevatedButton.icon(
                 onPressed: () {
-                  vehicleController.vehicleImageController.text = '';
+                  if (vehicleController.vehicleImageController != null) {
+                    vehicleController.vehicleImageController!.text = '';
+                  }
                   imagePath.value = '';
                 },
                 icon: const Icon(Icons.delete),
@@ -440,46 +414,16 @@ class AddVehicleScreen extends StatelessWidget {
   }
 
   Future<void> _getImage(ImageSource source) async {
-    try {
-      isPickingImage.value = true;
+    final picker = ImagePicker();
+    final pickedFile = await picker.pickImage(
+      source: source,
+      imageQuality: 80,
+      maxWidth: 1000,
+      maxHeight: 1000,
+    );
 
-      final picker = ImagePicker();
-      final XFile? pickedFile = await picker.pickImage(
-        source: source,
-        imageQuality: 80,
-        maxWidth: 1000,
-        maxHeight: 1000,
-        preferredCameraDevice: CameraDevice.rear,
-      );
-
-      if (pickedFile != null) {
-        vehicleController.vehicleImageController.text = pickedFile.path;
-        // Force UI update
-        Get.forceAppUpdate();
-      } else {
-        // Try to retrieve lost data (for Android)
-        try {
-          final LostDataResponse response = await picker.retrieveLostData();
-          if (!response.isEmpty && response.file != null) {
-            vehicleController.vehicleImageController.text = response.file!.path;
-          }
-        } catch (e) {
-          print("Error retrieving lost data: $e");
-        }
-      }
-    } catch (e) {
-      print("Error picking image: $e");
-      Get.snackbar(
-        "Error",
-        "Failed to capture image. Please try again.",
-        backgroundColor: Colors.red[100],
-        colorText: Colors.red[800],
-        snackPosition: SnackPosition.TOP,
-        margin: EdgeInsets.all(16),
-        borderRadius: 10,
-      );
-    } finally {
-      isPickingImage.value = false;
+    if (pickedFile != null && vehicleController.vehicleImageController != null) {
+      vehicleController.vehicleImageController!.text = pickedFile.path;
     }
   }
 }
