@@ -15,9 +15,10 @@ class Building {
   final String link;
   final double leaseValue;
   final double purchasePrice;
+  final String buildingImage;
 
   final DateTime? constructionDate;
-  final String imageURL;
+
 
   Building({
     required this.name,
@@ -38,7 +39,7 @@ class Building {
     required this.link,
 
     this.constructionDate,
-    required this.imageURL,
+    required this.buildingImage,
   });
 
   factory Building.fromJson(Map<String, dynamic>? json) {
@@ -64,7 +65,7 @@ class Building {
       purposeOfUse: json['purposeOfUse']?.toString() ?? 'Unknown',
       purchasePrice: _parseDouble(json['purchasePrice']),
       link: json['_links']['self']['href'] ?? 'N/A',
-      imageURL: json?['imageURL'] ?? '', // ✅ If API uses lowercase "imageUrl"
+      buildingImage: json?['imageURL'] ?? '', // ✅ If API uses lowercase "imageUrl"
 
     );
   }

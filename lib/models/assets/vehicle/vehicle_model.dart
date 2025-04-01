@@ -10,7 +10,7 @@ class Vehicle {
   final String motDate;
   final double mileage;
   final String insuranceDate;
-  final String imageURL;
+  final String vehicleImage;
   final String createdBy;
   final String createdDate;
   final String lastModifiedBy;
@@ -30,7 +30,7 @@ class Vehicle {
     required this.purchaseDate,
     required this.motDate,
     required this.insuranceDate,
-    required this.imageURL,
+    required this.vehicleImage,
     required this.createdBy,
     required this.createdDate,
     required this.lastModifiedBy,
@@ -71,7 +71,7 @@ class Vehicle {
       purchaseDate: json['purchaseDate'] ?? 'N/A',
       motDate: json['motDate'] ?? 'N/A',
       insuranceDate: json['insuranceDate'] ?? 'N/A',
-      imageURL: json['imageURL'] ?? '',
+      vehicleImage: json['imageURL'] ?? '',
       createdBy: json['createdBy'] ?? 'Unknown',
       createdDate: json['createdDate'] ?? 'N/A',
       lastModifiedBy: json['lastModifiedBy'] ?? 'Unknown',
@@ -96,7 +96,7 @@ class Vehicle {
       'purchaseDate': purchaseDate,
       'motDate': motDate,
       'insuranceDate': insuranceDate,
-      'imageURL': imageURL,
+      'imageURL': vehicleImage,
       'createdBy': createdBy,
       'createdDate': createdDate,
       'lastModifiedBy': lastModifiedBy,

@@ -199,6 +199,7 @@ class AssetController extends GetxController {
         "leaseValue": b.leaseValue.toString(), // Ensures it's a string
         "lease_date": b.leaseDate.toString() ?? "N/A", // Convert DateTime properly
         "buildingId": Uri.parse(b.link).pathSegments.last,
+        "imageURL": b.buildingImage ?? "",
 
 
 
@@ -233,11 +234,12 @@ class AssetController extends GetxController {
         "vehicle_type": v.vehicleType,
         "owner_name": v.ownerName,
 
+
         "purchasePrice": v.purchasePrice, // Keep as double, no "N/A"
         "purchaseDate":(v.purchaseDate),
         "motDate": (v.motDate),
         "insuranceDate":(v.insuranceDate),
-        "imageURL": v.imageURL,
+        "imageURL": v.vehicleImage,
         "createdBy": v.createdBy,
         "createdDate": (v.createdDate),
         "lastModifiedBy": v.lastModifiedBy,
