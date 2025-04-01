@@ -279,7 +279,7 @@ class AssetController extends GetxController {
         "purchasePrice": l.purchasePrice ?? "N/A",
         'leaseValue': l.leaseValue ?? "N/A",
         'lease_date': l.leaseDate ?? "N/A",
-        "imageURL": l.imageURL ?? "",
+        "imageURL": l.landImage ?? "",
         "landId": Uri.parse(l.links).pathSegments.last,
 
       }).toList();

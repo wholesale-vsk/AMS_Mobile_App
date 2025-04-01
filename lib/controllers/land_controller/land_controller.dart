@@ -28,6 +28,8 @@ class LandController extends GetxController {
   final TextEditingController leaseDateController = TextEditingController();
   final TextEditingController leaseValueController = TextEditingController();
 
+
+
   //:::::::::::::::::::::::::::::::::<< ADD LAND FUNCTION >>::::::::::::::::::::::::::::::::://
   Future<void> addLand() async {
     if (!landFormKey.currentState!.validate()) {
@@ -52,6 +54,8 @@ class LandController extends GetxController {
         landImage: _validateInput(landImageController.text),
         leaseDate: _validateInput(leaseDateController.text, isRequired: true),
         leaseValue: _validateInput(leaseValueController.text, isRequired: true),
+
+
       );
 
       _logger.i('Response for test: $response');

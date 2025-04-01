@@ -3,32 +3,28 @@ import 'package:get/get.dart';
 import 'package:hexalyte_ams/controllers/vehicle_controller/vehicle_controller.dart';
 import 'package:hexalyte_ams/controllers/image_picker_controller/image_picker_controller.dart';
 import 'package:hexalyte_ams/utils/widgets/calander/calender_field.dart';
-
-
+import 'package:image_picker/image_picker.dart';
+import 'dart:io';
 
 class AddVehicleScreen extends StatelessWidget {
   final VehicleController vehicleController = Get.put(VehicleController());
   final ImagePickerController imagePickerController = Get.put(ImagePickerController());
+  final RxBool isPickingImage = false.obs;
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.grey[50],
       appBar: AppBar(
-        backgroundColor: Colors.blue[700],
+        backgroundColor: Colors.white,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.white),
-          onPressed: () {
-            Get.back(); // Directly go back without confirmation
-          },
+          icon: const Icon(Icons.arrow_back, color: Colors.black),
+          onPressed: () => Get.back(),
         ),
         title: const Text(
           'Add Vehicle',
-          style: TextStyle(
-            color: Colors.white,
-            fontWeight: FontWeight.w600,
-          ),
+          style: TextStyle(color: Colors.black, fontWeight: FontWeight.w600),
         ),
         centerTitle: true,
         shape: const RoundedRectangleBorder(
@@ -70,7 +66,7 @@ class AddVehicleScreen extends StatelessWidget {
                 ),
 
                 const SizedBox(height: 24),
-                _buildSectionHeader(context, "Purchase Details", Icons.shopping_cart),
+                _buildSectionHeader(context, "Purchase Details", Icons.receipt_long),
                 const SizedBox(height: 16),
                 _buildCard(
                   context,
@@ -82,7 +78,7 @@ class AddVehicleScreen extends StatelessWidget {
                       CalendarField(
                         controller: vehicleController.purchaseDateController,
                         hintText: 'Purchase Date',
-                        icon: Icons.calendar_month,
+                        icon: Icons.calendar_today,
                       ),
                       const SizedBox(height: 16),
                       _buildTextField('Mileage', vehicleController.mileageController,
@@ -101,7 +97,7 @@ class AddVehicleScreen extends StatelessWidget {
                       CalendarField(
                         controller: vehicleController.motDateController,
                         hintText: 'MOT Date',
-                        icon: Icons.calendar_month,
+                        icon: Icons.calendar_today,
                       ),
                       const SizedBox(height: 16),
                       _buildTextField('MOT Value', vehicleController.motValueController,
@@ -110,7 +106,7 @@ class AddVehicleScreen extends StatelessWidget {
                       CalendarField(
                         controller: vehicleController.motExpiredDateController,
                         hintText: 'MOT Expired Date',
-                        icon: Icons.calendar_month,
+                        icon: Icons.calendar_today,
                       ),
                     ],
                   ),
@@ -126,7 +122,7 @@ class AddVehicleScreen extends StatelessWidget {
                       CalendarField(
                         controller: vehicleController.serviceDateController,
                         hintText: 'Last Service Date',
-                        icon: Icons.calendar_month,
+                        icon: Icons.calendar_today,
                       ),
                     ],
                   ),
@@ -142,7 +138,7 @@ class AddVehicleScreen extends StatelessWidget {
                       CalendarField(
                         controller: vehicleController.insuranceDateController,
                         hintText: 'Insurance Date',
-                        icon: Icons.calendar_month,
+                        icon: Icons.calendar_today,
                       ),
                       const SizedBox(height: 16),
                       _buildTextField('Insurance Value', vehicleController.insuranceValueController,
@@ -151,15 +147,21 @@ class AddVehicleScreen extends StatelessWidget {
                   ),
                 ),
 
-                // Uncomment to add image picker functionality
-                // const SizedBox(height: 24),
-                // _buildSectionHeader(context, "Vehicle Image", Icons.image),
-                // const SizedBox(height: 16),
-                // _buildCard(context, _buildImagePickerField()),
+                const SizedBox(height: 24),
+                _buildSectionHeader(context, "Vehicle Image", Icons.image),
+                const SizedBox(height: 16),
+                _buildCard(
+                  context,
+                  Column(
+                    children: [
+                      _buildImagePicker(context),
+                    ],
+                  ),
+                ),
 
                 const SizedBox(height: 32),
                 Obx(() => ElevatedButton(
-                  onPressed: vehicleController.isLoading.value
+                  onPressed: (vehicleController.isLoading.value || isPickingImage.value)
                       ? null
                       : () async {
                     if (vehicleController.vehicleFormKey.currentState?.validate() ?? false) {
@@ -170,7 +172,7 @@ class AddVehicleScreen extends StatelessWidget {
                         "Please fill all required fields.",
                         backgroundColor: Colors.red[100],
                         colorText: Colors.red[800],
-                        snackPosition: SnackPosition.BOTTOM,
+                        snackPosition: SnackPosition.TOP,
                         margin: EdgeInsets.all(16),
                         borderRadius: 10,
                       );
@@ -188,7 +190,7 @@ class AddVehicleScreen extends StatelessWidget {
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      vehicleController.isLoading.value
+                      (vehicleController.isLoading.value || isPickingImage.value)
                           ? SizedBox(
                         height: 20,
                         width: 20,
@@ -200,7 +202,11 @@ class AddVehicleScreen extends StatelessWidget {
                           : Icon(Icons.save),
                       SizedBox(width: 10),
                       Text(
-                        vehicleController.isLoading.value ? 'Saving...' : 'Save Vehicle',
+                        vehicleController.isLoading.value
+                            ? 'Saving...'
+                            : isPickingImage.value
+                            ? 'Processing...'
+                            : 'Save Vehicle',
                         style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
                       ),
                     ],
@@ -242,7 +248,7 @@ class AddVehicleScreen extends StatelessWidget {
             color: Colors.grey.withOpacity(0.1),
             spreadRadius: 1,
             blurRadius: 5,
-            offset: const Offset(0, 3),
+            offset: const Offset(0, 8),
           ),
         ],
       ),
@@ -289,46 +295,191 @@ class AddVehicleScreen extends StatelessWidget {
     );
   }
 
-// Uncomment to add image picker functionality
-// Widget _buildImagePickerField() {
-//   return Column(
-//     crossAxisAlignment: CrossAxisAlignment.stretch,
-//     children: [
-//       InkWell(
-//         onTap: () async {
-//           await imagePickerController.pickImage(ImageSource.gallery);
-//         },
-//         borderRadius: BorderRadius.circular(12),
-//         child: Obx(() {
-//           File? selectedImage = imagePickerController.selectedImage.value;
-//           return Container(
-//             height: 150,
-//             width: double.infinity,
-//             decoration: BoxDecoration(
-//               color: Colors.grey[100],
-//               border: Border.all(color: Colors.grey[300]!),
-//               borderRadius: BorderRadius.circular(12),
-//               image: selectedImage != null
-//                   ? DecorationImage(image: FileImage(selectedImage), fit: BoxFit.cover)
-//                   : null,
-//             ),
-//             child: selectedImage == null
-//                 ? Column(
-//                     mainAxisAlignment: MainAxisAlignment.center,
-//                     children: [
-//                       Icon(Icons.add_a_photo, size: 40, color: Colors.grey[600]),
-//                       SizedBox(height: 8),
-//                       Text(
-//                         "Tap to select vehicle image",
-//                         style: TextStyle(color: Colors.grey[600]),
-//                       ),
-//                     ],
-//                   )
-//                 : null,
-//           );
-//         }),
-//       ),
-//     ],
-//   );
-// }
+  Widget _buildImagePicker(BuildContext context) {
+    // Create an RxString to track image path changes
+    final imagePath = vehicleController.vehicleImageController.text.obs;
+
+    // Add a listener to keep it in sync with the TextEditingController
+    vehicleController.vehicleImageController.addListener(() {
+      imagePath.value = vehicleController.vehicleImageController.text;
+    });
+
+    return Obx(() => Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Vehicle Image',
+          style: TextStyle(
+            fontSize: 15,
+            fontWeight: FontWeight.w500,
+            color: Colors.grey[700],
+          ),
+        ),
+        const SizedBox(height: 12),
+        Container(
+          height: 200,
+          width: double.infinity,
+          decoration: BoxDecoration(
+            color: Colors.grey[100],
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+              color: Colors.grey[300]!,
+              width: 1,
+            ),
+          ),
+          child: isPickingImage.value
+              ? Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                CircularProgressIndicator(
+                  color: Colors.blue[700],
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  'Processing image...',
+                  style: TextStyle(
+                    color: Colors.grey[700],
+                    fontSize: 14,
+                  ),
+                ),
+              ],
+            ),
+          )
+              : imagePath.value.isEmpty
+              ? Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(
+                  Icons.image,
+                  size: 64,
+                  color: Colors.grey[400],
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'No image selected',
+                  style: TextStyle(
+                    color: Colors.grey[600],
+                    fontSize: 14,
+                  ),
+                ),
+              ],
+            ),
+          )
+              : ClipRRect(
+            borderRadius: BorderRadius.circular(12),
+            child: Image.file(
+              File(imagePath.value),
+              fit: BoxFit.cover,
+              width: double.infinity,
+              height: double.infinity,
+            ),
+          ),
+        ),
+        const SizedBox(height: 12),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            ElevatedButton.icon(
+              onPressed: isPickingImage.value
+                  ? null
+                  : () => _getImage(ImageSource.camera),
+              icon: const Icon(Icons.camera_alt),
+              label: const Text('Camera'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.green[600],
+                foregroundColor: Colors.white,
+                disabledBackgroundColor: Colors.grey[400],
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(5),
+                ),
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              ),
+            ),
+            const SizedBox(width: 12),
+            ElevatedButton.icon(
+              onPressed: isPickingImage.value
+                  ? null
+                  : () => _getImage(ImageSource.gallery),
+              icon: const Icon(Icons.photo_library),
+              label: const Text('Gallery'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.blue[600],
+                foregroundColor: Colors.white,
+                disabledBackgroundColor: Colors.grey[400],
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(5),
+                ),
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              ),
+            ),
+            if (imagePath.value.isNotEmpty && !isPickingImage.value) ...[
+              const SizedBox(width: 12),
+              ElevatedButton.icon(
+                onPressed: () {
+                  vehicleController.vehicleImageController.text = '';
+                  imagePath.value = '';
+                },
+                icon: const Icon(Icons.delete),
+                label: const Text('Remove'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.red[600],
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(5),
+                  ),
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                ),
+              ),
+            ],
+          ],
+        ),
+      ],
+    ));
+  }
+
+  Future<void> _getImage(ImageSource source) async {
+    try {
+      isPickingImage.value = true;
+
+      final picker = ImagePicker();
+      final XFile? pickedFile = await picker.pickImage(
+        source: source,
+        imageQuality: 80,
+        maxWidth: 1000,
+        maxHeight: 1000,
+        preferredCameraDevice: CameraDevice.rear,
+      );
+
+      if (pickedFile != null) {
+        vehicleController.vehicleImageController.text = pickedFile.path;
+        // Force UI update
+        Get.forceAppUpdate();
+      } else {
+        // Try to retrieve lost data (for Android)
+        try {
+          final LostDataResponse response = await picker.retrieveLostData();
+          if (!response.isEmpty && response.file != null) {
+            vehicleController.vehicleImageController.text = response.file!.path;
+          }
+        } catch (e) {
+          print("Error retrieving lost data: $e");
+        }
+      }
+    } catch (e) {
+      print("Error picking image: $e");
+      Get.snackbar(
+        "Error",
+        "Failed to capture image. Please try again.",
+        backgroundColor: Colors.red[100],
+        colorText: Colors.red[800],
+        snackPosition: SnackPosition.TOP,
+        margin: EdgeInsets.all(16),
+        borderRadius: 10,
+      );
+    } finally {
+      isPickingImage.value = false;
+    }
+  }
 }

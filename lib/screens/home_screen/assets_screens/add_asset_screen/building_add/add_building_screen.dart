@@ -15,15 +15,15 @@ class AddBuildingScreen extends StatelessWidget {
     return Scaffold(
       backgroundColor: Colors.grey[50],
       appBar: AppBar(
-        backgroundColor: Colors.blue[700],
+        backgroundColor: Colors.white,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.white),
+          icon: const Icon(Icons.arrow_back, color: Colors.black),
           onPressed: () => Get.back(),
         ),
         title: const Text(
           'Add Building',
-          style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
+          style: TextStyle(color: Colors.black, fontWeight: FontWeight.w600),
         ),
         centerTitle: true,
         shape: const RoundedRectangleBorder(
@@ -40,59 +40,77 @@ class AddBuildingScreen extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                _buildSectionHeader(context, "Building Details", Icons.business),
+                _buildSectionHeader(
+                    context, "Building Details", Icons.business),
                 const SizedBox(height: 16),
                 _buildCard(
                   context,
                   Column(
                     children: [
-                      _buildTextField('Building Name', buildingController.buildingNameController,
+                      _buildTextField('Building Name',
+                          buildingController.buildingNameController,
                           prefixIcon: Icons.home),
                       const SizedBox(height: 16),
                       CustomDropdown(
                         label: 'Building Type',
-                        options: const ['RESIDENTIAL', 'COMMERCIAL', 'INDUSTRIAL', 'AGRICULTURAL'],
+                        options: const [
+                          'RESIDENTIAL',
+                          'COMMERCIAL',
+                          'INDUSTRIAL',
+                          'AGRICULTURAL'
+                        ],
                         controller: buildingController.buildingTypeController,
                         onChanged: (value) {
-                          buildingController.buildingTypeController.text = value!;
+                          buildingController.buildingTypeController.text =
+                          value!;
                         },
-                        selectedItem: buildingController.buildingTypeController.text,
+                        selectedItem: buildingController.buildingTypeController
+                            .text,
                       ),
                       const SizedBox(height: 16),
                       Row(
                         children: [
                           Expanded(
-                            child: _buildTextField('Floors', buildingController.numberOfFloorsController,
+                            child: _buildTextField('Floors',
+                                buildingController.numberOfFloorsController,
                                 prefixIcon: Icons.stairs, isNumeric: true),
                           ),
                           const SizedBox(width: 16),
                           Expanded(
-                            child: _buildTextField('Area (sq.m)', buildingController.totalAreaController,
+                            child: _buildTextField('Area (sq.m)',
+                                buildingController.totalAreaController,
                                 prefixIcon: Icons.square_foot, isNumeric: true),
                           ),
                         ],
                       ),
                       const SizedBox(height: 16),
-                      _buildTextField('Address', buildingController.buildingAddressController,
+                      _buildTextField('Address',
+                          buildingController.buildingAddressController,
                           prefixIcon: Icons.location_on),
                       const SizedBox(height: 16),
-                      _buildTextField('City', buildingController.buildingCityController,
+                      _buildTextField(
+                          'City', buildingController.buildingCityController,
                           prefixIcon: Icons.location_city),
                       const SizedBox(height: 16),
-                      _buildTextField('Province', buildingController.buildingProvinceController,
+                      _buildTextField('Province',
+                          buildingController.buildingProvinceController,
                           prefixIcon: Icons.map),
                       const SizedBox(height: 16),
-                      _buildTextField('Owner Name', buildingController.ownerNameController,
+                      _buildTextField(
+                          'Owner Name', buildingController.ownerNameController,
                           prefixIcon: Icons.person),
                       const SizedBox(height: 16),
-                      _buildTextField('Purpose of Use', buildingController.purposeOfUseController,
+                      _buildTextField('Purpose of Use',
+                          buildingController.purposeOfUseController,
                           prefixIcon: Icons.category),
                     ],
                   ),
                 ),
 
+
                 const SizedBox(height: 24),
-                _buildSectionHeader(context, "Purchase Details", Icons.receipt_long),
+                _buildSectionHeader(
+                    context, "Purchase Details", Icons.receipt_long),
                 const SizedBox(height: 16),
                 _buildCard(
                   context,
@@ -104,23 +122,26 @@ class AddBuildingScreen extends StatelessWidget {
                         icon: Icons.calendar_today,
                       ),
                       const SizedBox(height: 16),
-                      _buildTextField('Purchase Price', buildingController.purchasePriceController,
+                      _buildTextField('Purchase Price',
+                          buildingController.purchasePriceController,
                           prefixIcon: Icons.attach_money, isNumeric: true),
                     ],
                   ),
                 ),
 
                 const SizedBox(height: 24),
-                _buildSectionHeader(context, "Council Tax Details", Icons.account_balance),
+                _buildSectionHeader(
+                    context, "Council Tax Details", Icons.account_balance),
                 const SizedBox(height: 16),
                 _buildCard(
                   context,
                   Column(
                     children: [
-                      _buildTextField('Council Tax', buildingController.councilTaxController,
+                      _buildTextField('Council Tax',
+                          buildingController.councilTaxController,
                           prefixIcon: Icons.account_balance_wallet),
                       const SizedBox(height: 16),
-                      
+
                       CalendarField(
                         controller: buildingController.councilTaxDateController,
                         hintText: 'Council Tax Date',
@@ -131,13 +152,15 @@ class AddBuildingScreen extends StatelessWidget {
                 ),
 
                 const SizedBox(height: 24),
-                _buildSectionHeader(context, "Lease Details", Icons.description),
+                _buildSectionHeader(
+                    context, "Lease Details", Icons.description),
                 const SizedBox(height: 16),
                 _buildCard(
                   context,
                   Column(
                     children: [
-                      _buildTextField('Lease Value', buildingController.leaseValueController,
+                      _buildTextField('Lease Value',
+                          buildingController.leaseValueController,
                           prefixIcon: Icons.payments, isNumeric: true),
                       const SizedBox(height: 16),
                       CalendarField(
@@ -149,55 +172,72 @@ class AddBuildingScreen extends StatelessWidget {
                   ),
                 ),
 
-                const SizedBox(height: 32),
-                Obx(() => ElevatedButton(
-                  onPressed: buildingController.isLoading.value
-                      ? null
-                      : () async {
-                    if (buildingController.buildingFormKey.currentState?.validate() ?? false) {
-                      await buildingController.addBuilding();
-                    } else {
-                      Get.snackbar(
-                        "Validation Error",
-                        "Please fill all required fields.",
-                        backgroundColor: Colors.red[100],
-                        colorText: Colors.red[800],
-                        snackPosition: SnackPosition.TOP,
-                        margin: EdgeInsets.all(16),
-                        borderRadius: 10,
-                      );
-                    }
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.blue[700],
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    elevation: 3,
-                  ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
+                const SizedBox(height: 24),
+                _buildSectionHeader(context, "Building Image", Icons.image),
+                const SizedBox(height: 16),
+                _buildCard(
+                  context,
+                  Column(
                     children: [
-                      buildingController.isLoading.value
-                          ? SizedBox(
-                          height: 20,
-                          width: 20,
-                          child: CircularProgressIndicator(
-                            color: Colors.white,
-                            strokeWidth: 2,
-                          )
-                      )
-                          : Icon(Icons.save),
-                      SizedBox(width: 10),
-                      Text(
-                        buildingController.isLoading.value ? 'Saving...' : 'Save Building',
-                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-                      ),
+                      _buildImagePicker(context),
                     ],
                   ),
-                )),
+                ),
+
+                const SizedBox(height: 32),
+                Obx(() =>
+                    ElevatedButton(
+                      onPressed: buildingController.isLoading.value
+                          ? null
+                          : () async {
+                        if (buildingController.buildingFormKey.currentState
+                            ?.validate() ?? false) {
+                          await buildingController.addBuilding();
+                        } else {
+                          Get.snackbar(
+                            "Validation Error",
+                            "Please fill all required fields.",
+                            backgroundColor: Colors.red[100],
+                            colorText: Colors.red[800],
+                            snackPosition: SnackPosition.TOP,
+                            margin: EdgeInsets.all(16),
+                            borderRadius: 10,
+                          );
+                        }
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.blue[700],
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        elevation: 3,
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          buildingController.isLoading.value
+                              ? SizedBox(
+                              height: 20,
+                              width: 20,
+                              child: CircularProgressIndicator(
+                                color: Colors.white,
+                                strokeWidth: 2,
+                              )
+                          )
+                              : Icon(Icons.save),
+                          SizedBox(width: 10),
+                          Text(
+                            buildingController.isLoading.value
+                                ? 'Saving...'
+                                : 'Save Building',
+                            style: TextStyle(
+                                fontSize: 16, fontWeight: FontWeight.w600),
+                          ),
+                        ],
+                      ),
+                    )),
                 const SizedBox(height: 24),
               ],
             ),
@@ -207,7 +247,8 @@ class AddBuildingScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildSectionHeader(BuildContext context, String title, IconData icon) {
+  Widget _buildSectionHeader(BuildContext context, String title,
+      IconData icon) {
     return Row(
       children: [
         Icon(icon, color: Colors.blue[700], size: 24),
@@ -256,7 +297,8 @@ class AddBuildingScreen extends StatelessWidget {
           fontWeight: FontWeight.w500,
           color: Colors.grey[700],
         ),
-        prefixIcon: prefixIcon != null ? Icon(prefixIcon, color: Colors.grey[600]) : null,
+        prefixIcon: prefixIcon != null ? Icon(
+            prefixIcon, color: Colors.grey[600]) : null,
         filled: true,
         fillColor: Colors.grey[100],
         border: OutlineInputBorder(
@@ -271,13 +313,233 @@ class AddBuildingScreen extends StatelessWidget {
           borderRadius: BorderRadius.circular(12),
           borderSide: BorderSide.none,
         ),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+        contentPadding: const EdgeInsets.symmetric(
+            horizontal: 16, vertical: 16),
       ),
       validator: (value) {
         if (value == null || value.isEmpty) return 'Please enter $label';
-        if (isNumeric && double.tryParse(value) == null) return '$label must be a valid number';
+        if (isNumeric && double.tryParse(value) == null)
+          return '$label must be a valid number';
         return null;
       },
     );
+  }
+
+  Widget _buildImagePicker(BuildContext context) {
+    // Create an RxString to track image path changes
+    final imagePath = buildingController.buildingImageController.text.obs;
+    // Add an RxBool for loading state
+    final isPickingImage = false.obs;
+
+    // Add a listener to keep it in sync with the TextEditingController
+    buildingController.buildingImageController.addListener(() {
+      imagePath.value = buildingController.buildingImageController.text;
+    });
+
+    return Obx(() =>
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Building Image',
+              style: TextStyle(
+                fontSize: 15,
+                fontWeight: FontWeight.w500,
+                color: Colors.grey[700],
+              ),
+            ),
+            const SizedBox(height: 12),
+            Container(
+              height: 200,
+              width: double.infinity,
+              decoration: BoxDecoration(
+                color: Colors.grey[100],
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: Colors.grey[300]!,
+                  width: 1,
+                ),
+              ),
+              child: isPickingImage.value
+                  ? Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    CircularProgressIndicator(
+                      color: Colors.blue[700],
+                    ),
+                    const SizedBox(height: 16),
+                    Text(
+                      'Processing image...',
+                      style: TextStyle(
+                        color: Colors.grey[700],
+                        fontSize: 14,
+                      ),
+                    ),
+                  ],
+                ),
+              )
+                  : imagePath.value.isEmpty
+                  ? Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      Icons.image,
+                      size: 64,
+                      color: Colors.grey[400],
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'No image selected',
+                      style: TextStyle(
+                        color: Colors.grey[600],
+                        fontSize: 14,
+                      ),
+                    ),
+                  ],
+                ),
+              )
+                  : ClipRRect(
+                borderRadius: BorderRadius.circular(12),
+                child: Image.file(
+                  File(imagePath.value),
+                  fit: BoxFit.cover,
+                  width: double.infinity,
+                  height: double.infinity,
+                ),
+              ),
+            ),
+            const SizedBox(height: 12),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                ElevatedButton.icon(
+                  onPressed: isPickingImage.value
+                      ? null
+                      : () async {
+                    try {
+                      isPickingImage.value = true;
+                      final picker = ImagePicker();
+                      final XFile? pickedFile = await picker.pickImage(
+                        source: ImageSource.camera,
+                        imageQuality: 80,
+                        maxWidth: 1000,
+                        maxHeight: 1000,
+                      );
+
+                      if (pickedFile != null) {
+                        buildingController.buildingImageController.text =
+                            pickedFile.path;
+                        // Force UI update
+                        Get.forceAppUpdate();
+                      } else {
+                        // Try to recover lost data (Android)
+                        try {
+                          final LostDataResponse response = await picker
+                              .retrieveLostData();
+                          if (!response.isEmpty && response.file != null) {
+                            buildingController.buildingImageController.text =
+                                response.file!.path;
+                          }
+                        } catch (e) {
+                          print("Error retrieving lost data: $e");
+                        }
+                      }
+                    } catch (e) {
+                      print("Error picking image: $e");
+                      Get.snackbar(
+                        "Error",
+                        "Failed to capture image. Please try again.",
+                        backgroundColor: Colors.red[100],
+                        colorText: Colors.red[800],
+                        snackPosition: SnackPosition.TOP,
+                      );
+                    } finally {
+                      isPickingImage.value = false;
+                    }
+                  },
+                  icon: const Icon(Icons.camera_alt),
+                  label: const Text('Camera'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.green[600],
+                    foregroundColor: Colors.white,
+                    disabledBackgroundColor: Colors.grey[400],
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(5),
+                    ),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 16, vertical: 12),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                ElevatedButton.icon(
+                  onPressed: isPickingImage.value
+                      ? null
+                      : () async {
+                    try {
+                      isPickingImage.value = true;
+                      final picker = ImagePicker();
+                      final XFile? pickedFile = await picker.pickImage(
+                        source: ImageSource.gallery,
+                        imageQuality: 80,
+                        maxWidth: 1000,
+                        maxHeight: 1000,
+                      );
+
+                      if (pickedFile != null) {
+                        buildingController.buildingImageController.text =
+                            pickedFile.path;
+                      }
+                    } catch (e) {
+                      print("Error picking image: $e");
+                      Get.snackbar(
+                        "Error",
+                        "Failed to select image. Please try again.",
+                        backgroundColor: Colors.red[100],
+                        colorText: Colors.red[800],
+                        snackPosition: SnackPosition.TOP,
+                      );
+                    } finally {
+                      isPickingImage.value = false;
+                    }
+                  },
+                  icon: const Icon(Icons.photo_library),
+                  label: const Text('Gallery'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.blue[600],
+                    foregroundColor: Colors.white,
+                    disabledBackgroundColor: Colors.grey[400],
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(5),
+                    ),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 16, vertical: 12),
+                  ),
+                ),
+                if (imagePath.value.isNotEmpty && !isPickingImage.value) ...[
+                  const SizedBox(width: 12),
+                  ElevatedButton.icon(
+                    onPressed: () {
+                      buildingController.buildingImageController.text = '';
+                      imagePath.value = '';
+                    },
+                    icon: const Icon(Icons.delete),
+                    label: const Text('Remove'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.red[600],
+                      foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(5),
+                      ),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 16, vertical: 12),
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ],
+        ));
   }
 }
