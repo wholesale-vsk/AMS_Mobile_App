@@ -23,6 +23,16 @@ class _BuildingUpdatePageState extends State<BuildingUpdatePage>
   late BuildingController _buildingController;
   bool isLoading = true;
 
+  // Define building type options
+  final List<String> _buildingTypeOptions = [
+    'RESIDENTIAL',
+    'COMMERCIAL',
+    'INDUSTRIAL',
+    'AGRICULTURAL'
+  ];
+
+  String _selectedBuildingType = 'RESIDENTIAL';
+
   @override
   void initState() {
     super.initState();
@@ -65,6 +75,14 @@ class _BuildingUpdatePageState extends State<BuildingUpdatePage>
     // If we have building data, populate the form
     if (buildingData != null) {
       _buildingController.populateFormForEditing(buildingData);
+
+      // Set selected building type if it exists in the data
+      final existingType = buildingData['buildingType']?.toString() ?? '';
+      if (existingType.isNotEmpty && _buildingTypeOptions.contains(existingType.toUpperCase())) {
+        _selectedBuildingType = existingType.toUpperCase();
+      }
+      _buildingController.buildingTypeController.text = _selectedBuildingType;
+
       setState(() {
         isLoading = false;
       });
@@ -132,14 +150,14 @@ class _BuildingUpdatePageState extends State<BuildingUpdatePage>
   }
 
   Widget _buildFormField(
-    String label,
-    TextEditingController controller, {
-    TextInputType inputType = TextInputType.text,
-    bool isDate = false,
-    bool isRequired = true,
-    int maxLines = 1,
-    IconData? prefixIcon,
-  }) {
+      String label,
+      TextEditingController controller, {
+        TextInputType inputType = TextInputType.text,
+        bool isDate = false,
+        bool isRequired = true,
+        int maxLines = 1,
+        IconData? prefixIcon,
+      }) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8),
       child: TextFormField(
@@ -162,17 +180,17 @@ class _BuildingUpdatePageState extends State<BuildingUpdatePage>
           focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(12),
             borderSide:
-                BorderSide(color: Theme.of(context).primaryColor, width: 2),
+            BorderSide(color: Theme.of(context).primaryColor, width: 2),
           ),
           prefixIcon: prefixIcon != null ? Icon(prefixIcon) : null,
           suffixIcon: isDate
               ? IconButton(
-                  icon: const Icon(Icons.calendar_today),
-                  onPressed: () => _selectDate(context, controller),
-                )
+            icon: const Icon(Icons.calendar_today),
+            onPressed: () => _selectDate(context, controller),
+          )
               : null,
           contentPadding:
-              const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+          const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
         ),
         validator: (value) {
           if (isRequired && (value == null || value.isEmpty)) {
@@ -181,6 +199,54 @@ class _BuildingUpdatePageState extends State<BuildingUpdatePage>
           return null;
         },
         onTap: isDate ? () => _selectDate(context, controller) : null,
+      ),
+    );
+  }
+
+  Widget _buildBuildingTypeDropdown() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      child: DropdownButtonFormField<String>(
+        value: _selectedBuildingType,
+        decoration: InputDecoration(
+          labelText: 'Building Type',
+          filled: true,
+          fillColor: Colors.grey.shade50,
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide(color: Colors.grey.shade300),
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide(color: Colors.grey.shade300),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide(color: Theme.of(context).primaryColor, width: 2),
+          ),
+          prefixIcon: const Icon(Icons.category),
+          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+        ),
+        items: _buildingTypeOptions.map((String type) {
+          return DropdownMenuItem<String>(
+            value: type,
+            child: Text(type),
+          );
+        }).toList(),
+        onChanged: (String? newValue) {
+          if (newValue != null) {
+            setState(() {
+              _selectedBuildingType = newValue;
+              _buildingController.buildingTypeController.text = newValue;
+            });
+          }
+        },
+        validator: (value) {
+          if (value == null || value.isEmpty) {
+            return 'Building Type is required';
+          }
+          return null;
+        },
       ),
     );
   }
@@ -217,9 +283,7 @@ class _BuildingUpdatePageState extends State<BuildingUpdatePage>
       _buildFormField(
           'Building Name', _buildingController.buildingNameController,
           prefixIcon: Icons.business),
-      _buildFormField(
-          'Building Type', _buildingController.buildingTypeController,
-          prefixIcon: Icons.category),
+      _buildBuildingTypeDropdown(), // Using dropdown instead of text field
       _buildFormField(
           'Number of Floors', _buildingController.numberOfFloorsController,
           inputType: TextInputType.number, prefixIcon: Icons.layers),
@@ -381,21 +445,37 @@ class _BuildingUpdatePageState extends State<BuildingUpdatePage>
         title: const Text('Update Building'),
         actions: [
           Obx(
-            () => _buildingController.isLoading.value
+                () => _buildingController.isLoading.value
                 ? const Center(
-                    child: Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 16),
-                    child: SizedBox(
-                      width: 20,
-                      height: 20,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    ),
-                  ))
-                : IconButton(
-                    icon: const Icon(Icons.save),
-                    onPressed: () => _buildingController.updateBuilding(),
-                    tooltip: 'Save Changes',
+                child: Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 16),
+                  child: SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(strokeWidth: 2),
                   ),
+                ))
+                : IconButton(
+              icon: const Icon(Icons.save),
+              onPressed: () {
+                if (_buildingController.buildingFormKey.currentState?.validate() ?? false) {
+                  // Update the building type before saving
+                  _buildingController.buildingTypeController.text = _selectedBuildingType;
+                  _buildingController.updateBuilding();
+                } else {
+                  Get.snackbar(
+                    "Validation Error",
+                    "Please fill all required fields.",
+                    backgroundColor: Colors.red[100],
+                    colorText: Colors.red[800],
+                    snackPosition: SnackPosition.BOTTOM,
+                    margin: EdgeInsets.all(16),
+                    borderRadius: 10,
+                  );
+                }
+              },
+              tooltip: 'Save Changes',
+            ),
           ),
         ],
         bottom: TabBar(
@@ -421,7 +501,7 @@ class _BuildingUpdatePageState extends State<BuildingUpdatePage>
             SingleChildScrollView(
               padding: const EdgeInsets.all(16),
               child:
-                  _buildFormSection('Location Details', _buildLocationFields()),
+              _buildFormSection('Location Details', _buildLocationFields()),
             ),
 
             // Financial Tab
@@ -431,60 +511,62 @@ class _BuildingUpdatePageState extends State<BuildingUpdatePage>
                   'Financial Information', _buildFinancialFields()),
             ),
 
-            // // Media Tab
-            // SingleChildScrollView(
-            //   padding: const EdgeInsets.all(16),
-            //   child: _buildFormSection('Building Media', _buildMediaFields()),
-            // ),
+            // Media Tab
+            SingleChildScrollView(
+              padding: const EdgeInsets.all(16),
+              child: _buildFormSection('Building Media', _buildMediaFields()),
+            ),
           ],
         ),
       ),
       bottomNavigationBar: Obx(() => Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.05),
-                  blurRadius: 5,
-                  offset: const Offset(0, -3),
-                ),
-              ],
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.05),
+              blurRadius: 5,
+              offset: const Offset(0, -3),
             ),
-            child: ElevatedButton(
-              onPressed: _buildingController.isLoading.value || isLoading
-                  ? null
-                  : () async {
-                if (_buildingController.buildingFormKey.currentState?.validate() ?? false) {
-                  await _buildingController.updateBuilding();
-                } else {
-                  Get.snackbar(
-                    "Validation Error",
-                    "Please fill all required fields.",
-                    backgroundColor: Colors.red[100],
-                    colorText: Colors.red[800],
-                    snackPosition: SnackPosition.BOTTOM ,
-                    margin: EdgeInsets.all(16),
-                    borderRadius: 10,
-                  );
-                }
-              },
-              style: ElevatedButton.styleFrom(
-                minimumSize: const Size(double.infinity, 54),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                padding: const EdgeInsets.symmetric(vertical: 12),
-              ),
-              child: _buildingController.isLoading.value
-                  ? const CircularProgressIndicator()
-                  : const Text(
-                      'Update Building',
-                      style:
-                          TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                    ),
+          ],
+        ),
+        child: ElevatedButton(
+          onPressed: _buildingController.isLoading.value || isLoading
+              ? null
+              : () async {
+            if (_buildingController.buildingFormKey.currentState?.validate() ?? false) {
+              // Ensure the building type is set before updating
+              _buildingController.buildingTypeController.text = _selectedBuildingType;
+              await _buildingController.updateBuilding();
+            } else {
+              Get.snackbar(
+                "Validation Error",
+                "Please fill all required fields.",
+                backgroundColor: Colors.red[100],
+                colorText: Colors.red[800],
+                snackPosition: SnackPosition.BOTTOM,
+                margin: EdgeInsets.all(16),
+                borderRadius: 10,
+              );
+            }
+          },
+          style: ElevatedButton.styleFrom(
+            minimumSize: const Size(double.infinity, 54),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
             ),
-          )),
+            padding: const EdgeInsets.symmetric(vertical: 12),
+          ),
+          child: _buildingController.isLoading.value
+              ? const CircularProgressIndicator()
+              : const Text(
+            'Update Building',
+            style:
+            TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+          ),
+        ),
+      )),
     );
   }
 }

@@ -23,6 +23,16 @@ class _LandUpdatePageState extends State<LandUpdatePage> with SingleTickerProvid
   late LandController _landController;
   bool _isLoading = false;
 
+  // Define land type options
+  final List<String> _landTypeOptions = [
+    'RESIDENTIAL',
+    'COMMERCIAL',
+    'INDUSTRIAL',
+    'AGRICULTURAL'
+  ];
+
+  String _selectedLandType = 'RESIDENTIAL';
+
   @override
   void initState() {
     super.initState();
@@ -43,7 +53,14 @@ class _LandUpdatePageState extends State<LandUpdatePage> with SingleTickerProvid
 
     _landController.landIdController.text = data['landId']?.toString() ?? data['id']?.toString() ?? '';
     _landController.landNameController.text = data['landName']?.toString() ?? data['name']?.toString() ?? '';
-    _landController.landTypeController.text = data['landType']?.toString() ?? data['type']?.toString() ?? '';
+
+    // Set the selected land type if it exists in the data
+    final existingType = data['landType']?.toString() ?? data['type']?.toString() ?? '';
+    if (existingType.isNotEmpty && _landTypeOptions.contains(existingType.toUpperCase())) {
+      _selectedLandType = existingType.toUpperCase();
+    }
+    _landController.landTypeController.text = _selectedLandType;
+
     _landController.landSizeController.text = data['landSize']?.toString() ?? '';
     _landController.landAddressController.text = data['landAddress']?.toString() ?? data['address']?.toString() ?? '';
     _landController.landCityController.text = data['landCity']?.toString() ?? data['city']?.toString() ?? '';
@@ -96,8 +113,8 @@ class _LandUpdatePageState extends State<LandUpdatePage> with SingleTickerProvid
           'id': _landController.landIdController.text, // For compatibility
           'landName': _landController.landNameController.text,
           'name': _landController.landNameController.text, // For compatibility
-          'landType': _landController.landTypeController.text,
-          'type': _landController.landTypeController.text, // For compatibility
+          'landType': _selectedLandType,
+          'type': _selectedLandType, // For compatibility
           'landSize': _landController.landSizeController.text,
           'landAddress': _landController.landAddressController.text,
           'address': _landController.landAddressController.text, // For compatibility
@@ -192,6 +209,54 @@ class _LandUpdatePageState extends State<LandUpdatePage> with SingleTickerProvid
     );
   }
 
+  Widget _buildLandTypeDropdown() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      child: DropdownButtonFormField<String>(
+        value: _selectedLandType,
+        decoration: InputDecoration(
+          labelText: 'Land Type',
+          filled: true,
+          fillColor: Colors.grey.shade50,
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide(color: Colors.grey.shade300),
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide(color: Colors.grey.shade300),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide(color: Theme.of(context).primaryColor, width: 2),
+          ),
+          prefixIcon: const Icon(Icons.category),
+          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+        ),
+        items: _landTypeOptions.map((String type) {
+          return DropdownMenuItem<String>(
+            value: type,
+            child: Text(type),
+          );
+        }).toList(),
+        onChanged: (String? newValue) {
+          if (newValue != null) {
+            setState(() {
+              _selectedLandType = newValue;
+              _landController.landTypeController.text = newValue;
+            });
+          }
+        },
+        validator: (value) {
+          if (value == null || value.isEmpty) {
+            return 'Land Type is required';
+          }
+          return null;
+        },
+      ),
+    );
+  }
+
   Widget _buildFormSection(String title, List<Widget> fields) {
     return Card(
       elevation: 2,
@@ -223,8 +288,7 @@ class _LandUpdatePageState extends State<LandUpdatePage> with SingleTickerProvid
     return [
       _buildFormField('Land Name', _landController.landNameController,
           prefixIcon: Icons.title),
-      _buildFormField('Land Type', _landController.landTypeController,
-          prefixIcon: Icons.category),
+      _buildLandTypeDropdown(), // Using the dropdown instead of text field
       _buildFormField('Land Size', _landController.landSizeController,
           inputType: TextInputType.number, prefixIcon: Icons.straighten),
 
@@ -403,4 +467,3 @@ class _LandUpdatePageState extends State<LandUpdatePage> with SingleTickerProvid
     );
   }
 }
-

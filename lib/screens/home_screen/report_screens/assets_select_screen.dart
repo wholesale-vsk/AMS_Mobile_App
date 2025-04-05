@@ -2,11 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 import '../../../controllers/Asset_Report_Controller/Asset_Report_Controller.dart';
-import '../../../controllers/assets_controllers/assets_controller.dart';
 
 class AssetsSelectForReports extends StatelessWidget {
   final AssetReportController _reportController = Get.put(AssetReportController());
-  final AssetController _assetController = Get.find<AssetController>();
 
   @override
   Widget build(BuildContext context) {
@@ -43,52 +41,144 @@ class AssetsSelectForReports extends StatelessWidget {
           ),
           onPressed: () => Get.back(),
         ),
+        actions: [
+          // Add a refresh button
+          IconButton(
+            icon: Icon(
+              Icons.refresh_rounded,
+              color: isDarkMode ? Colors.white : Colors.black87,
+            ),
+            onPressed: () {
+              _reportController.refreshAssets();
+              Get.snackbar(
+                "Refreshing",
+                "Updating asset data...",
+                snackPosition: SnackPosition.BOTTOM,
+                duration: Duration(seconds: 2),
+              );
+            },
+          ),
+        ],
       ),
       body: SafeArea(
-        child: Obx(() => Stack(
-          children: [
-            SingleChildScrollView(
-              physics: BouncingScrollPhysics(),
-              padding: EdgeInsets.symmetric(horizontal: 20, vertical: 20),
+        child: Obx(() {
+          // Show loading indicator when initially loading data
+          if (_reportController.isLoading.value) {
+            return Center(
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
                 children: [
-                  _buildSectionTitle('Select Asset Types', Icons.category_rounded, textColor),
-                  SizedBox(height: 12),
-                  _buildAssetTypeSelector(cardColor, textColor),
-                  SizedBox(height: 24),
-
-                  _buildSectionTitle('Select Property Types', Icons.home_work_rounded, textColor),
-                  SizedBox(height: 12),
-                  _buildBuildingTypeSelector(cardColor, textColor),
-                  SizedBox(height: 24),
-
-                  _buildSectionTitle('Report Type', Icons.description_rounded, textColor),
-                  SizedBox(height: 12),
-                  _buildReportTypeSelector(cardColor, textColor, subtitleColor),
-                  SizedBox(height: 24),
-
-                  _buildSectionTitle('Date Range', Icons.calendar_today_rounded, textColor),
-                  SizedBox(height: 12),
-                  _buildDateRangeSelector(context, cardColor, textColor, subtitleColor),
-                  SizedBox(height: 24),
-
-                  _buildSectionTitle('Additional Options', Icons.tune_rounded, textColor),
-                  SizedBox(height: 12),
-                  _buildAdditionalOptions(cardColor, textColor, subtitleColor),
-                  SizedBox(height: 36),
-
-                  _buildGenerateButton(context),
-                  SizedBox(height: 24),
+                  CircularProgressIndicator(),
+                  SizedBox(height: 16),
+                  Text(
+                    'Loading asset data...',
+                    style: TextStyle(
+                      color: textColor,
+                      fontSize: 16,
+                    ),
+                  ),
                 ],
               ),
-            ),
-            if (_reportController.isGeneratingReport.value)
-              _buildLoadingOverlay(),
-          ],
-        )),
+            );
+          }
+
+          return Stack(
+            children: [
+              SingleChildScrollView(
+                physics: BouncingScrollPhysics(),
+                padding: EdgeInsets.symmetric(horizontal: 20, vertical: 20),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Asset count indicator
+                    _buildAssetCountIndicator(textColor, subtitleColor),
+                    SizedBox(height: 20),
+
+                    _buildSectionTitle('Select Asset Types', Icons.category_rounded, textColor),
+                    SizedBox(height: 12),
+                    _buildAssetTypeSelector(cardColor, textColor),
+                    SizedBox(height: 24),
+
+                    _buildSectionTitle('Select Property Types', Icons.home_work_rounded, textColor),
+                    SizedBox(height: 12),
+                    _buildBuildingTypeSelector(cardColor, textColor),
+                    SizedBox(height: 24),
+
+                    _buildSectionTitle('Select Vehicle Types', Icons.directions_car_rounded, textColor),
+                    SizedBox(height: 12),
+                    _buildVehicleTypeSelector(cardColor, textColor),
+                    SizedBox(height: 24),
+
+                    _buildSectionTitle('Report Type', Icons.description_rounded, textColor),
+                    SizedBox(height: 12),
+                    _buildReportTypeSelector(cardColor, textColor, subtitleColor),
+                    SizedBox(height: 24),
+
+                    _buildSectionTitle('Date Range', Icons.calendar_today_rounded, textColor),
+                    SizedBox(height: 12),
+                    _buildDateRangeSelector(context, cardColor, textColor, subtitleColor),
+                    SizedBox(height: 24),
+
+                    _buildSectionTitle('Additional Options', Icons.tune_rounded, textColor),
+                    SizedBox(height: 12),
+                    _buildAdditionalOptions(cardColor, textColor, subtitleColor),
+                    SizedBox(height: 36),
+
+                    _buildGenerateButton(context),
+                    SizedBox(height: 24),
+                  ],
+                ),
+              ),
+              if (_reportController.isGeneratingReport.value)
+                _buildLoadingOverlay(),
+            ],
+          );
+        }),
       ),
     );
+  }
+
+  Widget _buildAssetCountIndicator(Color textColor, Color subtitleColor) {
+    return Obx(() => Container(
+      padding: EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Get.theme.primaryColor.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: Get.theme.primaryColor.withOpacity(0.3),
+        ),
+      ),
+      child: Row(
+        children: [
+          Icon(
+            Icons.inventory_2_rounded,
+            color: Get.theme.primaryColor,
+            size: 24,
+          ),
+          SizedBox(width: 12),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                '${_reportController.assets.length} Assets Available',
+                style: TextStyle(
+                  color: textColor,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 16,
+                ),
+              ),
+              Text(
+                'Filter options to generate your report',
+                style: TextStyle(
+                  color: subtitleColor,
+                  fontSize: 12,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    ));
   }
 
   Widget _buildLoadingOverlay() {
@@ -148,7 +238,7 @@ class AssetsSelectForReports extends StatelessWidget {
 
   Widget _buildAssetTypeSelector(Color cardColor, Color textColor) {
     return Obx(() {
-      final filteredCategories = _assetController.categories
+      final filteredCategories = _reportController.categories
           .where((category) => category != 'All')
           .toList();
 
@@ -231,6 +321,43 @@ class AssetsSelectForReports extends StatelessWidget {
     });
   }
 
+  Widget _buildVehicleTypeSelector(Color cardColor, Color textColor) {
+    return Obx(() {
+      final vehicleTypes = _reportController.vehicleTypes;
+
+      return Card(
+        elevation: 0,
+        color: cardColor,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Select the vehicle types to include in the report',
+                style: TextStyle(
+                  color: textColor.withOpacity(0.7),
+                  fontSize: 14,
+                ),
+              ),
+              SizedBox(height: 16),
+              Wrap(
+                spacing: 10,
+                runSpacing: 10,
+                children: vehicleTypes
+                    .map((vehicleType) => _buildVehicleTypeChip(vehicleType))
+                    .toList(),
+              ),
+            ],
+          ),
+        ),
+      );
+    });
+  }
+
   Widget _buildAssetTypeChip(String assetType) {
     Color chipColor = _getColorForAssetType(assetType);
     bool isSelected = _reportController.selectedAssetTypes.contains(assetType);
@@ -285,6 +412,33 @@ class AssetsSelectForReports extends StatelessWidget {
     );
   }
 
+  Widget _buildVehicleTypeChip(String vehicleType) {
+    Color chipColor = _getColorForVehicleType(vehicleType);
+    bool isSelected = _reportController.selectedVehicleTypes.contains(vehicleType);
+
+    return FilterChip(
+      selected: isSelected,
+      label: Text(vehicleType),
+      labelStyle: TextStyle(
+        color: isSelected ? Colors.white : Get.isDarkMode ? Colors.white : Colors.black87,
+        fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+      ),
+      selectedColor: chipColor,
+      backgroundColor: Get.isDarkMode ? Colors.black12 : Colors.grey[100],
+      checkmarkColor: Colors.white,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(8),
+        side: BorderSide(
+          color: isSelected ? Colors.transparent : chipColor.withOpacity(0.5),
+          width: 1,
+        ),
+      ),
+      onSelected: (selected) {
+        _reportController.toggleVehicleType(vehicleType);
+      },
+    );
+  }
+
   Color _getColorForAssetType(String assetType) {
     switch (assetType) {
       case 'Building':
@@ -310,6 +464,23 @@ class AssetsSelectForReports extends StatelessWidget {
         return Colors.green;
       default:
         return Colors.teal;
+    }
+  }
+
+  Color _getColorForVehicleType(String vehicleType) {
+    switch (vehicleType) {
+      case 'CAR':
+        return Colors.red;
+      case 'TRUCK':
+        return Colors.brown;
+      case 'VAN':
+        return Colors.indigo;
+      case 'MOTORCYCLE':
+        return Colors.deepOrange;
+      case 'BUS':
+        return Colors.deepPurple;
+      default:
+        return Colors.blue;
     }
   }
 
@@ -565,8 +736,15 @@ class AssetsSelectForReports extends StatelessWidget {
 
   Widget _buildGenerateButton(BuildContext context) {
     return Obx(() {
-      final bool canGenerate = !_reportController.isGeneratingReport.value &&
+      bool canGenerate = !_reportController.isGeneratingReport.value &&
           _reportController.selectedAssetTypes.isNotEmpty;
+
+      // Check if we have any asset data
+      bool hasAssetData = _reportController.assets.isNotEmpty;
+
+      if (!hasAssetData) {
+        canGenerate = false;
+      }
 
       return ElevatedButton(
         onPressed: canGenerate
@@ -574,7 +752,7 @@ class AssetsSelectForReports extends StatelessWidget {
             : null,
         style: ElevatedButton.styleFrom(
           backgroundColor: Get.theme.primaryColor,
-          disabledBackgroundColor: Get.isDarkMode ? Colors.grey[800] : Colors.white,
+          disabledBackgroundColor: Get.isDarkMode ? Colors.grey[800] : Colors.grey[300],
           padding: EdgeInsets.symmetric(vertical: 16),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
@@ -594,6 +772,7 @@ class AssetsSelectForReports extends StatelessWidget {
                 style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
+                  color: Colors.white,
                 ),
               ),
             ],

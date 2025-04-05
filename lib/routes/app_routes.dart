@@ -96,10 +96,10 @@ class AppRoutes {
     GetPage(name: UPDATE_BUILDING_SCREEN, page: () => BuildingUpdatePage (building: Get.arguments, buildingData: {}, asset: null,), transition: Transition.rightToLeft),
 
     GetPage(name: ASSETS_SELECT_FOR_REPORT_SCREEN, page: () => AssetsSelectForReports(), transition: Transition.rightToLeft),
-    GetPage(name: BUILDING_REPORT_SCREEN, page: () => BuildingReportScreen(), transition: Transition.rightToLeft),
-    GetPage(name: LAND_REPORT_SCREEN, page: () => LandReportScreen(), transition: Transition.rightToLeft),
+    // GetPage(name: BUILDING_REPORT_SCREEN, page: () => BuildingReportScreen(), transition: Transition.rightToLeft),
+    // GetPage(name: LAND_REPORT_SCREEN, page: () => LandReportScreen(), transition: Transition.rightToLeft),
     GetPage(name: VEHICLE_REPORT_SCREEN, page: () => VehicleReportScreen(), transition: Transition.rightToLeft),
-    GetPage(name: TOTAL_ASSETS_REPORT_SCREEN, page: () => TotalAssetsReportScreen(), transition: Transition.rightToLeft),
+    // GetPage(name: TOTAL_ASSETS_REPORT_SCREEN, page: () => TotalAssetsReportScreen(), transition: Transition.rightToLeft),
 
     GetPage(name: FAQ_SCREEN, page: () => FAQScreen(), transition: Transition.rightToLeft),
 

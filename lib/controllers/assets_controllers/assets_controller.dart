@@ -41,8 +41,8 @@ class AssetController extends GetxController {
 
   @override
   void onInit() {
-    fetchAllAssets();
     super.onInit();
+    fetchAllAssets();
   }
 
   /// **🔄 Fetch all assets initially**
@@ -106,11 +106,19 @@ class AssetController extends GetxController {
       isFetchingMore(true);
       _logger.i("📦 Loading more assets...");
 
-      var newAssets = await Future.wait([
-        if (hasMoreBuildings.value) _fetchBuildings(page: currentBuildingPage.value + 1),
-        if (hasMoreVehicles.value) _fetchVehicles(page: currentVehiclePage.value + 1),
-        if (hasMoreLands.value) _fetchLands(page: currentLandPage.value + 1),
-      ]);
+      List<List<Map<String, dynamic>>> newAssets = [];
+
+      if (hasMoreBuildings.value) {
+        newAssets.add(await _fetchBuildings(page: currentBuildingPage.value + 1));
+      }
+
+      if (hasMoreVehicles.value) {
+        newAssets.add(await _fetchVehicles(page: currentVehiclePage.value + 1));
+      }
+
+      if (hasMoreLands.value) {
+        newAssets.add(await _fetchLands(page: currentLandPage.value + 1));
+      }
 
       assets.addAll(newAssets.expand((element) => element));
       _incrementPageNumbers();
@@ -119,7 +127,7 @@ class AssetController extends GetxController {
       // Recalculate total value
       _calculateTotalAssetValue();
 
-      _logger.i("📌 Total Assets After Load More: ${assets.length}");
+      _logger.i("📌 Total Assets After Load More: ${assets.totalElements}");
     } catch (e) {
       _logger.e("❌ Error loading more assets: $e");
     } finally {
@@ -169,44 +177,65 @@ class AssetController extends GetxController {
     final query = searchQuery.value.toLowerCase();
     return assets.where((asset) {
       bool matchesCategory = selectedCategory.value == 'All' || asset['category'] == selectedCategory.value;
-      bool matchesSearch = query.isEmpty || (asset['name'] ?? '').toLowerCase().contains(query);
+
+      // Enhanced search to look at both name and other key properties
+      bool matchesSearch = query.isEmpty;
+      if (!matchesSearch) {
+        // Check name field
+        if (asset.containsKey('name') && asset['name'] != null) {
+          matchesSearch = asset['name'].toString().toLowerCase().contains(query);
+        }
+        // For vehicles, also check model and vrn
+        if (!matchesSearch && asset['category'] == 'Vehicle') {
+          if (asset.containsKey('model') && asset['model'] != null) {
+            matchesSearch = asset['model'].toString().toLowerCase().contains(query);
+          }
+          if (!matchesSearch && asset.containsKey('vrn') && asset['vrn'] != null) {
+            matchesSearch = asset['vrn'].toString().toLowerCase().contains(query);
+          }
+        }
+        // For buildings and lands, check address
+        if (!matchesSearch && (asset['category'] == 'Building' || asset['category'] == 'Land')) {
+          if (asset.containsKey('address') && asset['address'] != null) {
+            matchesSearch = asset['address'].toString().toLowerCase().contains(query);
+          }
+        }
+      }
+
       return matchesCategory && matchesSearch;
     }).toList();
   }
+
   /// **🏗 Fetch Buildings with Pagination**
   Future<List<Map<String, dynamic>>> _fetchBuildings({int page = 1}) async {
     try {
       _logger.i("🏗 Fetching buildings... Page: $page");
 
-      var response = await _buildingService.fetchBuildings();
+      var response = await _buildingService.fetchBuildings(page: page);
       totalBuildings.value = response['totalElements'] ?? 0;
 
       List<Building> buildings = (response['buildings'] ?? []).cast<Building>();
       List<Map<String, dynamic>> buildingAssets = buildings.map((b) => {
         "category": "Building",
-        "name": (b.name?.trim().isNotEmpty ?? false) ? b.name!.trim() : "N/A",
+        "name": (b.name.trim().isNotEmpty ?? false) ? b.name!.trim() : "N/A",
         "buildingType": b.buildingType ?? "N/A",
-        "numberOfFloors": b.numberOfFloors.toString(), // Ensures it's a string
-        "totalArea": b.totalArea.toString(), // Ensures it's a string
+        "numberOfFloors": b.numberOfFloors.toString() ?? "N/A", // Handle null
+        "totalArea": b.totalArea.toString() ?? "N/A", // Handle null
         "address": b.address ?? "N/A",
         "purposeOfUse": b.purposeOfUse ?? "N/A",
-        "councilTaxValue": b.councilTaxValue.toString(), // Ensures it's a string
-        "councilTaxDate": b.councilTaxDate?.toString() ?? "N/A", // Convert DateTime properly
+        "councilTaxValue": b.councilTaxValue.toString() ?? "N/A", // Handle null
+        "councilTaxDate": b.councilTaxDate.toString() ?? "N/A",
         "city": b.city ?? "N/A",
         "ownerName": b.ownerName ?? "N/A",
-        "purchasePrice": b.purchasePrice.toString(), // Ensures it's a string
-        "purchaseDate": b.purchaseDate.toString() ?? "N/A", // Convert DateTime properly
-        "leaseValue": b.leaseValue.toString(), // Ensures it's a string
-        "lease_date": b.leaseDate.toString() ?? "N/A", // Convert DateTime properly
-        "buildingId": Uri.parse(b.link).pathSegments.last,
+        "purchasePrice": b.purchasePrice.toString() ?? "N/A", // Handle null
+        "purchaseDate": b.purchaseDate.toString() ?? "N/A",
+        "leaseValue": b.leaseValue.toString() ?? "N/A", // Handle null
+        "lease_date": b.leaseDate.toString() ?? "N/A",
+        "buildingId": b.link != null ? Uri.parse(b.link).pathSegments.last : "",
         "imageURL": b.buildingImage ?? "",
-
-
-
       }).toList();
 
       _logger.i("🏗 Buildings Loaded: ${buildingAssets.length}");
-      _logger.i("📝 Building Details: ${buildingAssets.map((b) => b.toString()).join("\n")}");
 
       return buildingAssets;
     } catch (e) {
@@ -214,7 +243,6 @@ class AssetController extends GetxController {
       return [];
     }
   }
-
 
   /// **🚗 Fetch Vehicles with Pagination**
   Future<List<Map<String, dynamic>>> _fetchVehicles({int page = 1}) async {
@@ -227,31 +255,28 @@ class AssetController extends GetxController {
       List<Vehicle> vehicles = (response['vehicles'] ?? []).cast<Vehicle>();
       List<Map<String, dynamic>> vehicleAssets = vehicles.map((v) => {
         "category": "Vehicle",
-        "model": v.model,
-        "vrn": v.vrn,
+        "name": v.model ?? "N/A", // Use model as name for consistency
+        "model": v.model ?? "N/A",
+        "vrn": v.vrn ?? "N/A",
         "motValue": v.motValue,
         "insuranceValue": v.insuranceValue,
-        "vehicle_type": v.vehicleType,
-        "owner_name": v.ownerName,
-
-
-        "purchasePrice": v.purchasePrice, // Keep as double, no "N/A"
-        "purchaseDate":(v.purchaseDate),
-        "motDate": (v.motDate),
-        "insuranceDate":(v.insuranceDate),
-        "imageURL": v.vehicleImage,
-        "createdBy": v.createdBy,
-        "createdDate": (v.createdDate),
-        "lastModifiedBy": v.lastModifiedBy,
-        "lastModifiedDate": (v.lastModifiedDate),
+        "vehicle_type": v.vehicleType ?? "N/A",
+        "owner_name": v.ownerName ?? "N/A",
+        "purchasePrice": v.purchasePrice,
+        "purchaseDate": v.purchaseDate?.toString(),
+        "motDate": v.motDate?.toString(),
+        "insuranceDate": v.insuranceDate?.toString(),
+        "imageURL": v.vehicleImage ?? "",
+        "createdBy": v.createdBy ?? "N/A",
+        "createdDate": v.createdDate?.toString(),
+        "lastModifiedBy": v.lastModifiedBy ?? "N/A",
+        "lastModifiedDate": v.lastModifiedDate?.toString(),
         "mileage": v.mileage,
-        "vehicleId": Uri.parse(v.links).pathSegments.last,
-        "motExpiredDate": (v.motExpiredDate),
-        "type": "Vehicle", // ✅ Ensures type is set for filtering
+        "vehicleId": v.links != null ? Uri.parse(v.links).pathSegments.last : "",
+        "motExpiredDate": v.motExpiredDate?.toString(),
       }).toList();
 
       _logger.i("🚗 Vehicles Loaded: ${vehicleAssets.length}");
-      _logger.i("📝 Vehicle Details: ${vehicleAssets.map((v) => v.toString()).join("\n")}");
 
       return vehicleAssets;
     } catch (e) {
@@ -259,7 +284,6 @@ class AssetController extends GetxController {
       return [];
     }
   }
-
 
   /// **🌱 Fetch Lands with Pagination**
   Future<List<Map<String, dynamic>>> _fetchLands({int page = 1}) async {
@@ -272,22 +296,20 @@ class AssetController extends GetxController {
       List<Land> lands = (response['lands'] ?? []).cast<Land>();
       List<Map<String, dynamic>> landAssets = lands.map((l) => {
         "category": "Land",
-        "name": l.name ?? "Unknown",
+        "name": l.name ?? "Unknown Land",
         "landType": l.landType ?? "N/A",
         "landSize": l.landSize ?? "N/A",
         "address": l.address ?? "N/A",
         "city": l.city ?? "N/A",
-        "purchaseDate": l.purchaseDate ?? "N/A",
-        "purchasePrice": l.purchasePrice ?? "N/A",
-        'leaseValue': l.leaseValue ?? "N/A",
-        'lease_date': l.leaseDate ?? "N/A",
+        "purchaseDate": l.purchaseDate?.toString() ?? "N/A",
+        "purchasePrice": l.purchasePrice?.toString() ?? "N/A",
+        'leaseValue': l.leaseValue?.toString() ?? "N/A",
+        'lease_date': l.leaseDate?.toString() ?? "N/A",
         "imageURL": l.landImage ?? "",
-        "landId": Uri.parse(l.links).pathSegments.last,
-
+        "landId": l.links != null ? Uri.parse(l.links).pathSegments.last : "",
       }).toList();
 
       _logger.i("🌱 Lands Loaded: ${landAssets.length}");
-      _logger.i("📝 Land Details: ${landAssets.map((l) => l.toString()).join("\n")}");
 
       return landAssets;
     } catch (e) {
@@ -295,6 +317,7 @@ class AssetController extends GetxController {
       return [];
     }
   }
+
   void deleteAsset(Map<String, dynamic> asset) {
     assets.remove(asset);
     totalAssets.value = assets.length;
@@ -303,8 +326,6 @@ class AssetController extends GetxController {
 
     _logger.i("✅ Asset Deleted: ${asset['name']}");
   }
-
-
 
   /// **🔄 Helper Methods**
   void _incrementPageNumbers() {
@@ -323,14 +344,19 @@ class AssetController extends GetxController {
   }
 
   void _updateLoadMoreFlags() {
-    hasMoreBuildings.value = currentBuildingPage.value < (totalBuildings.value ~/ 10);
-    hasMoreVehicles.value = currentVehiclePage.value < (totalVehicles.value ~/ 10);
-    hasMoreLands.value = currentLandPage.value < (totalLands.value ~/ 10);
+    // Fix the calculation to properly determine if there are more pages
+    hasMoreBuildings.value = totalBuildings.value > (currentBuildingPage.value * 10);
+    hasMoreVehicles.value = totalVehicles.value > (currentVehiclePage.value * 10);
+    hasMoreLands.value = totalLands.value > (currentLandPage.value * 10);
   }
 
-  void fetchAssets() {}
-
-  getAssetsByCategory(String s) {}
+  // Get assets by specific category
+  List<Map<String, dynamic>> getAssetsByCategory(String category) {
+    if (category == 'All') {
+      return assets;
+    }
+    return assets.where((asset) => asset['category'] == category).toList();
+  }
 
   // Format total value as currency string
   String get formattedTotalValue {
@@ -339,6 +365,8 @@ class AssetController extends GetxController {
             (Match m) => '${m[1]},'
     )}';
   }
+}
 
-
+extension on RxList<Map<String, dynamic>> {
+  get totalElements => null;
 }
