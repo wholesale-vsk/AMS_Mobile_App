@@ -308,11 +308,11 @@ class _BuildingUpdatePageState extends State<BuildingUpdatePage>
                 prefixIcon: Icons.location_city),
           ),
           const SizedBox(width: 16),
-          Expanded(
-            child: _buildFormField(
-                'Province', _buildingController.buildingProvinceController,
-                prefixIcon: Icons.map),
-          ),
+          // Expanded(
+          //   child: _buildFormField(
+          //       'Province', _buildingController.buildingProvinceController,
+          //       prefixIcon: Icons.map),
+          // ),
         ],
       ),
     ];
@@ -354,8 +354,7 @@ class _BuildingUpdatePageState extends State<BuildingUpdatePage>
           ),
         ],
       ),
-      _buildFormField('Council Tax', _buildingController.councilTaxController,
-          prefixIcon: Icons.receipt),
+
       Row(
         children: [
           Expanded(
@@ -375,49 +374,49 @@ class _BuildingUpdatePageState extends State<BuildingUpdatePage>
     ];
   }
 
-  List<Widget> _buildMediaFields() {
-    return [
-      _buildFormField(
-          'Building Image URL', _buildingController.buildingImageController,
-          prefixIcon: Icons.image),
-      const SizedBox(height: 16),
-
-      // Image preview
-      Obx(() {
-        final imageUrl = _buildingController.buildingImageController.text;
-        if (imageUrl.isNotEmpty) {
-          return Container(
-            width: double.infinity,
-            height: 200,
-            decoration: BoxDecoration(
-              border: Border.all(color: Colors.grey.shade300),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(12),
-              child: Image.network(
-                imageUrl,
-                fit: BoxFit.cover,
-                errorBuilder: (context, error, stackTrace) => Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(Icons.broken_image,
-                          size: 48, color: Colors.grey.shade400),
-                      const SizedBox(height: 8),
-                      const Text('Image not available'),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-          );
-        } else {
-          return const SizedBox.shrink();
-        }
-      }),
-    ];
-  }
+  // List<Widget> _buildMediaFields() {
+  //   return [
+  //     _buildFormField(
+  //         'Building Image URL', _buildingController.buildingImageController,
+  //         prefixIcon: Icons.image),
+  //     const SizedBox(height: 16),
+  //
+  //     // Image preview
+  //     Obx(() {
+  //       final imageUrl = _buildingController.buildingImageController.text;
+  //       if (imageUrl.isNotEmpty) {
+  //         return Container(
+  //           width: double.infinity,
+  //           height: 200,
+  //           decoration: BoxDecoration(
+  //             border: Border.all(color: Colors.grey.shade300),
+  //             borderRadius: BorderRadius.circular(12),
+  //           ),
+  //           child: ClipRRect(
+  //             borderRadius: BorderRadius.circular(12),
+  //             child: Image.network(
+  //               imageUrl,
+  //               fit: BoxFit.cover,
+  //               errorBuilder: (context, error, stackTrace) => Center(
+  //                 child: Column(
+  //                   mainAxisAlignment: MainAxisAlignment.center,
+  //                   children: [
+  //                     Icon(Icons.broken_image,
+  //                         size: 48, color: Colors.grey.shade400),
+  //                     const SizedBox(height: 8),
+  //                     const Text('Image not available'),
+  //                   ],
+  //                 ),
+  //               ),
+  //             ),
+  //           ),
+  //         );
+  //       } else {
+  //         return const SizedBox.shrink();
+  //       }
+  //     }),
+  //   ];
+  // }
 
   @override
   Widget build(BuildContext context) {
@@ -426,7 +425,7 @@ class _BuildingUpdatePageState extends State<BuildingUpdatePage>
       const Tab(icon: Icon(Icons.business), text: 'Basic Info'),
       const Tab(icon: Icon(Icons.location_on), text: 'Location'),
       const Tab(icon: Icon(Icons.attach_money), text: 'Financial'),
-      const Tab(icon: Icon(Icons.image), text: 'Media'),
+      // const Tab(icon: Icon(Icons.image), text: 'Media'),
     ];
 
     if (isLoading) {
@@ -511,11 +510,11 @@ class _BuildingUpdatePageState extends State<BuildingUpdatePage>
                   'Financial Information', _buildFinancialFields()),
             ),
 
-            // Media Tab
-            SingleChildScrollView(
-              padding: const EdgeInsets.all(16),
-              child: _buildFormSection('Building Media', _buildMediaFields()),
-            ),
+            // // Media Tab
+            // SingleChildScrollView(
+            //   padding: const EdgeInsets.all(16),
+            //   child: _buildFormSection('Building Media', _buildMediaFields()),
+            // ),
           ],
         ),
       ),

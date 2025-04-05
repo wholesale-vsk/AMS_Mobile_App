@@ -295,33 +295,33 @@ class _LandUpdatePageState extends State<LandUpdatePage> with SingleTickerProvid
 
       const SizedBox(height: 16),
 
-      // Image preview
-      if (_landController.landImageController.text.isNotEmpty)
-        Container(
-          width: double.infinity,
-          height: 200,
-          decoration: BoxDecoration(
-            border: Border.all(color: Colors.grey.shade300),
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(12),
-            child: Image.network(
-              _landController.landImageController.text,
-              fit: BoxFit.cover,
-              errorBuilder: (context, error, stackTrace) => Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(Icons.broken_image, size: 48, color: Colors.grey.shade400),
-                    const SizedBox(height: 8),
-                    const Text('Image not available'),
-                  ],
-                ),
-              ),
-            ),
-          ),
-        ),
+      // // Image preview
+      // if (_landController.landImageController.text.isNotEmpty)
+      //   Container(
+      //     width: double.infinity,
+      //     height: 200,
+      //     decoration: BoxDecoration(
+      //       border: Border.all(color: Colors.grey.shade300),
+      //       borderRadius: BorderRadius.circular(12),
+      //     ),
+      //     child: ClipRRect(
+      //       borderRadius: BorderRadius.circular(12),
+      //       child: Image.network(
+      //         _landController.landImageController.text,
+      //         fit: BoxFit.cover,
+      //         errorBuilder: (context, error, stackTrace) => Center(
+      //           child: Column(
+      //             mainAxisAlignment: MainAxisAlignment.center,
+      //             children: [
+      //               Icon(Icons.broken_image, size: 48, color: Colors.grey.shade400),
+      //               const SizedBox(height: 8),
+      //               const Text('Image not available'),
+      //             ],
+      //           ),
+      //         ),
+      //       ),
+      //     ),
+      //   ),
     ];
   }
 

@@ -138,7 +138,7 @@ class BuildingController extends GetxController {
     purposeOfUseController.text = buildingData['purposeOfUse']?.toString() ?? '';
     councilTaxController.text = buildingData['councilTax']?.toString() ?? '';
     councilTaxDateController.text = buildingData['councilTaxDate']?.toString() ?? '';
-    councilTaxValueController.text = buildingData['councilTaxValue']?.toString() ?? '';
+    councilTaxValueController.text = buildingData[' councilTaxValue']?.toString() ?? '';
     leaseDateController.text = buildingData['lease_date']?.toString() ?? '';
     leaseValueController.text = buildingData['leaseValue']?.toString() ?? '';
     purchaseDateController.text = buildingData['purchaseDate']?.toString() ?? '';

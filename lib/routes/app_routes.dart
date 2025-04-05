@@ -2,7 +2,7 @@ import 'package:get/get.dart';
 import 'package:hexalyte_ams/screens/home_screen/app_settigns/app_settings.dart';
 import 'package:hexalyte_ams/screens/home_screen/assets_screens/add_asset_screen/add_asset_screen.dart';
 import 'package:hexalyte_ams/screens/home_screen/assets_screens/add_asset_screen/add_land/add_land_screen.dart';
-import 'package:hexalyte_ams/screens/home_screen/assets_screens/add_asset_screen/add_building/add_building_screen.dart';
+
 import 'package:hexalyte_ams/screens/home_screen/assets_screens/add_asset_screen/add_vehicle/add_vehicle_screen.dart';
 import 'package:hexalyte_ams/screens/home_screen/assets_screens/view_assets_screen/building_details_screen/building_details_screen.dart';
 import 'package:hexalyte_ams/screens/home_screen/assets_screens/view_assets_screen/land_details_screen/land_details_screen.dart';

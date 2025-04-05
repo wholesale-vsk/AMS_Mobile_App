@@ -65,7 +65,7 @@ class Building {
       purposeOfUse: json['purposeOfUse']?.toString() ?? 'Unknown',
       purchasePrice: _parseDouble(json['purchasePrice']),
       link: json['_links']['self']['href'] ?? 'N/A',
-      buildingImage: json?['imageURL'] ?? '', // ✅ If API uses lowercase "imageUrl"
+      buildingImage: json['imageURL'] ?? '', // ✅ If API uses lowercase "imageUrl"
 
     );
   }
