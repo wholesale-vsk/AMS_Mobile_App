@@ -78,6 +78,13 @@ class AssetReportController extends GetxController {
 
   final selectedVehicleTypes = <String>[].obs;
 
+  // Land types
+  final landTypes = <String>['AGRICULTURAL', 'RESIDENTIAL', 'COMMERCIAL'].obs;
+  final selectedLandTypes = <String>[].obs;
+
+
+
+
   @override
   void onInit() {
     super.onInit();
@@ -110,11 +117,8 @@ class AssetReportController extends GetxController {
   }
 
   void _startAutoRefresh() {
-    autoRefreshTimer?.cancel(); // Prevent duplicate timers
-    autoRefreshTimer = Timer.periodic(const Duration(seconds: 30), (timer) {
-      refreshAssets();
-      _logger.i("🔄 Auto-refreshing assets...");
-    });
+
+
   }
 
   /// Load all asset data from all services
@@ -160,7 +164,7 @@ class AssetReportController extends GetxController {
       // Transform Building objects into standardized maps
       return buildings.map((b) => {
         "category": "Building",
-        "name": b.name?.trim() ?? "Unnamed Building",
+        "name": b.name.trim() ?? "Unnamed Building",
         "buildingType": b.buildingType ?? "N/A",
         "numberOfFloors": b.numberOfFloors,
         "totalArea": b.totalArea,
@@ -176,8 +180,6 @@ class AssetReportController extends GetxController {
         "purchaseDate": b.purchaseDate,
         "leaseValue": b.leaseValue,
         "leaseDate": b.leaseDate,
-        "buildingId": b.link != null ? Uri.parse(b.link!).pathSegments.last : "",
-        "imageURL": b.buildingImage ?? "",
       }).toList();
     } catch (e) {
       _logger.e("❌ Error loading buildings: $e");
@@ -210,8 +212,7 @@ class AssetReportController extends GetxController {
         "motDate": v.motDate,
         "motExpiredDate": v.motExpiredDate,
         "insuranceDate": v.insuranceDate,
-        "imageURL": v.vehicleImage ?? "",
-        "vehicleId": v.links != null ? Uri.parse(v.links!).pathSegments.last : "",
+
       }).toList();
     } catch (e) {
       _logger.e("❌ Error loading vehicles: $e");
@@ -242,8 +243,7 @@ class AssetReportController extends GetxController {
         "purchaseDate": l.purchaseDate,
         "leaseValue": l.leaseValue,
         "leaseDate": l.leaseDate,
-        "imageURL": l.landImage ?? "",
-        "landId": l.links != null ? Uri.parse(l.links!).pathSegments.last : "",
+
       }).toList();
     } catch (e) {
       _logger.e("❌ Error loading lands: $e");
@@ -316,7 +316,6 @@ class AssetReportController extends GetxController {
 
     return assets.where((asset) {
       final category = asset['category'];
-      _logger.i("🏢 Filtering asset category: $category");
 
       if (category == null || !selectedAssetTypes.contains(category)) {
         return false;
@@ -327,7 +326,9 @@ class AssetReportController extends GetxController {
           selectedBuildingTypes.isNotEmpty &&
           asset.containsKey('buildingType')) {
         String? buildingType = asset['buildingType'] as String?;
-        _logger.i("🏢 Building type: $buildingType");
+       _logger.i("🏢 Building Type: ${asset['buildingType'] ?? asset['building_Type']}");
+
+
         if (buildingType == null ||
             !selectedBuildingTypes.contains(buildingType)) {
           return false;
@@ -338,8 +339,8 @@ class AssetReportController extends GetxController {
       if (category == 'Land' &&
           selectedBuildingTypes.isNotEmpty &&
           asset.containsKey('landType')) {
-        _logger.i("🌳 Land type: ${asset['landType']}");
         String? landType = asset['landType'] as String?;
+     _logger.i("🏢 Land Type: ${asset['landType'] ?? asset['land_Type']}");
         if (landType == null || !selectedBuildingTypes.contains(landType)) {
           return false;
         }
@@ -406,7 +407,8 @@ class AssetReportController extends GetxController {
     try {
       isGeneratingReport(true);
       reportProgress(0.1);
-      _logger.i("📊 Generating ${reportType.value}...");
+
+
 
       // Get filtered assets
       final filteredAssets = getFilteredAssets();
@@ -426,12 +428,18 @@ class AssetReportController extends GetxController {
 
       // Create PDF document based on report type
       final pdf = await _createPdfReport(filteredAssets, reportType.value);
+      _logger.i("✅ PDF created successfully");
+
+
+
+
 
       reportProgress(0.7);
+      _logger.i("📊 Generating report preview...");
 
       // Save the PDF
       final filePath = await _savePdfReport(pdf);
-
+_logger.i("✅ PDF saved successfully: $filePath");
       reportProgress(1.0);
 
       // Show preview dialog
@@ -517,6 +525,7 @@ class AssetReportController extends GetxController {
           'Purchase Price',
           'Current Value',
           'Depreciation'
+
         ];
         rowBuilder = (asset) =>
         [
@@ -545,6 +554,7 @@ class AssetReportController extends GetxController {
               _getMaintenanceDate(asset) ?? 'N/A'),
           _getMaintenanceStatus(asset),
           _getValue(asset, 'maintenanceNotes') ?? 'No notes',
+
         ];
         break;
       default:
@@ -557,6 +567,17 @@ class AssetReportController extends GetxController {
           _formatDate(_getValue(asset, 'purchaseDate')),
           _formatCurrency(_getValue(asset, 'purchasePrice')),
         ];
+
+        _logger.w("Unknown report type: $type");
+        _logger.w("Defaulting to Summary Report");
+        _logger.w("Please report this to the developer");
+        _logger.w("Report type: $type");
+        _logger.w("Report data: $assets");
+        _logger.w("Report columns: $columns");
+        _logger.w("Report row builder: $rowBuilder");
+        _logger.w("Report font: $font");
+        _logger.w("Report fontBold: $fontBold");
+        break;
     }
 
     // Add report pages
@@ -683,7 +704,7 @@ class AssetReportController extends GetxController {
 
     // Simple bar chart - we'll simulate it with rectangles
     return pw.Container(
-      padding: pw.EdgeInsets.all(12),
+      padding: const pw.EdgeInsets.all(12),
       decoration: pw.BoxDecoration(
         borderRadius: pw.BorderRadius.circular(4),
         border: pw.Border.all(color: PdfColors.grey300),
@@ -718,7 +739,7 @@ class AssetReportController extends GetxController {
                       margin: pw.EdgeInsets.symmetric(horizontal: 8),
                       decoration: pw.BoxDecoration(
                         color: _getCategoryColor(entry.key),
-                        borderRadius: pw.BorderRadius.vertical(
+                        borderRadius: const pw.BorderRadius.vertical(
                           top: pw.Radius.circular(4),
                         ),
                       ),
@@ -1128,9 +1149,11 @@ class AssetReportController extends GetxController {
                 child: _buildFilterItem(
                   'Vehicle Types',
                   selectedVehicleTypes.isNotEmpty ? selectedVehicleTypes.join(
+
                       ', ') : 'All',
                   font,
                   fontBold,
+
                 ),
               ),
             ],
@@ -1143,7 +1166,7 @@ class AssetReportController extends GetxController {
   pw.Widget _buildFilterItem(String label, String value, pw.Font font,
       pw.Font fontBold) {
     return pw.Padding(
-      padding: pw.EdgeInsets.symmetric(horizontal: 5, vertical: 3),
+      padding: const pw.EdgeInsets.symmetric(horizontal: 5, vertical: 3),
       child: pw.Column(
         crossAxisAlignment: pw.CrossAxisAlignment.start,
         children: [
@@ -1223,7 +1246,6 @@ class AssetReportController extends GetxController {
   String _getTypeValue(Map<String, dynamic> asset) {
     final category = asset['category'];
     if (category == 'Building') {
-      _logger.i("🏢 Building type: ${asset['buildingType']}");
       return asset['buildingType'] ?? 'N/A';
     } else if (category == 'Vehicle') {
       return asset['vehicleType'] ?? asset['vehicle_type'] ?? asset['type'] ??

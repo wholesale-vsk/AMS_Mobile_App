@@ -135,6 +135,7 @@ class AssetController extends GetxController {
     }
   }
 
+
   /// **🔄 Refresh all assets (Pull-to-Refresh)**
   Future<void> refreshAssets() async {
     try {
@@ -158,6 +159,8 @@ class AssetController extends GetxController {
       isRefreshing(false);
     }
   }
+
+
 
   /// **🔍 Update search query & refresh UI**
   void updateSearchQuery(String query) {
@@ -231,7 +234,7 @@ class AssetController extends GetxController {
         "purchaseDate": b.purchaseDate.toString() ?? "N/A",
         "leaseValue": b.leaseValue.toString() ?? "N/A", // Handle null
         "lease_date": b.leaseDate.toString() ?? "N/A",
-        "buildingId": b.link != null ? Uri.parse(b.link).pathSegments.last : "",
+        "buildingId": b.link != null? Uri.parse(b.link).pathSegments.last : "",
         "imageURL": b.buildingImage ?? "",
       }).toList();
 

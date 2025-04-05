@@ -1,10 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
+import 'package:logger/logger.dart';
 import '../../../controllers/Asset_Report_Controller/Asset_Report_Controller.dart';
 
 class AssetsSelectForReports extends StatelessWidget {
   final AssetReportController _reportController = Get.put(AssetReportController());
+  final Logger _logger = Logger();
+
+  AssetsSelectForReports({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -109,6 +113,7 @@ class AssetsSelectForReports extends StatelessWidget {
                     _buildVehicleTypeSelector(cardColor, textColor),
                     SizedBox(height: 24),
 
+
                     _buildSectionTitle('Report Type', Icons.description_rounded, textColor),
                     SizedBox(height: 12),
                     _buildReportTypeSelector(cardColor, textColor, subtitleColor),
@@ -195,7 +200,8 @@ class AssetsSelectForReports extends StatelessWidget {
             SizedBox(height: 20),
             Text(
               'Generating ${_reportController.reportType.value}...',
-              style: TextStyle(
+
+              style: const TextStyle(
                 color: Colors.white,
                 fontWeight: FontWeight.bold,
                 fontSize: 16,
@@ -260,7 +266,7 @@ class AssetsSelectForReports extends StatelessWidget {
                   fontSize: 14,
                 ),
               ),
-              SizedBox(height: 16),
+              const SizedBox(height: 16),
               Wrap(
                 spacing: 10,
                 runSpacing: 10,
@@ -325,6 +331,7 @@ class AssetsSelectForReports extends StatelessWidget {
     return Obx(() {
       final vehicleTypes = _reportController.vehicleTypes;
 
+
       return Card(
         elevation: 0,
         color: cardColor,
@@ -343,13 +350,15 @@ class AssetsSelectForReports extends StatelessWidget {
                   fontSize: 14,
                 ),
               ),
-              SizedBox(height: 16),
+              const SizedBox(height: 16),
               Wrap(
                 spacing: 10,
                 runSpacing: 10,
                 children: vehicleTypes
                     .map((vehicleType) => _buildVehicleTypeChip(vehicleType))
+
                     .toList(),
+
               ),
             ],
           ),
