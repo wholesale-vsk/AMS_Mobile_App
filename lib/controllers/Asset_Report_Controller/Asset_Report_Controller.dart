@@ -167,7 +167,7 @@ class AssetReportController extends GetxController {
         "address": b.address ?? "N/A",
         "buildingAddress": b.address ?? "N/A",
         "purposeOfUse": b.purposeOfUse ?? "N/A",
-        "councilTaxValue": b.councilTaxValue,
+        "councilTaxValue": b.councilTax,
         "councilTaxDate": b.councilTaxDate,
         "city": b.city ?? "N/A",
         "buildingCity": b.city ?? "N/A",

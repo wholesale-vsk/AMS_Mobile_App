@@ -77,20 +77,20 @@ class LandService {
     }
   }
 
-  addLand(
-      {required String landName,
-        required String landType,
-        required String landSize,
-        required String landAddress,
-        required String landCity,
-        required String purchaseDate,
-        required String purchasePrice,
-        required String landImage,
-        required String leaseValue,
-        required String leaseDate,
+  addLand({required String landName,
+    required String landType,
+    required String landSize,
+    required String landAddress,
+    required String landCity,
+    required String purchaseDate,
+    required String purchasePrice,
+    required String landImage,
+    required String leaseValue,
+    required String leaseDate,
 
-      }) async {
-    _logger.i('Land details: $landName, $landType, $landSize, $landAddress, $landCity, , $purchaseDate, $purchasePrice, $landImage');
+  }) async {
+    _logger.i(
+        'Land details: $landName, $landType, $landSize, $landAddress, $landCity, , $purchaseDate, $purchasePrice, $landImage');
     String? accessToken = await _secureStorage.read(key: 'access_token');
 
     try {
@@ -140,5 +140,57 @@ class LandService {
     }
   }
 
-  fetchLands() {}
+
+  /// **Delete Land**
+  Future<ApiResponse> deleteLand({
+    required String landId,
+  }) async {
+    try {
+      // Retrieve the stored token
+      String? accessToken = await _secureStorage.read(key: 'access_token');
+      if (accessToken == null) {
+        return ApiResponse(
+          isSuccess: false,
+          statusCode: 401,
+          message: 'Unauthorized: No access token found',
+        );
+      }
+
+      var url = 'https://api.ams.hexalyte.com/land/lands/$landId';
+      _logger.i('Deleting land with URL: $url');
+
+      final response = await dio.delete(
+        url,
+        options: Options(
+          headers: {
+            'Authorization': 'Bearer $accessToken',
+          },
+        ),
+      );
+
+      return ApiResponse(
+        isSuccess: true,
+        statusCode: response.statusCode,
+        message: 'Land deleted successfully!',
+      );
+    } on DioException catch (e) {
+      print("DioException in deleteLand: ${e.response?.data}");
+      return ApiResponse(
+        isSuccess: false,
+        statusCode: e.response?.statusCode ?? 500,
+        message: e.response?.data?['error_description'] ??
+            'An error occurred while deleting the land',
+      );
+    } catch (e, stackTrace) {
+      print("Exception in deleteLand: $e");
+      print("StackTrace: $stackTrace");
+
+      return ApiResponse(
+        isSuccess: false,
+        statusCode: 500,
+        message: 'Unexpected error occurred during land deletion',
+      );
+    }
+  }
 }
+fetchLands() {}

@@ -223,7 +223,7 @@ class AssetController extends GetxController {
         "totalArea": b.totalArea.toString() ?? "N/A", // Handle null
         "address": b.address ?? "N/A",
         "purposeOfUse": b.purposeOfUse ?? "N/A",
-        "councilTaxValue": b.councilTaxValue.toString() ?? "N/A", // Handle null
+        "councilTaxValue": b.councilTax.toString() ?? "N/A", // Handle null
         "councilTaxDate": b.councilTaxDate.toString() ?? "N/A",
         "city": b.city ?? "N/A",
         "ownerName": b.ownerName ?? "N/A",

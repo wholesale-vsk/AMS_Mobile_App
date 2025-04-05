@@ -20,7 +20,7 @@ class VehicleService {
     required double mileage,
     required String motExpiredDate,
     required String purchaseDate,
-    required double purchasePrice,  // Changed from String to double to match addVehicle
+    required double purchasePrice,
     required String insuranceValue,
     required String insuranceDate,
     required String vehicleImage,
@@ -50,7 +50,7 @@ class VehicleService {
       };
 
       final response = await dio.put(
-        '/vehicle/vehicles/$vehicleId',  // Use relative URL with baseURL
+        'https://api.ams.hexalyte.com/vehicle/vehicles/$vehicleId',  // Use relative URL with baseURL
         data: updateData,
         options: Options(
           headers: {
@@ -108,7 +108,7 @@ class VehicleService {
       }
 
       final response = await dio.post(
-        '/vehicle/vehicles',  // Use relative URL with baseURL
+        'https://api.ams.hexalyte.com/vehicle/vehicles',  // Use relative URL with baseURL
         data: {
           "vrn": registrationNumber,
           "vehicle_type": vehicleType,
@@ -157,6 +157,52 @@ class VehicleService {
       );
     }
   }
+  /// **Delete Vehicle**
+  Future<ApiResponse> deleteVehicle({
+    required String vehicleId,
+  }) async {
+    try {
+      String? accessToken = await _secureStorage.read(key: 'access_token');
+
+      if (accessToken == null) {
+        return ApiResponse(isSuccess: false, statusCode: 401, message: "Unauthorized: No token found");
+      }
+
+      final response = await dio.delete(
+        'https://api.ams.hexalyte.com/vehicle/vehicles/$vehicleId',  // Use relative URL with baseURL
+        options: Options(
+          headers: {
+            'Authorization': 'Bearer $accessToken',
+          },
+        ),
+      );
+
+      debugPrint("✅ Vehicle Deleted Successfully: ${response.data}");
+
+      return ApiResponse(
+        isSuccess: true,
+        statusCode: response.statusCode,
+        message: 'Vehicle deleted successfully!',
+        data: response.data,
+      );
+    } on DioException catch (e) {
+      debugPrint("🚨 DioException in deleteVehicle: ${e.response?.data}");
+      return ApiResponse(
+        isSuccess: false,
+        statusCode: e.response?.statusCode ?? 500,
+        message: e.response?.data?['error_description'] ?? 'An error occurred',
+      );
+    } catch (e, stackTrace) {
+      debugPrint("🚨 Exception in deleteVehicle: $e");
+      debugPrint("StackTrace: $stackTrace");
+
+      return ApiResponse(
+        isSuccess: false,
+        statusCode: 500,
+        message: 'Unexpected error occurred',
+      );
+    }
+  }
 
   /// **Fetch All Vehicles**
   Future<ApiResponse> fetchVehicles() async {
@@ -168,7 +214,7 @@ class VehicleService {
       }
 
       final response = await dio.get(
-        '/vehicle/vehicles',  // Use relative URL with baseURL
+        'https://api.ams.hexalyte.com/vehicle/vehicles',  // Use relative URL with baseURL
         options: Options(
           headers: {
             'Authorization': 'Bearer $accessToken',

@@ -71,7 +71,7 @@ class BuildingController extends GetxController {
     } catch (e, stackTrace) {
       debugPrint("Exception in addBuilding: $e");
       debugPrint("StackTrace: $stackTrace");
-      Get.snackbar('Error', 'An unexpected error occurred.');
+
     } finally {
       isLoading(false);
     }
@@ -123,7 +123,48 @@ class BuildingController extends GetxController {
       isLoading(false);
     }
   }
+  /// **Delete Existing Building**
+  Future<void> deleteBuilding() async {
+    // Ensure a building ID is selected
+    if (buildingIdController.text.trim().isEmpty) {
+      Get.snackbar('Validation Error', 'Please select a building to delete.');
+      return;
+    }
 
+    // Show confirmation dialog
+    final confirmDelete = await Get.defaultDialog(
+      title: 'Confirm Deletion',
+      middleText: 'Are you sure you want to delete this building?',
+      textConfirm: 'Delete',
+      textCancel: 'Cancel',
+      onConfirm: () => Get.back(result: true),
+      onCancel: () => Get.back(result: false),
+    );
+
+    // Exit if not confirmed
+    if (confirmDelete != true) return;
+
+    isLoading(true);
+
+    try {
+      final response = await buildingService.deleteBuilding(
+        buildingId: buildingIdController.text.trim(),
+      );
+
+      if (response.isSuccess) {
+        Get.snackbar('Success', response.message ?? 'Building deleted successfully.');
+        clearForm();
+      } else {
+        Get.snackbar('Error', response.message ?? 'Failed to delete building.');
+      }
+    } catch (e, stackTrace) {
+      debugPrint("Exception in deleteBuilding: $e");
+      debugPrint("StackTrace: $stackTrace");
+      Get.snackbar('Error', 'An unexpected error occurred.');
+    } finally {
+      isLoading(false);
+    }
+  }
   /// **Populate Form for Editing**
   void populateFormForEditing(Map<String, dynamic> buildingData) {
     buildingIdController.text = buildingData['buildingId']?.toString() ?? '';
@@ -166,7 +207,7 @@ class BuildingController extends GetxController {
       purposeOfUseController,
       councilTaxController,
       councilTaxDateController,
-      councilTaxValueController,
+      councilTaxController,
       leaseDateController,
       leaseValueController,
       purchaseDateController,
@@ -197,7 +238,7 @@ class BuildingController extends GetxController {
       purposeOfUseController,
       councilTaxController,
       councilTaxDateController,
-      councilTaxValueController,
+      councilTaxController,
       leaseDateController,
       leaseValueController,
       purchaseDateController,
@@ -211,4 +252,8 @@ class BuildingController extends GetxController {
 
     super.onClose();
   }
+}
+
+extension on BuildingService {
+  deleteBuilding({required String buildingId}) {}
 }

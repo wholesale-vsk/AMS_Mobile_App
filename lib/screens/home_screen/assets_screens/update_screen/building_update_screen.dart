@@ -116,7 +116,7 @@ class _BuildingUpdatePageState extends State<BuildingUpdatePage>
       'purposeOfUse': building.purposeOfUse,
 
       'councilTaxDate': building.councilTaxDate,
-      'councilTaxValue': building.councilTaxValue?.toString(),
+      'councilTaxValue': building.councilTax?.toString(),
       'lease_date': building.leaseDate,
       // Note: the controller expects 'lease_date' not 'leaseDate'
       'leaseValue': building.leaseValue?.toString(),

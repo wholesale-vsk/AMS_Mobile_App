@@ -187,4 +187,60 @@ class BuildingService {
       );
     }
   }
-}
+
+  deleteBuilding({required String buildingId}) {
+
+    Future<ApiResponse> deleteBuilding({
+      required String buildingId,
+    }) async {
+      try {
+        // Retrieve the stored token
+        String? accessToken = await _secureStorage.read(key: 'access_token');
+        if (accessToken == null) {
+          return ApiResponse(
+            isSuccess: false,
+            statusCode: 401,
+            message: 'Unauthorized: No access token found',
+          );
+        }
+
+        var url = "https://api.ams.hexalyte.com/asset/assets/$buildingId";
+        print('Deleting building with URL: $url');
+
+        final response = await dio.delete(
+          url,
+          options: Options(
+            headers: {
+              'Authorization': 'Bearer $accessToken',
+            },
+          ),
+        );
+
+        return ApiResponse(
+          isSuccess: true,
+          statusCode: response.statusCode,
+          message: 'Building deleted successfully!',
+        );
+      } on DioException catch (e) {
+        print("DioException in deleteBuilding: ${e.response?.data}");
+        return ApiResponse(
+          isSuccess: false,
+          statusCode: e.response?.statusCode ?? 500,
+          message: e.response?.data?['error_description'] ?? 'An error occurred while deleting the building',
+        );
+      } catch (e, stackTrace) {
+        print("Exception in deleteBuilding: $e");
+        print("StackTrace: $stackTrace");
+
+        return ApiResponse(
+          isSuccess: false,
+          statusCode: 500,
+          message: 'Unexpected error occurred during building deletion',
+        );
+      }
+    }
+  }
+  }
+
+
+

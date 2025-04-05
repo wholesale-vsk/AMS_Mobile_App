@@ -75,6 +75,49 @@ class LandController extends GetxController {
     }
   }
 
+  /// **Delete Existing Land**
+  Future<void> deleteLand() async {
+    // Ensure a land ID is selected
+    if (landIdController.text.trim().isEmpty) {
+      Get.snackbar('Validation Error', 'Please select a land to delete.');
+      return;
+    }
+
+    // Show confirmation dialog
+    final confirmDelete = await Get.defaultDialog(
+      title: 'Confirm Deletion',
+      middleText: 'Are you sure you want to delete this land?',
+      textConfirm: 'Delete',
+      textCancel: 'Cancel',
+      onConfirm: () => Get.back(result: true),
+      onCancel: () => Get.back(result: false),
+    );
+
+    // Exit if not confirmed
+    if (confirmDelete != true) return;
+
+    isLoading(true);
+
+    try {
+      final response = await _landService.deleteLand(
+        landId: landIdController.text.trim(),
+      );
+
+      if (response.isSuccess) {
+        Get.snackbar('Success', response.message ?? 'Land deleted successfully.');
+        clearForm();
+      } else {
+        Get.snackbar('Error', response.message ?? 'Failed to delete land.');
+      }
+    } catch (e, stackTrace) {
+      debugPrint("Exception in deleteLand: $e");
+      debugPrint("StackTrace: $stackTrace");
+      Get.snackbar('Error', 'An unexpected error occurred.');
+    } finally {
+      isLoading(false);
+    }
+  }
+
   //:::::::::::::::::::::::::::::::::<< CLEAR FORM FUNCTION >>::::::::::::::::::::::::::::::::://
   void clearForm() {
     landIdController.clear();
