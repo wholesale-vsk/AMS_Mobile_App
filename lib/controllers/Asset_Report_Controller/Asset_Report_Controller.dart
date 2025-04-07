@@ -83,6 +83,12 @@ class AssetReportController extends GetxController {
 
   // Land types
   final landTypes = <String>[
+    'RESIDENTIAL',
+    'COMMERCIAL',
+    'INDUSTRIAL',
+    'AGRICULTURAL',
+    'RECREATIONAL',
+
   ].obs;
 
 // Initialize with some defaults so users have a starting point
@@ -95,10 +101,8 @@ class AssetReportController extends GetxController {
     super.onInit();
 
     // Initialize with all asset types selected by default
-    selectedAssetTypes.value = categories
-        .where((category) => category != 'All')
-        .toList();
-
+    selectedAssetTypes.value = categories.where((category) => category != 'All').toList();
+    selectedLandTypes.value = landTypes.toList();
     _logger.i("🏢 Selected asset types: $selectedAssetTypes");
 
     // // // Initialize with some building types selected
@@ -393,6 +397,8 @@ class AssetReportController extends GetxController {
         }
       }
 
+
+
 // Apply vehicle type filter for Vehicle assets
       if (category == 'Vehicle' &&
           selectedVehicleTypes.isNotEmpty &&
@@ -476,7 +482,7 @@ class AssetReportController extends GetxController {
       }
 
       reportProgress(0.3);
-      _logger.i("📊 Creating PDF for ${filteredAssets.length} assets");
+      _logger.e("📊 Creating PDF for ${filteredAssets.length} assets");
       _logger.i("📊 Report type: ${reportType.value}");
 
 

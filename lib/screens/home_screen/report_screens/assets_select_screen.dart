@@ -205,7 +205,7 @@ class AssetsSelectForReports extends StatelessWidget {
                     _buildAssetTypeSelector(cardColor, textColor),
                     SizedBox(height: 24),
 
-                    // Only show property types if Building is selected
+                    // Only show property types if Building or Land is selected
                     Obx(() {
                       if (_reportController.selectedAssetTypes.contains('Building') ||
                           _reportController.selectedAssetTypes.contains('Land')) {
@@ -214,7 +214,7 @@ class AssetsSelectForReports extends StatelessWidget {
                           children: [
                             _buildSectionTitle('Select Property Types', Icons.home_work_rounded, textColor),
                             SizedBox(height: 12),
-                            _buildBuildingTypeSelector(cardColor, textColor),
+                            _buildPropertyTypeSelector(cardColor, textColor),
                             SizedBox(height: 24),
                           ],
                         );
@@ -601,9 +601,12 @@ class AssetsSelectForReports extends StatelessWidget {
     });
   }
 
-  Widget _buildBuildingTypeSelector(Color cardColor, Color textColor) {
+  // FIXED: Renamed from _buildBuildingTypeSelector to _buildPropertyTypeSelector
+  // to better reflect that it applies to both buildings and lands
+  Widget _buildPropertyTypeSelector(Color cardColor, Color textColor) {
     return Obx(() {
-      final buildingTypes = _reportController.buildingTypes;
+      // Use building types for property type list
+      final propertyTypes = _reportController.buildingTypes;
 
       return Card(
         elevation: 0,
@@ -640,8 +643,8 @@ class AssetsSelectForReports extends StatelessWidget {
               Wrap(
                 spacing: 10,
                 runSpacing: 10,
-                children: buildingTypes
-                    .map((buildingType) => _buildBuildingTypeChip(buildingType))
+                children: propertyTypes
+                    .map((propertyType) => _buildPropertyTypeChip(propertyType))
                     .toList(),
               ),
 
@@ -652,8 +655,18 @@ class AssetsSelectForReports extends StatelessWidget {
                 children: [
                   TextButton.icon(
                     onPressed: () {
+                      // FIXED: Update both building types and land types
                       _reportController.selectedBuildingTypes.value =
                       List<String>.from(_reportController.buildingTypes);
+
+                      // Also update land types with matching property types
+                      List<String> validLandTypes = _reportController.buildingTypes
+                          .where((type) => _reportController.landTypes.contains(type))
+                          .toList();
+                      _reportController.selectedLandTypes.value = validLandTypes;
+
+                      _logger.i("🏢 Selected all property types - Buildings: ${_reportController.selectedBuildingTypes}");
+                      _logger.i("🌳 Selected all property types - Lands: ${_reportController.selectedLandTypes}");
                     },
                     icon: Icon(Icons.select_all, size: 16),
                     label: Text('Select All'),
@@ -666,7 +679,11 @@ class AssetsSelectForReports extends StatelessWidget {
                   if (_reportController.selectedBuildingTypes.isNotEmpty)
                     TextButton.icon(
                       onPressed: () {
+                        // FIXED: Clear both building types and land types
                         _reportController.selectedBuildingTypes.clear();
+                        _reportController.selectedLandTypes.clear();
+
+                        _logger.i("🏢 Cleared all property types");
                       },
                       icon: Icon(Icons.clear_all, size: 16),
                       label: Text('Clear All'),
@@ -787,13 +804,15 @@ class AssetsSelectForReports extends StatelessWidget {
     );
   }
 
-  Widget _buildBuildingTypeChip(String buildingType) {
-    Color chipColor = _getColorForBuildingType(buildingType);
-    bool isSelected = _reportController.selectedBuildingTypes.contains(buildingType);
+  // FIXED: Renamed from _buildBuildingTypeChip to _buildPropertyTypeChip
+  // to better reflect that it applies to both buildings and lands
+  Widget _buildPropertyTypeChip(String propertyType) {
+    Color chipColor = _getColorForPropertyType(propertyType);
+    bool isSelected = _reportController.selectedBuildingTypes.contains(propertyType);
 
     return FilterChip(
       selected: isSelected,
-      label: Text(buildingType),
+      label: Text(propertyType),
       labelStyle: TextStyle(
         color: isSelected ? Colors.white : Get.isDarkMode ? Colors.white : Colors.black87,
         fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
@@ -809,9 +828,38 @@ class AssetsSelectForReports extends StatelessWidget {
         ),
       ),
       onSelected: (selected) {
-        _reportController.toggleBuildingType(buildingType);
+        // FIXED: Toggle both building type and land type
+        _togglePropertyType(propertyType);
       },
     );
+  }
+
+  // FIXED: Added this helper method to toggle property types correctly
+  void _togglePropertyType(String propertyType) {
+    _logger.i("🏢 Toggling property type: $propertyType");
+
+    // Toggle in building types
+    if (_reportController.selectedBuildingTypes.contains(propertyType)) {
+      _reportController.selectedBuildingTypes.remove(propertyType);
+      _logger.i("🏢 Removed from building types: $propertyType");
+    } else {
+      _reportController.selectedBuildingTypes.add(propertyType);
+      _logger.i("🏢 Added to building types: $propertyType");
+    }
+
+    // Also toggle in land types if it's a valid land type
+    if (_reportController.landTypes.contains(propertyType)) {
+      if (_reportController.selectedLandTypes.contains(propertyType)) {
+        _reportController.selectedLandTypes.remove(propertyType);
+        _logger.i("🌳 Removed from land types: $propertyType");
+      } else {
+        _reportController.selectedLandTypes.add(propertyType);
+        _logger.i("🌳 Added to land types: $propertyType");
+      }
+    }
+
+    _logger.i("🏢 Updated building types: ${_reportController.selectedBuildingTypes}");
+    _logger.i("🌳 Updated land types: ${_reportController.selectedLandTypes}");
   }
 
   Widget _buildVehicleTypeChip(String vehicleType) {
@@ -843,8 +891,8 @@ class AssetsSelectForReports extends StatelessWidget {
 
   Color _getColorForAssetType(String assetType) {
     switch (assetType) {
-      case 'Building':
-        return Colors.orange;
+    case 'Building':
+      return Colors.orange;
       case 'Vehicle':
         return Colors.blue;
       case 'Land':
@@ -854,8 +902,9 @@ class AssetsSelectForReports extends StatelessWidget {
     }
   }
 
-  Color _getColorForBuildingType(String buildingType) {
-    switch (buildingType) {
+  // FIXED: Renamed from _getColorForBuildingType to _getColorForPropertyType
+  Color _getColorForPropertyType(String propertyType) {
+    switch (propertyType) {
       case 'RESIDENTIAL':
         return Colors.blue;
       case 'COMMERCIAL':
@@ -864,8 +913,12 @@ class AssetsSelectForReports extends StatelessWidget {
         return Colors.orange;
       case 'AGRICULTURAL':
         return Colors.green;
-      default:
+      case 'RECREATIONAL':
+        return Colors.cyan;
+      case 'MIXED USE':
         return Colors.teal;
+      default:
+        return Colors.grey;
     }
   }
 
@@ -1133,7 +1186,6 @@ class AssetsSelectForReports extends StatelessWidget {
       _reportController.setDateRange(picked.start, picked.end);
     }
   }
-
   Widget _buildAdditionalOptions(Color cardColor, Color textColor, Color subtitleColor) {
     return Card(
       elevation: 0,
