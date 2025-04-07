@@ -1,16 +1,19 @@
 import 'dart:io';
 import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:logger/logger.dart';
 
 class ImagePickerController extends GetxController {
   var selectedImage = Rxn<File>();  // ✅ Null-safe reactive variable
   final ImagePicker _picker = ImagePicker();
+  final Logger _logger = Logger();
 
   Future<void> pickImage(ImageSource source) async {
     try {
       final XFile? image = await _picker.pickImage(source: source);
       if (image != null) {
         selectedImage.value = File(image.path);
+       _logger.i("Selected Image: ${selectedImage.value!.path}");
       } else {
         Get.snackbar("No Image Selected", "You didn't select any image.",
             snackPosition: SnackPosition.BOTTOM, duration: Duration(seconds: 2));

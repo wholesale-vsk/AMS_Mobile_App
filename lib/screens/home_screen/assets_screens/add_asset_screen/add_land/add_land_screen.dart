@@ -1,15 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:hexalyte_ams/controllers/land_controller/land_controller.dart';
-import 'package:hexalyte_ams/controllers/image_picker_controller/image_picker_controller.dart';
+
 import 'package:hexalyte_ams/utils/widgets/calander/calender_field.dart';
 import 'package:hexalyte_ams/utils/widgets/drop_down_field/custom_drop_down.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:logger/logger.dart';
 import 'dart:io';
+
+import '../../../../../controllers/image_controller/image_controller.dart';
 
 class AddLandScreen extends StatelessWidget {
   final LandController landController = Get.put(LandController());
-  final ImagePickerController imagePickerController = Get.put(ImagePickerController());
+  final ImagePickerController imagePickerController = Get.put(
+      ImagePickerController());
+  final Logger _logger = Logger();
 
   @override
   Widget build(BuildContext context) {
@@ -47,12 +52,18 @@ class AddLandScreen extends StatelessWidget {
                   context,
                   Column(
                     children: [
-                      _buildTextField('Land Name', landController.landNameController,
+                      _buildTextField(
+                          'Land Name', landController.landNameController,
                           prefixIcon: Icons.title),
                       const SizedBox(height: 16),
                       CustomDropdown(
                         label: 'Land Type',
-                        options: const ['RESIDENTIAL', 'COMMERCIAL', 'INDUSTRIAL', 'AGRICULTURAL'],
+                        options: const [
+                          'RESIDENTIAL',
+                          'COMMERCIAL',
+                          'INDUSTRIAL',
+                          'AGRICULTURAL'
+                        ],
                         controller: landController.landTypeController,
                         onChanged: (value) {
                           landController.landTypeController.text = value!;
@@ -60,10 +71,12 @@ class AddLandScreen extends StatelessWidget {
                         selectedItem: landController.landTypeController.text,
                       ),
                       const SizedBox(height: 16),
-                      _buildTextField('Land Size (in sq. ft.)', landController.landSizeController,
+                      _buildTextField('Land Size (in sq. ft.)',
+                          landController.landSizeController,
                           isNumeric: true, prefixIcon: Icons.square_foot),
                       const SizedBox(height: 16),
-                      _buildTextField('Address', landController.landAddressController,
+                      _buildTextField(
+                          'Address', landController.landAddressController,
                           prefixIcon: Icons.location_on),
                       const SizedBox(height: 16),
                       _buildTextField('City', landController.landCityController,
@@ -79,7 +92,8 @@ class AddLandScreen extends StatelessWidget {
                 ),
 
                 const SizedBox(height: 24),
-                _buildSectionHeader(context, "Purchase Details", Icons.receipt_long),
+                _buildSectionHeader(
+                    context, "Purchase Details", Icons.receipt_long),
                 const SizedBox(height: 16),
                 _buildCard(
                   context,
@@ -91,14 +105,16 @@ class AddLandScreen extends StatelessWidget {
                         icon: Icons.calendar_today,
                       ),
                       const SizedBox(height: 16),
-                      _buildTextField('Purchase Price (GBP)', landController.purchasePriceController,
+                      _buildTextField('Purchase Price (GBP)',
+                          landController.purchasePriceController,
                           isNumeric: true, prefixIcon: Icons.attach_money),
                     ],
                   ),
                 ),
 
                 const SizedBox(height: 24),
-                _buildSectionHeader(context, "Leasing Details", Icons.description),
+                _buildSectionHeader(
+                    context, "Leasing Details", Icons.description),
                 const SizedBox(height: 16),
                 _buildCard(
                   context,
@@ -110,7 +126,8 @@ class AddLandScreen extends StatelessWidget {
                         icon: Icons.calendar_today,
                       ),
                       const SizedBox(height: 16),
-                      _buildTextField('Leasing Value (GBP)', landController.leaseValueController,
+                      _buildTextField('Leasing Value (GBP)',
+                          landController.leaseValueController,
                           isNumeric: true, prefixIcon: Icons.payments),
                     ],
                   ),
@@ -129,54 +146,59 @@ class AddLandScreen extends StatelessWidget {
                 ),
 
                 const SizedBox(height: 32),
-                Obx(() => ElevatedButton(
-                  onPressed: landController.isLoading.value
-                      ? null
-                      : () async {
-                    if (landController.landFormKey.currentState?.validate() ?? false) {
-                      await landController.addLand();
-                    } else {
-                      Get.snackbar(
-                        "Validation Error",
-                        "Please fill all required fields.",
-                        backgroundColor: Colors.red[100],
-                        colorText: Colors.red[800],
-                        snackPosition: SnackPosition.TOP,
-                        margin: EdgeInsets.all(16),
-                        borderRadius: 10,
-                      );
-                    }
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.blue[700],
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    elevation: 3,
-                  ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      landController.isLoading.value
-                          ? SizedBox(
-                        height: 20,
-                        width: 20,
-                        child: CircularProgressIndicator(
-                          color: Colors.white,
-                          strokeWidth: 2,
+                Obx(() =>
+                    ElevatedButton(
+                      onPressed: landController.isLoading.value
+                          ? null
+                          : () async {
+                        if (landController.landFormKey.currentState
+                            ?.validate() ?? false) {
+                          await landController.addLand();
+                        } else {
+                          Get.snackbar(
+                            "Validation Error",
+                            "Please fill all required fields.",
+                            backgroundColor: Colors.red[100],
+                            colorText: Colors.red[800],
+                            snackPosition: SnackPosition.TOP,
+                            margin: EdgeInsets.all(16),
+                            borderRadius: 10,
+                          );
+                        }
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.blue[700],
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
                         ),
-                      )
-                          : Icon(Icons.save),
-                      SizedBox(width: 10),
-                      Text(
-                        landController.isLoading.value ? 'Saving...' : 'Save Land',
-                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                        elevation: 3,
                       ),
-                    ],
-                  ),
-                )),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          landController.isLoading.value
+                              ? SizedBox(
+                            height: 20,
+                            width: 20,
+                            child: CircularProgressIndicator(
+                              color: Colors.white,
+                              strokeWidth: 2,
+                            ),
+                          )
+                              : Icon(Icons.save),
+                          SizedBox(width: 10),
+                          Text(
+                            landController.isLoading.value
+                                ? 'Saving...'
+                                : 'Save Land',
+                            style: TextStyle(
+                                fontSize: 16, fontWeight: FontWeight.w600),
+                          ),
+                        ],
+                      ),
+                    )),
                 const SizedBox(height: 24),
               ],
             ),
@@ -186,7 +208,8 @@ class AddLandScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildSectionHeader(BuildContext context, String title, IconData icon) {
+  Widget _buildSectionHeader(BuildContext context, String title,
+      IconData icon) {
     return Row(
       children: [
         Icon(icon, color: Colors.blue[700], size: 24),
@@ -235,7 +258,8 @@ class AddLandScreen extends StatelessWidget {
           fontWeight: FontWeight.w500,
           color: Colors.grey[700],
         ),
-        prefixIcon: prefixIcon != null ? Icon(prefixIcon, color: Colors.grey[600]) : null,
+        prefixIcon: prefixIcon != null ? Icon(
+            prefixIcon, color: Colors.grey[600]) : null,
         filled: true,
         fillColor: Colors.grey[100],
         border: OutlineInputBorder(
@@ -250,11 +274,13 @@ class AddLandScreen extends StatelessWidget {
           borderRadius: BorderRadius.circular(12),
           borderSide: BorderSide.none,
         ),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+        contentPadding: const EdgeInsets.symmetric(
+            horizontal: 16, vertical: 16),
       ),
       validator: (value) {
         if (value == null || value.isEmpty) return 'Please enter $label';
-        if (isNumeric && double.tryParse(value) == null) return '$label must be a valid number';
+        if (isNumeric && double.tryParse(value) == null)
+          return '$label must be a valid number';
         return null;
       },
     );
@@ -271,116 +297,120 @@ class AddLandScreen extends StatelessWidget {
       });
     }
 
-    return Obx(() => Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'Land Image',
-          style: TextStyle(
-            fontSize: 15,
-            fontWeight: FontWeight.w500,
-            color: Colors.grey[700],
-          ),
-        ),
-        const SizedBox(height: 12),
-        Container(
-          height: 200,
-          width: double.infinity,
-          decoration: BoxDecoration(
-            color: Colors.grey[100],
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(
-              color: Colors.grey[300]!,
-              width: 1,
+    return Obx(() =>
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Land Image',
+              style: TextStyle(
+                fontSize: 15,
+                fontWeight: FontWeight.w500,
+                color: Colors.grey[700],
+              ),
             ),
-          ),
-          child: imagePath.value.isEmpty
-              ? Center(
-            child: Column(
+            const SizedBox(height: 12),
+            Container(
+              height: 200,
+              width: double.infinity,
+              decoration: BoxDecoration(
+                color: Colors.grey[100],
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: Colors.grey[300]!,
+                  width: 1,
+                ),
+              ),
+              child: imagePath.value.isEmpty
+                  ? Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      Icons.image,
+                      size: 64,
+                      color: Colors.grey[400],
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'No image selected',
+                      style: TextStyle(
+                        color: Colors.grey[600],
+                        fontSize: 14,
+                      ),
+                    ),
+                  ],
+                ),
+              )
+                  : ClipRRect(
+                borderRadius: BorderRadius.circular(12),
+                child: Image.file(
+                  File(imagePath.value),
+                  fit: BoxFit.cover,
+                  width: double.infinity,
+                  height: double.infinity,
+                ),
+              ),
+            ),
+            const SizedBox(height: 12),
+            Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(
-                  Icons.image,
-                  size: 64,
-                  color: Colors.grey[400],
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  'No image selected',
-                  style: TextStyle(
-                    color: Colors.grey[600],
-                    fontSize: 14,
+                ElevatedButton.icon(
+                  onPressed: () => _getImage(ImageSource.camera),
+                  icon: const Icon(Icons.camera_alt),
+                  label: const Text('Camera'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.green[600],
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(5),
+                    ),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 16, vertical: 12),
                   ),
                 ),
+                const SizedBox(width: 12),
+                ElevatedButton.icon(
+                  onPressed: () => _getImage(ImageSource.gallery),
+                  icon: const Icon(Icons.photo_library),
+                  label: const Text('Gallery'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.blue[600],
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(5),
+                    ),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 16, vertical: 12),
+                  ),
+                ),
+                if (imagePath.value.isNotEmpty) ...[
+                  const SizedBox(width: 12),
+                  ElevatedButton.icon(
+                    onPressed: () {
+                      if (landController.landImageController != null) {
+                        landController.landImageController!.text = '';
+                      }
+                      imagePath.value = '';
+                    },
+                    icon: const Icon(Icons.delete),
+                    label: const Text('Remove'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.red[600],
+                      foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(5),
+                      ),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 16, vertical: 12),
+                    ),
+                  ),
+                ],
               ],
             ),
-          )
-              : ClipRRect(
-            borderRadius: BorderRadius.circular(12),
-            child: Image.file(
-              File(imagePath.value),
-              fit: BoxFit.cover,
-              width: double.infinity,
-              height: double.infinity,
-            ),
-          ),
-        ),
-        const SizedBox(height: 12),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            ElevatedButton.icon(
-              onPressed: () => _getImage(ImageSource.camera),
-              icon: const Icon(Icons.camera_alt),
-              label: const Text('Camera'),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.green[600],
-                foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(5),
-                ),
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-              ),
-            ),
-            const SizedBox(width: 12),
-            ElevatedButton.icon(
-              onPressed: () => _getImage(ImageSource.gallery),
-              icon: const Icon(Icons.photo_library),
-              label: const Text('Gallery'),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.blue[600],
-                foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(5),
-                ),
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-              ),
-            ),
-            if (imagePath.value.isNotEmpty) ...[
-              const SizedBox(width: 12),
-              ElevatedButton.icon(
-                onPressed: () {
-                  if (landController.landImageController != null) {
-                    landController.landImageController!.text = '';
-                  }
-                  imagePath.value = '';
-                },
-                icon: const Icon(Icons.delete),
-                label: const Text('Remove'),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.red[600],
-                  foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(5),
-                  ),
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                ),
-              ),
-            ],
           ],
-        ),
-      ],
-    ));
+        ));
   }
 
   Future<void> _getImage(ImageSource source) async {
@@ -393,7 +423,20 @@ class AddLandScreen extends StatelessWidget {
     );
 
     if (pickedFile != null && landController.landImageController != null) {
-      landController.landImageController!.text = pickedFile.path;
+      final String extension = pickedFile.path
+          .split('.')
+          .last
+          .toLowerCase();
+
+      if (extension == 'png' || extension == 'jpg' || extension == 'jpeg') {
+        // Accept both PNG and JPEG formats
+        _logger.i("Selected Image: ${pickedFile.path}");
+        landController.landImageController.text = pickedFile.path;
+      } else {
+        // Inform user if an unsupported format is selected
+        _logger.w("Unsupported file format: ${pickedFile.path}");
+        Get.snackbar('Format Error', 'Please select a PNG or JPEG image');
+      }
     }
   }
 }

@@ -1,7 +1,10 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:hexalyte_ams/services/data/land_service.dart';
 import 'package:flutter/foundation.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:logger/logger.dart';
 
 
@@ -24,10 +27,15 @@ class LandController extends GetxController {
   final TextEditingController landProvinceController = TextEditingController();
   final TextEditingController purchaseDateController = TextEditingController();
   final TextEditingController purchasePriceController = TextEditingController();
-  final TextEditingController landImageController = TextEditingController();
   final TextEditingController leaseDateController = TextEditingController();
+  final TextEditingController landImageController = TextEditingController();
+  // late final File landImageFileController = File('');
   final TextEditingController leaseValueController = TextEditingController();
 
+
+  Future<void> uploadImage() async {
+
+  }
 
 
   //:::::::::::::::::::::::::::::::::<< ADD LAND FUNCTION >>::::::::::::::::::::::::::::::::://
@@ -51,10 +59,10 @@ class LandController extends GetxController {
             purchaseDateController.text, isRequired: true),
         purchasePrice: _validateInput(
             purchasePriceController.text, defaultValue: '0'),
-        landImage: _validateInput(landImageController.text),
+
         leaseDate: _validateInput(leaseDateController.text, isRequired: true),
         leaseValue: _validateInput(leaseValueController.text, isRequired: true),
-
+        landImage: File(landImageController.text),
 
       );
 
@@ -129,7 +137,7 @@ class LandController extends GetxController {
     landProvinceController.clear();
     purchaseDateController.clear();
     purchasePriceController.clear();
-    // landImageController.clear(); // ❌ Removed to retain image
+    landImageController.clear(); // ❌ Removed to retain image
     leaseDateController.clear();
     leaseValueController.clear();
 

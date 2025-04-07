@@ -1,10 +1,14 @@
+import 'dart:math' as _logger;
+
 import 'package:dio/dio.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:hexalyte_ams/services/api_environment.dart';
 import 'package:hexalyte_ams/services/auth/api_response_formatter.dart';
+import 'package:logger/logger.dart';
 
 class BuildingService {
   final Dio dio = Dio();
+  final Logger _logger = Logger();
   final FlutterSecureStorage _secureStorage = const FlutterSecureStorage();
 
   /// **Update Building Details**
@@ -222,15 +226,15 @@ class BuildingService {
           message: 'Building deleted successfully!',
         );
       } on DioException catch (e) {
-        print("DioException in deleteBuilding: ${e.response?.data}");
+        _logger.e("DioException in deleteBuilding: ${e.response?.data}");
         return ApiResponse(
           isSuccess: false,
           statusCode: e.response?.statusCode ?? 500,
           message: e.response?.data?['error_description'] ?? 'An error occurred while deleting the building',
         );
       } catch (e, stackTrace) {
-        print("Exception in deleteBuilding: $e");
-        print("StackTrace: $stackTrace");
+        _logger.e("Exception in deleteBuilding: $e");
+        _logger.e("StackTrace: $stackTrace");
 
         return ApiResponse(
           isSuccess: false,

@@ -4,7 +4,8 @@ import 'dart:io';
 import 'package:image_picker/image_picker.dart';
 import 'package:hexalyte_ams/utils/theme/app_theme_management.dart';
 import 'package:hexalyte_ams/utils/widgets/labels/label.dart';
-import '../../../controllers/image_picker_controller/image_picker_controller.dart';
+import '../../../controllers/image_controller/image_controller.dart';
+
 
 class CustomImagePickerField extends StatelessWidget {
   final String label;

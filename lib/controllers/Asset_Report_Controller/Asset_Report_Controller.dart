@@ -11,12 +11,9 @@ import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
 import 'package:open_file/open_file.dart';
 
-
-
 import '../../models/assets/building/building_model.dart';
 import '../../models/assets/land/land_model.dart';
 import '../../models/assets/vehicle/vehicle_model.dart';
-
 
 import '../../services/data/load_building.dart';
 import '../../services/data/load_land.dart';
@@ -26,10 +23,10 @@ class AssetReportController extends GetxController {
   final Logger _logger = Logger();
   Timer? autoRefreshTimer;
 
-  // Initialize services directly at declaration to avoid type issues
-  final LoadVehicleService _vehicleService = Get.put(LoadVehicleService());
-  final LoadBuildingService _buildingService = Get.put(LoadBuildingService());
-  final LoadLandsService _landService = Get.put(LoadLandsService());
+  // Initialize services
+  final LoadVehicleService _vehicleService = Get.find<LoadVehicleService>();
+  final LoadBuildingService _buildingService = Get.find<LoadBuildingService>();
+  final LoadLandsService _landService = Get.find<LoadLandsService>();
 
   // Reactive data storage
   var assets = <Map<String, dynamic>>[].obs;
@@ -47,6 +44,8 @@ class AssetReportController extends GetxController {
   var reportProgress = 0.0.obs;
   var generatedReportPath = ''.obs;
   var isLoading = false.obs;
+  var hasError = false.obs;
+  var errorMessage = ''.obs;
 
   // Report types
   final List<String> reportTypes = [
@@ -56,7 +55,9 @@ class AssetReportController extends GetxController {
     'Maintenance Report'
   ];
 
-  // Property types
+  // Building types
+  // Building types
+  // Property types - Initialize with sample data
   final buildingTypes = <String>[
     'RESIDENTIAL',
     'COMMERCIAL',
@@ -65,7 +66,9 @@ class AssetReportController extends GetxController {
     'MIXED USE'
   ].obs;
 
-  final selectedBuildingTypes = <String>[].obs;
+// Initialize with some defaults so users don't have to select manually
+  final selectedBuildingTypes = <String>[
+  ].obs;
 
   // Vehicle types
   final vehicleTypes = <String>[
@@ -79,11 +82,13 @@ class AssetReportController extends GetxController {
   final selectedVehicleTypes = <String>[].obs;
 
   // Land types
-  final landTypes = <String>['AGRICULTURAL', 'RESIDENTIAL', 'COMMERCIAL'].obs;
-  final selectedLandTypes = <String>[].obs;
+  final landTypes = <String>[
+  ].obs;
 
+// Initialize with some defaults so users have a starting point
+  final selectedLandTypes = <String>[
 
-
+  ].obs;
 
   @override
   void onInit() {
@@ -96,17 +101,23 @@ class AssetReportController extends GetxController {
 
     _logger.i("🏢 Selected asset types: $selectedAssetTypes");
 
-    // Initialize with some building types selected
-    selectedBuildingTypes.value = ['RESIDENTIAL', 'COMMERCIAL', 'INDUSTRIAL'];
-    _logger.i("🏢 Selected building types: $selectedBuildingTypes");
+    // // // Initialize with some building types selected
+    //  selectedBuildingTypes.value = ['RESIDENTIAL', 'COMMERCIAL', 'INDUSTRIAL', 'AGRICULTURAL'];
+    //  _logger.i("🏢 Selected building types: $selectedBuildingTypes");
+    //
+    //  // Initialize with some vehicle types selected
+    //  // selectedVehicleTypes.value = ['CAR', 'TRUCK'];
+    //
+    // // Initialize with some land types selected
+    // selectedLandTypes.value = ['RESIDENTIAL', 'COMMERCIAL', 'INDUSTRIAL', 'AGRICULTURAL'];
+    // _logger.i("🌳 Selected land types: $selectedLandTypes");
 
-    // Initialize with some vehicle types selected
-    selectedVehicleTypes.value = ['CAR', 'TRUCK'];
 
     // Load data initially
     loadAllAssets();
+    _logger.i("📌 Total Assets Loaded: ${assets.length}");
 
-    // Start auto refresh timer
+    // Start auto refresh timer (every 30 minutes)
     _startAutoRefresh();
   }
 
@@ -117,14 +128,19 @@ class AssetReportController extends GetxController {
   }
 
   void _startAutoRefresh() {
-
-
+    autoRefreshTimer = Timer.periodic(Duration(minutes: 30), (timer) {
+      _logger.i("🔄 Auto refreshing assets...");
+      loadAllAssets();
+    });
   }
 
   /// Load all asset data from all services
   Future<void> loadAllAssets() async {
     try {
       isLoading(true);
+      hasError(false);
+      errorMessage('');
+
       _logger.i("🔄 Loading all assets for reporting...");
 
       // Load data from all three services concurrently
@@ -140,6 +156,9 @@ class AssetReportController extends GetxController {
       _logger.i("✅ Loaded ${assets.length} assets for reporting");
     } catch (e) {
       _logger.e("❌ Error loading assets: $e");
+      hasError(true);
+      errorMessage("Failed to load asset data: ${e.toString()}");
+
       Get.snackbar(
         "Loading Error",
         "Failed to load asset data: ${e.toString()}",
@@ -164,7 +183,7 @@ class AssetReportController extends GetxController {
       // Transform Building objects into standardized maps
       return buildings.map((b) => {
         "category": "Building",
-        "name": b.name.trim() ?? "Unnamed Building",
+        "name": b.name?.trim() ?? "Unnamed Building",
         "buildingType": b.buildingType ?? "N/A",
         "numberOfFloors": b.numberOfFloors,
         "totalArea": b.totalArea,
@@ -180,6 +199,7 @@ class AssetReportController extends GetxController {
         "purchaseDate": b.purchaseDate,
         "leaseValue": b.leaseValue,
         "leaseDate": b.leaseDate,
+
       }).toList();
     } catch (e) {
       _logger.e("❌ Error loading buildings: $e");
@@ -198,6 +218,7 @@ class AssetReportController extends GetxController {
 
       // Transform Vehicle objects into standardized maps
       return vehicles.map((v) => {
+        "id": v.id,
         "category": "Vehicle",
         "name": v.model ?? "Unnamed Vehicle",
         "model": v.model ?? "N/A",
@@ -205,7 +226,7 @@ class AssetReportController extends GetxController {
         "motValue": v.motValue,
         "insuranceValue": v.insuranceValue,
         "vehicleType": v.vehicleType ?? "N/A",
-        "vehicle_type": v.vehicleType ?? "N/A",
+        "vehicle_type": v.vehicleType ?? "N/A", // Keep both for backward compatibility
         "ownerName": v.ownerName ?? "N/A",
         "purchasePrice": v.purchasePrice,
         "purchaseDate": v.purchaseDate,
@@ -231,6 +252,7 @@ class AssetReportController extends GetxController {
 
       // Transform Land objects into standardized maps
       return lands.map((l) => {
+
         "category": "Land",
         "name": l.name ?? "Unnamed Land",
         "landType": l.landType ?? "N/A",
@@ -251,11 +273,20 @@ class AssetReportController extends GetxController {
     }
   }
 
-  /// Refresh all assets
+  /// Refresh all assets manually
   Future<void> refreshAssets() async {
     try {
-      _logger.i("🔄 Refreshing assets for reporting...");
+      _logger.i("🔄 Manually refreshing assets for reporting...");
       await loadAllAssets();
+
+      Get.snackbar(
+        "Assets Refreshed",
+        "Successfully updated asset data",
+        snackPosition: SnackPosition.TOP,
+        backgroundColor: Colors.green,
+        colorText: Colors.white,
+        duration: Duration(seconds: 2),
+      );
     } catch (e) {
       _logger.e("❌ Error refreshing assets: $e");
     }
@@ -267,6 +298,7 @@ class AssetReportController extends GetxController {
     } else {
       selectedAssetTypes.add(assetType);
     }
+    _logger.i("🔍 Asset types updated: $selectedAssetTypes");
   }
 
   void toggleVehicleType(String vehicleType) {
@@ -275,11 +307,11 @@ class AssetReportController extends GetxController {
     } else {
       selectedVehicleTypes.add(vehicleType);
     }
+    _logger.i("🚗 Vehicle types updated: $selectedVehicleTypes");
   }
 
   void toggleBuildingType(String? buildingType) {
     if (buildingType == null) return;
-    _logger.i("🏢 Toggling building type: $buildingType");
 
     if (selectedBuildingTypes.contains(buildingType)) {
       selectedBuildingTypes.remove(buildingType);
@@ -290,9 +322,27 @@ class AssetReportController extends GetxController {
     }
   }
 
+  void toggleLandType(String? landType) {
+    if (landType == null) return;
+
+    _logger.i("🌳 Attempting to toggle land type: $landType");
+    _logger.i("🌳 Current selected land types: $selectedLandTypes");
+
+    if (selectedLandTypes.contains(landType)) {
+      selectedLandTypes.remove(landType);
+      _logger.i("🌳 Removed land type: $landType");
+    } else {
+      selectedLandTypes.add(landType);
+      _logger.i("🌳 Added land type: $landType");
+    }
+
+    _logger.i("🌳 Updated selected land types: $selectedLandTypes");
+  }
+
   void setDateRange(DateTime start, DateTime end) {
     startDate.value = start;
     endDate.value = end;
+    _logger.i("📅 Date range set: ${_formatDate(start)} to ${_formatDate(end)}");
   }
 
   void setReportType(String type) {
@@ -302,6 +352,7 @@ class AssetReportController extends GetxController {
 
   void toggleIncludeCharts() {
     includeCharts.value = !includeCharts.value;
+    _logger.i("📈 Include charts: ${includeCharts.value}");
   }
 
   // Helper function to get value from asset map
@@ -317,6 +368,7 @@ class AssetReportController extends GetxController {
     return assets.where((asset) {
       final category = asset['category'];
 
+      // Filter by asset category
       if (category == null || !selectedAssetTypes.contains(category)) {
         return false;
       }
@@ -326,11 +378,7 @@ class AssetReportController extends GetxController {
           selectedBuildingTypes.isNotEmpty &&
           asset.containsKey('buildingType')) {
         String? buildingType = asset['buildingType'] as String?;
-       _logger.i("🏢 Building Type: ${asset['buildingType'] ?? asset['building_Type']}");
-
-
-        if (buildingType == null ||
-            !selectedBuildingTypes.contains(buildingType)) {
+        if (buildingType == null || !selectedBuildingTypes.contains(buildingType)) {
           return false;
         }
       }
@@ -340,29 +388,35 @@ class AssetReportController extends GetxController {
           selectedBuildingTypes.isNotEmpty &&
           asset.containsKey('landType')) {
         String? landType = asset['landType'] as String?;
-     _logger.i("🏢 Land Type: ${asset['landType'] ?? asset['land_Type']}");
         if (landType == null || !selectedBuildingTypes.contains(landType)) {
           return false;
         }
       }
 
-      // Apply vehicle type filter for Vehicle assets
+// Apply vehicle type filter for Vehicle assets
       if (category == 'Vehicle' &&
           selectedVehicleTypes.isNotEmpty &&
-          (asset.containsKey('vehicleType') ||
-              asset.containsKey('vehicle_type'))) {
-        _logger.i("🚗 Vehicle type: ${asset['vehicleType'] ?? asset['vehicle_type']}");
-        String? vehicleType = asset['vehicleType'] as String? ??
-            asset['vehicle_type'] as String?;
-        if (vehicleType == null ||
-            !selectedVehicleTypes.contains(vehicleType)) {
+          (asset.containsKey('vehicleType') || asset.containsKey('vehicle_type'))) {
+
+        // Get the vehicle type from either property name, handling potential nulls
+        String? vehicleType = asset['vehicleType'] as String? ?? asset['vehicle_type'] as String?;
+
+        // Convert to uppercase for consistent comparison
+        String? normalizedVehicleType = vehicleType?.toUpperCase();
+
+        // Check if the vehicle type is in our selected list
+        bool typeMatches = normalizedVehicleType != null &&
+            selectedVehicleTypes.contains(normalizedVehicleType);
+
+        if (!typeMatches) {
+          _logger.i("🚗 Vehicle type filter excluded: $vehicleType");
+          _logger.i("🚗 Selected vehicle types: $selectedVehicleTypes");
           return false;
         }
       }
 
       // Filter by date range if purchase date is available
-      if (asset.containsKey('purchaseDate') && asset['purchaseDate'] != null &&
-          asset['purchaseDate'] != 'N/A') {
+      if (asset.containsKey('purchaseDate') && asset['purchaseDate'] != null && asset['purchaseDate'] != 'N/A') {
         try {
           DateTime purchaseDate;
 
@@ -380,12 +434,10 @@ class AssetReportController extends GetxController {
               purchaseDate.isBefore(endDate.value.add(Duration(days: 1)));
         } catch (e) {
           // If date parsing fails, include the asset anyway
-          _logger.w("⚠️ Could not parse date for asset: ${asset['name'] ??
-              asset['model'] ?? 'Unknown'}");
+          _logger.w("⚠️ Could not parse date for asset: ${asset['name'] ?? asset['model'] ?? 'Unknown'}");
           return true;
         }
       }
-
       // Include assets without purchase date
       return true;
     }).toList();
@@ -407,8 +459,7 @@ class AssetReportController extends GetxController {
     try {
       isGeneratingReport(true);
       reportProgress(0.1);
-
-
+      _logger.i("📊 Starting report generation...");
 
       // Get filtered assets
       final filteredAssets = getFilteredAssets();
@@ -425,21 +476,22 @@ class AssetReportController extends GetxController {
       }
 
       reportProgress(0.3);
+      _logger.i("📊 Creating PDF for ${filteredAssets.length} assets");
+      _logger.i("📊 Report type: ${reportType.value}");
+
 
       // Create PDF document based on report type
       final pdf = await _createPdfReport(filteredAssets, reportType.value);
       _logger.i("✅ PDF created successfully");
 
-
-
-
-
       reportProgress(0.7);
-      _logger.i("📊 Generating report preview...");
+      _logger.i("📊 Saving report to device...");
 
       // Save the PDF
       final filePath = await _savePdfReport(pdf);
-_logger.i("✅ PDF saved successfully: $filePath");
+      _logger.i("✅ PDF saved successfully: $filePath");
+      generatedReportPath.value = filePath;
+
       reportProgress(1.0);
 
       // Show preview dialog
@@ -463,7 +515,7 @@ _logger.i("✅ PDF saved successfully: $filePath");
   // Save the PDF to a location
   Future<String> _savePdfReport(pw.Document pdf) async {
     final String timestamp = DateFormat('yyyyMMdd_HHmmss').format(DateTime.now());
-    final String reportName = 'asset_report_$timestamp.pdf';
+    final String reportName = 'asset_report_${reportType.value.toLowerCase().replaceAll(' ', '_')}_$timestamp.pdf';
 
     // For simplicity, save to application documents directory
     final directory = await getApplicationDocumentsDirectory();
@@ -491,8 +543,7 @@ _logger.i("✅ PDF saved successfully: $filePath");
     switch (type) {
       case 'Summary Report':
         columns = ['Asset Name', 'Category', 'Type', 'Purchase Price'];
-        rowBuilder = (asset) =>
-        [
+        rowBuilder = (asset) => [
           _getValue(asset, 'name') ?? _getValue(asset, 'model') ?? 'N/A',
           _getValue(asset, 'category') ?? 'N/A',
           _getTypeValue(asset),
@@ -508,8 +559,7 @@ _logger.i("✅ PDF saved successfully: $filePath");
           'Purchase Price',
           'Location'
         ];
-        rowBuilder = (asset) =>
-        [
+        rowBuilder = (asset) => [
           _getValue(asset, 'name') ?? _getValue(asset, 'model') ?? 'N/A',
           _getValue(asset, 'category') ?? 'N/A',
           _getTypeValue(asset),
@@ -525,10 +575,8 @@ _logger.i("✅ PDF saved successfully: $filePath");
           'Purchase Price',
           'Current Value',
           'Depreciation'
-
         ];
-        rowBuilder = (asset) =>
-        [
+        rowBuilder = (asset) => [
           _getValue(asset, 'name') ?? _getValue(asset, 'model') ?? 'N/A',
           _getValue(asset, 'category') ?? 'N/A',
           _formatCurrency(_getValue(asset, 'purchasePrice')),
@@ -545,38 +593,25 @@ _logger.i("✅ PDF saved successfully: $filePath");
           'Status',
           'Notes'
         ];
-        rowBuilder = (asset) =>
-        [
+        rowBuilder = (asset) => [
           _getValue(asset, 'name') ?? _getValue(asset, 'model') ?? 'N/A',
           _getValue(asset, 'category') ?? 'N/A',
           _getTypeValue(asset),
-          _formatDate(_getValue(asset, 'lastMaintenance') ??
-              _getMaintenanceDate(asset) ?? 'N/A'),
+          _formatDate(_getValue(asset, 'lastMaintenance') ?? _getMaintenanceDate(asset) ?? 'N/A'),
           _getMaintenanceStatus(asset),
           _getValue(asset, 'maintenanceNotes') ?? 'No notes',
-
         ];
         break;
       default:
         columns = ['Asset Name', 'Category', 'Type', 'Purchase Date', 'Purchase Price'];
-        rowBuilder = (asset) =>
-        [
+        rowBuilder = (asset) => [
           _getValue(asset, 'name') ?? _getValue(asset, 'model') ?? 'N/A',
           _getValue(asset, 'category') ?? 'N/A',
           _getTypeValue(asset),
           _formatDate(_getValue(asset, 'purchaseDate')),
           _formatCurrency(_getValue(asset, 'purchasePrice')),
         ];
-
-        _logger.w("Unknown report type: $type");
-        _logger.w("Defaulting to Summary Report");
-        _logger.w("Please report this to the developer");
-        _logger.w("Report type: $type");
-        _logger.w("Report data: $assets");
-        _logger.w("Report columns: $columns");
-        _logger.w("Report row builder: $rowBuilder");
-        _logger.w("Report font: $font");
-        _logger.w("Report fontBold: $fontBold");
+        _logger.w("Unknown report type: $type, defaulting to Summary Report");
         break;
     }
 
@@ -587,8 +622,7 @@ _logger.i("✅ PDF saved successfully: $filePath");
         margin: pw.EdgeInsets.all(40),
         header: (context) => _buildReportHeader(context, type, fontBold),
         footer: (context) => _buildReportFooter(context, font),
-        build: (context) =>
-        [
+        build: (context) => [
           _buildReportFilters(font, fontBold),
           pw.SizedBox(height: 20),
           _buildSummaryStats(assets, font, fontBold),
@@ -606,8 +640,7 @@ _logger.i("✅ PDF saved successfully: $filePath");
   }
 
   // Build summary statistics section
-  pw.Widget _buildSummaryStats(List<Map<String, dynamic>> assets, pw.Font font,
-      pw.Font fontBold) {
+  pw.Widget _buildSummaryStats(List<Map<String, dynamic>> assets, pw.Font font, pw.Font fontBold) {
     // Calculate total value
     double totalValue = 0;
     for (var asset in assets) {
@@ -649,13 +682,9 @@ _logger.i("✅ PDF saved successfully: $filePath");
           pw.Row(
             mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
             children: [
-              _buildStatItem(
-                  'Total Assets', '${assets.length}', font, fontBold),
-              _buildStatItem(
-                  'Total Value', _formatCurrency(totalValue), font, fontBold),
-              _buildStatItem('Date Range',
-                  '${_formatDate(startDate.value)} - ${_formatDate(
-                      endDate.value)}', font, fontBold),
+              _buildStatItem('Total Assets', '${assets.length}', font, fontBold),
+              _buildStatItem('Total Value', _formatCurrency(totalValue), font, fontBold),
+              _buildStatItem('Date Range', '${_formatDate(startDate.value)} - ${_formatDate(endDate.value)}', font, fontBold),
             ],
           ),
           pw.SizedBox(height: 10),
@@ -670,8 +699,7 @@ _logger.i("✅ PDF saved successfully: $filePath");
           pw.SizedBox(height: 5),
           pw.Row(
             children: categoryCounts.entries.map((entry) =>
-                _buildStatItem(
-                    entry.key, '${entry.value}', font, fontBold, flex: 1)
+                _buildStatItem(entry.key, '${entry.value}', font, fontBold, flex: 1)
             ).toList(),
           ),
         ],
@@ -680,8 +708,7 @@ _logger.i("✅ PDF saved successfully: $filePath");
   }
 
   // Build charts section
-  pw.Widget _buildCharts(List<Map<String, dynamic>> assets, pw.Font font,
-      pw.Font fontBold) {
+  pw.Widget _buildCharts(List<Map<String, dynamic>> assets, pw.Font font, pw.Font fontBold) {
     // Count by category
     Map<String, int> categoryCounts = {};
     for (var asset in assets) {
@@ -725,10 +752,7 @@ _logger.i("✅ PDF saved successfully: $filePath");
             children: categoryCounts.entries.map((entry) {
               // Calculate bar height proportional to count
               final maxHeight = 100.0;
-              final maxCount = categoryCounts.values.reduce((a, b) =>
-              a > b
-                  ? a
-                  : b);
+              final maxCount = categoryCounts.values.reduce((a, b) => a > b ? a : b);
               final barHeight = (entry.value / maxCount) * maxHeight;
 
               return pw.Expanded(
@@ -778,10 +802,7 @@ _logger.i("✅ PDF saved successfully: $filePath");
             children: categoryValues.entries.map((entry) {
               // Calculate bar height proportional to value
               final maxHeight = 100.0;
-              final maxValue = categoryValues.values.reduce((a, b) =>
-              a > b
-                  ? a
-                  : b);
+              final maxValue = categoryValues.values.reduce((a, b) => a > b ? a : b);
               final barHeight = (entry.value / maxValue) * maxHeight;
 
               return pw.Expanded(
@@ -791,7 +812,7 @@ _logger.i("✅ PDF saved successfully: $filePath");
                       height: barHeight,
                       margin: pw.EdgeInsets.symmetric(horizontal: 8),
                       decoration: pw.BoxDecoration(
-                        color: _getCategoryColor(entry.key),  // Just use the same color
+                        color: _getCategoryColor(entry.key),
                         borderRadius: pw.BorderRadius.vertical(
                           top: pw.Radius.circular(4),
                         ),
@@ -837,8 +858,7 @@ _logger.i("✅ PDF saved successfully: $filePath");
   }
 
   // Build stat item
-  pw.Widget _buildStatItem(String label, String value, pw.Font font,
-      pw.Font fontBold, {int flex = 1}) {
+  pw.Widget _buildStatItem(String label, String value, pw.Font font, pw.Font fontBold, {int flex = 1}) {
     return pw.Expanded(
       flex: flex,
       child: pw.Padding(
@@ -850,7 +870,7 @@ _logger.i("✅ PDF saved successfully: $filePath");
               label,
               style: pw.TextStyle(
                 font: font,
-                fontSize: 10,
+                fontSize: 12,
                 color: PdfColors.grey700,
               ),
             ),
@@ -871,116 +891,133 @@ _logger.i("✅ PDF saved successfully: $filePath");
   // Show PDF preview dialog
   void _showReportPreview(String filePath) {
     Get.dialog(
-        Dialog(
+      Dialog(
         insetPadding: EdgeInsets.all(16),
-    child: Container(
-    height: Get.height * 0.8,
-    width: Get.width * 0.9,
-    child: Column(
-    children: [
-    Container(
-    padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-    color: Get.theme.primaryColor,
-    child: Row(
-    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-    children: [
-    Text(
-    '${reportType.value} Preview',
-    style: TextStyle(
-    color: Colors.white,
-    fontWeight: FontWeight.bold,
-    fontSize: 16,
-    ),
-    ),
-      IconButton(
-        icon: Icon(Icons.close, color: Colors.white),
-        onPressed: () => Get.back(),
-      ),
-    ],
-    ),
-    ),
-      Expanded(
-        child: PdfPreview(
-          build: (format) => File(filePath).readAsBytes(),
-          allowSharing: false,
-          allowPrinting: false,
-          canChangeOrientation: false,
-          canChangePageFormat: false,
-          canDebug: false,
+        child: Container(
+          height: Get.height * 0.8,
+          width: Get.width * 0.9,
+          child: Column(
+            children: [
+              Container(
+                padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                color: Get.theme.primaryColor,
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      '${reportType.value} Preview',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                      ),
+                    ),
+                    IconButton(
+                      icon: Icon(Icons.close, color: Colors.white),
+                      onPressed: () => Get.back(),
+                    ),
+                  ],
+                ),
+              ),
+              Expanded(
+                child: PdfPreview(
+                  build: (format) => File(filePath).readAsBytes(),
+                  allowSharing: true,
+                  allowPrinting: true,
+                  canChangeOrientation: false,
+                  canChangePageFormat: false,
+                  canDebug: false,
+                ),
+              ),
+              Container(
+                padding: EdgeInsets.all(16),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    ElevatedButton.icon(
+                      onPressed: () async {
+                        final result = await OpenFile.open(filePath);
+                        if (result.type != ResultType.done) {
+                          Get.snackbar(
+                            "Error",
+                            "Could not open the file: ${result.message}",
+                            snackPosition: SnackPosition.BOTTOM,
+                          );
+                        }
+                      },
+                      icon: Icon(Icons.open_in_new),
+                      label: Text('Open'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.blue,
+                        foregroundColor: Colors.white,
+                      ),
+                    ),
+                    ElevatedButton.icon(
+                      onPressed: () async {
+                        await Printing.layoutPdf(
+                          onLayout: (_) => File(filePath).readAsBytes(),
+                        );
+                      },
+                      icon: Icon(Icons.print),
+                      label: Text('Print'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.grey[200],
+                        foregroundColor: Colors.black87,
+                      ),
+                    ),
+                    ElevatedButton.icon(
+                      onPressed: () {
+                        // Save as feature would go here
+                        Get.snackbar(
+                          "File Saved",
+                          "Report saved at: $filePath",
+                          snackPosition: SnackPosition.BOTTOM,
+                        );
+                      },
+                      icon: Icon(Icons.save_alt),
+                      label: Text('Save As'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.green,
+                        foregroundColor: Colors.white,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Container(
+                padding: EdgeInsets.only(left: 16, right: 16, bottom: 16),
+                child: Column(
+                  children: [
+                    Text(
+                      'File saved at:',
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.grey[800],
+                      ),
+                    ),
+                    SizedBox(height: 4),
+                    Text(
+                      filePath,
+                      style: TextStyle(
+                        fontSize: 11,
+                        color: Colors.grey[600],
+                        fontFamily: 'monospace',
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
         ),
       ),
-      Container(
-        padding: EdgeInsets.all(16),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-          children: [
-            ElevatedButton.icon(
-              onPressed: () async {
-                final result = await OpenFile.open(filePath);
-                if (result.type != ResultType.done) {
-                  Get.snackbar(
-                    "Error",
-                    "Could not open the file: ${result.message}",
-                    snackPosition: SnackPosition.BOTTOM,
-                  );
-                }
-              },
-              icon: Icon(Icons.open_in_new),
-              label: Text('Open'),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.blue,
-              ),
-            ),
-            ElevatedButton.icon(
-              onPressed: () async {
-                await Printing.layoutPdf(
-                  onLayout: (_) => File(filePath).readAsBytes(),
-                );
-              },
-              icon: Icon(Icons.print),
-              label: Text('Print'),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.white,
-              ),
-            ),
-          ],
-        ),
-      ),
-      Container(
-        padding: EdgeInsets.only(left: 16, right: 16, bottom: 16),
-        child: Column(
-          children: [
-            Text(
-              'File saved at:',
-              style: TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.bold,
-                color: Colors.grey[800],
-              ),
-            ),
-            SizedBox(height: 4),
-            Text(
-              filePath,
-              style: TextStyle(
-                fontSize: 11,
-                color: Colors.grey[600],
-                fontFamily: 'monospace',
-              ),
-              textAlign: TextAlign.center,
-            ),
-          ],
-        ),
-      ),
-    ],
-    ),
-    ),
-        ),
     );
   }
 
   // PDF Report Header
-  pw.Widget _buildReportHeader(pw.Context context, String title,
-      pw.Font fontBold) {
+  pw.Widget _buildReportHeader(pw.Context context, String title, pw.Font fontBold) {
     return pw.Container(
       alignment: pw.Alignment.center,
       margin: pw.EdgeInsets.only(bottom: 20),
@@ -991,7 +1028,7 @@ _logger.i("✅ PDF saved successfully: $filePath");
             mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
             children: [
               pw.Text(
-                'Vynix',
+                'Vynix Asset Management',
                 style: pw.TextStyle(
                   font: fontBold,
                   fontSize: 20,
@@ -999,8 +1036,7 @@ _logger.i("✅ PDF saved successfully: $filePath");
                 ),
               ),
               pw.Text(
-                'Generated: ${DateFormat('MMM dd, yyyy').format(
-                    DateTime.now())}',
+                'Generated: ${DateFormat('MMM dd, yyyy').format(DateTime.now())}',
                 style: pw.TextStyle(
                   fontSize: 12,
                   color: PdfColors.grey700,
@@ -1050,7 +1086,7 @@ _logger.i("✅ PDF saved successfully: $filePath");
         mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
         children: [
           pw.Text(
-            'Asset Management System',
+            'Vynix Asset Management System',
             style: pw.TextStyle(
               fontSize: 10,
               color: PdfColors.grey600,
@@ -1116,9 +1152,7 @@ _logger.i("✅ PDF saved successfully: $filePath");
               pw.Expanded(
                 child: _buildFilterItem(
                   'Date Range',
-                  '${DateFormat('MM/dd/yyyy').format(
-                      startDate.value)} - ${DateFormat('MM/dd/yyyy').format(
-                      endDate.value)}',
+                  '${DateFormat('MM/dd/yyyy').format(startDate.value)} - ${DateFormat('MM/dd/yyyy').format(endDate.value)}',
                   font,
                   fontBold,
                 ),
@@ -1138,9 +1172,8 @@ _logger.i("✅ PDF saved successfully: $filePath");
             children: [
               pw.Expanded(
                 child: _buildFilterItem(
-                  'Property Types',
-                  selectedBuildingTypes.isNotEmpty ? selectedBuildingTypes.join(
-                      ', ') : 'All',
+                  'Building Types',
+                  selectedBuildingTypes.isNotEmpty ? selectedBuildingTypes.join(', ') : 'All',
                   font,
                   fontBold,
                 ),
@@ -1148,13 +1181,26 @@ _logger.i("✅ PDF saved successfully: $filePath");
               pw.Expanded(
                 child: _buildFilterItem(
                   'Vehicle Types',
-                  selectedVehicleTypes.isNotEmpty ? selectedVehicleTypes.join(
-
-                      ', ') : 'All',
+                  selectedVehicleTypes.isNotEmpty ? selectedVehicleTypes.join(', ') : 'All',
                   font,
                   fontBold,
-
                 ),
+              ),
+            ],
+          ),
+          pw.SizedBox(height: 10),
+          pw.Row(
+            children: [
+              pw.Expanded(
+                child: _buildFilterItem(
+                  'Land Types',
+                  selectedLandTypes.isNotEmpty ? selectedLandTypes.join(', ') : 'All',
+                  font,
+                  fontBold,
+                ),
+              ),
+              pw.Expanded(
+                child: pw.SizedBox(), // Empty space for balance
               ),
             ],
           ),
@@ -1163,8 +1209,7 @@ _logger.i("✅ PDF saved successfully: $filePath");
     );
   }
 
-  pw.Widget _buildFilterItem(String label, String value, pw.Font font,
-      pw.Font fontBold) {
+  pw.Widget _buildFilterItem(String label, String value, pw.Font font, pw.Font fontBold) {
     return pw.Padding(
       padding: const pw.EdgeInsets.symmetric(horizontal: 5, vertical: 3),
       child: pw.Column(
@@ -1192,11 +1237,13 @@ _logger.i("✅ PDF saved successfully: $filePath");
   }
 
   // Build asset table for the report
-  pw.Widget _buildAssetTable(List<Map<String, dynamic>> assets,
+  pw.Widget _buildAssetTable(
+      List<Map<String, dynamic>> assets,
       List<String> columns,
       List<dynamic> Function(Map<String, dynamic>) rowBuilder,
       pw.Font font,
-      pw.Font fontBold,) {
+      pw.Font fontBold,
+      ) {
     return pw.Table(
       border: pw.TableBorder.all(color: PdfColors.grey400),
       columnWidths: {
@@ -1248,8 +1295,7 @@ _logger.i("✅ PDF saved successfully: $filePath");
     if (category == 'Building') {
       return asset['buildingType'] ?? 'N/A';
     } else if (category == 'Vehicle') {
-      return asset['vehicleType'] ?? asset['vehicle_type'] ?? asset['type'] ??
-          'N/A';
+      return asset['vehicleType'] ?? asset['vehicle_type'] ?? asset['type'] ?? 'N/A';
     } else if (category == 'Land') {
       return asset['landType'] ?? 'N/A';
     }
@@ -1259,7 +1305,6 @@ _logger.i("✅ PDF saved successfully: $filePath");
   String _getLocationValue(Map<String, dynamic> asset) {
     final category = asset['category'];
     if (category == 'Building') {
-      _logger.i("🏢 Building location: ${asset['buildingAddress']}, ${asset['buildingCity']}");
       if (asset['buildingAddress'] != null && asset['buildingCity'] != null) {
         return '${asset['buildingAddress']}, ${asset['buildingCity']}';
       } else if (asset['buildingAddress'] != null) {
@@ -1305,6 +1350,7 @@ _logger.i("✅ PDF saved successfully: $filePath");
       }
       return DateFormat('MM/dd/yyyy').format(dateTime);
     } catch (e) {
+      _logger.w("⚠️ Date parsing error: $e");
       return date.toString();
     }
   }
@@ -1317,12 +1363,12 @@ _logger.i("✅ PDF saved successfully: $filePath");
         return value.toDouble();
       } else {
         // Try to parse string value
-        final sanitizedValue = value.toString().replaceAll(
-            RegExp(r'[^\d.]'), '');
+        final sanitizedValue = value.toString().replaceAll(RegExp(r'[^\d.]'), '');
         if (sanitizedValue.isEmpty) return null;
         return double.parse(sanitizedValue);
       }
     } catch (e) {
+      _logger.w("⚠️ Number parsing error: $e");
       return null;
     }
   }
@@ -1356,15 +1402,13 @@ _logger.i("✅ PDF saved successfully: $filePath");
     String category = _getValue(asset, 'category') ?? '';
 
     if (category == 'Vehicle') {
-      var motDate = _getValue(asset, 'motExpiredDate') ??
-          _getValue(asset, 'motDate');
+      var motDate = _getValue(asset, 'motExpiredDate') ?? _getValue(asset, 'motDate');
       if (motDate != null && motDate != 'N/A') {
         try {
           DateTime expiryDate = DateTime.parse(motDate.toString());
           if (expiryDate.isBefore(DateTime.now())) {
             return 'OVERDUE';
-          } else
-          if (expiryDate.isBefore(DateTime.now().add(Duration(days: 30)))) {
+          } else if (expiryDate.isBefore(DateTime.now().add(Duration(days: 30)))) {
             return 'DUE SOON';
           } else {
             return 'VALID';
@@ -1374,7 +1418,6 @@ _logger.i("✅ PDF saved successfully: $filePath");
         }
       }
     } else if (category == 'Building') {
-      _logger.i("🏢 Building type: ${asset['buildingType']}");
       // For buildings, we can check council tax date
       var councilTaxDate = _getValue(asset, 'councilTaxDate');
       if (councilTaxDate != null && councilTaxDate != 'N/A') {
@@ -1382,8 +1425,7 @@ _logger.i("✅ PDF saved successfully: $filePath");
           DateTime expiryDate = DateTime.parse(councilTaxDate.toString());
           if (expiryDate.isBefore(DateTime.now())) {
             return 'RENEWAL REQUIRED';
-          } else
-          if (expiryDate.isBefore(DateTime.now().add(Duration(days: 60)))) {
+          } else if (expiryDate.isBefore(DateTime.now().add(Duration(days: 60)))) {
             return 'UPCOMING RENEWAL';
           } else {
             return 'CURRENT';
@@ -1401,8 +1443,7 @@ _logger.i("✅ PDF saved successfully: $filePath");
           DateTime expiryDate = DateTime.parse(leaseDate.toString());
           if (expiryDate.isBefore(DateTime.now())) {
             return 'EXPIRED';
-          } else
-          if (expiryDate.isBefore(DateTime.now().add(Duration(days: 90)))) {
+          } else if (expiryDate.isBefore(DateTime.now().add(Duration(days: 90)))) {
             return 'EXPIRING SOON';
           } else {
             return 'ACTIVE';
@@ -1441,7 +1482,6 @@ _logger.i("✅ PDF saved successfully: $filePath");
             depreciationRate = 0.15; // 15% per year for vehicles
             break;
           case 'Building':
-            _logger.i("🏢 Building type: ${asset['buildingType']}");
             depreciationRate = 0.03; // 3% per year for buildings
             break;
           case 'Land':
@@ -1492,5 +1532,30 @@ _logger.i("✅ PDF saved successfully: $filePath");
     }
   }
 
+  // Export function for the reports - useful for sharing via email
+  Future<void> exportReport(String filePath) async {
+    // Implementation depends on your sharing mechanism
+    // This is a placeholder for future implementation
+    try {
+      // Implement email sending or other sharing mechanism
+      _logger.i("📤 Exporting report: $filePath");
 
+      // For now, just display a message
+      Get.snackbar(
+        "Export",
+        "Report ready for export: $filePath",
+        snackPosition: SnackPosition.BOTTOM,
+        duration: Duration(seconds: 3),
+      );
+    } catch (e) {
+      _logger.e("❌ Error exporting report: $e");
+      Get.snackbar(
+        "Export Error",
+        "Failed to export report: ${e.toString()}",
+        snackPosition: SnackPosition.TOP,
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+      );
+    }
+  }
 }

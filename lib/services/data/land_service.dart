@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:dio/dio.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:hexalyte_ams/services/api_environment.dart';
@@ -59,15 +61,15 @@ class LandService {
         message: 'Land details updated successfully!',
       );
     } on DioException catch (e) {
-      print("DioException in updateLand: ${e.response?.data}");
+      _logger.e("DioException in updateLand: ${e.response?.data}");
       return ApiResponse(
         isSuccess: false,
         statusCode: e.response?.statusCode ?? 500,
         message: e.response?.data?['error_description'] ?? 'An error occurred',
       );
     } catch (e, stackTrace) {
-      print("Exception in updateLand: $e");
-      print("StackTrace: $stackTrace");
+      _logger.e("Exception in updateLand: $e");
+      _logger.e("StackTrace: $stackTrace");
 
       return ApiResponse(
         isSuccess: false,
@@ -84,11 +86,14 @@ class LandService {
     required String landCity,
     required String purchaseDate,
     required String purchasePrice,
-    required String landImage,
+    required File landImage,
     required String leaseValue,
     required String leaseDate,
 
   }) async {
+    _logger.i(landImage.path);
+    var uploadedImage = uploadImage(imageFile: landImage);
+    _logger.i(uploadedImage.toString());
     _logger.i(
         'Land details: $landName, $landType, $landSize, $landAddress, $landCity, , $purchaseDate, $purchasePrice, $landImage');
     String? accessToken = await _secureStorage.read(key: 'access_token');
@@ -106,7 +111,7 @@ class LandService {
           "purchasePrice": purchasePrice,
           "lease_date": leaseDate,
           "leaseValue": leaseValue,
-          "imageURL": landImage,
+          // "imageURL": landImage,
         },
         options: Options(
           headers: {
@@ -122,15 +127,15 @@ class LandService {
         data: response.data,
       );
     } on DioException catch (e) {
-      print("DioException in addLand: ${e.response?.data}");
+      _logger.e("DioException in addLand: ${e.response?.data}");
       return ApiResponse(
         isSuccess: false,
         statusCode: e.response?.statusCode ?? 500,
         message: e.response?.data?['error_description'] ?? 'An error occurred',
       );
     } catch (e, stackTrace) {
-      print("Exception in addLand: $e");
-      print("StackTrace: $stackTrace");
+      _logger.e("Exception in addLand: $e");
+      _logger.e("StackTrace: $stackTrace");
 
       return ApiResponse(
         isSuccess: false,
@@ -140,6 +145,59 @@ class LandService {
     }
   }
 
+  Future<ApiResponse> uploadImage({
+    required File imageFile,
+  }) async {
+    try {
+      // Retrieve the stored token
+      String? accessToken = await _secureStorage.read(key: 'access_token');
+
+      // Create FormData
+      FormData formData = FormData.fromMap({
+        "image": await MultipartFile.fromFile(
+          imageFile.path,
+          filename: imageFile.path.split('/').last,
+        ),
+      });
+
+      final response = await dio.post(
+        'https://api.ams.hexalyte.com/storage',
+        data: formData,
+        options: Options(
+          headers: {
+            'Authorization': 'Bearer $accessToken',
+          },
+        ),
+      );
+
+      return ApiResponse(
+        isSuccess: true,
+        data: response.data,
+        statusCode: response.statusCode,
+        message: 'Image uploaded successfully!',
+      );
+    }   on DioException catch (e) {
+      _logger.e("DioException in uploadImage: ${e.message}");
+      _logger.e("DioException type: ${e.type}");
+      _logger.e("DioException response: ${e.response}");
+      _logger.e("DioException error: ${e.error}");
+
+      return ApiResponse(
+        isSuccess: false,
+        statusCode: e.response?.statusCode ?? 500,
+        message: e.message ?? e.response?.data?['error_description'] ?? 'An error occurred',
+      );
+    } catch (e, stackTrace) {
+      _logger.e("Exception in uploadImage: $e");
+      _logger.e("StackTrace: $stackTrace");
+
+      return ApiResponse(
+        isSuccess: false,
+        statusCode: 500,
+        message: 'Unexpected error occurred',
+      );
+    }
+  }
 
   /// **Delete Land**
   Future<ApiResponse> deleteLand({

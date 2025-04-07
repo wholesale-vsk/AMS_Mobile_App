@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:hexalyte_ams/controllers/vehicle_controller/vehicle_controller.dart';
-import 'package:hexalyte_ams/controllers/image_picker_controller/image_picker_controller.dart';
+
 import 'package:hexalyte_ams/utils/widgets/calander/calender_field.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
+
+import '../../../../../controllers/image_controller/image_controller.dart';
 
 class AddVehicleScreen extends StatelessWidget {
   final VehicleController vehicleController = Get.put(VehicleController());
