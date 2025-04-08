@@ -165,7 +165,7 @@ class LandService {
 
       // Create the land data including the image URL
       final landData = {
-        "name": landName,
+        "": landName,
         "landSize": landSize,
         "landType": landType,
         "address": landAddress,

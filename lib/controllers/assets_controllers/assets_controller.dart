@@ -308,7 +308,7 @@ class AssetController extends GetxController {
         "purchasePrice": l.purchasePrice?.toString() ?? "N/A",
         'leaseValue': l.leaseValue?.toString() ?? "N/A",
         'lease_date': l.leaseDate?.toString() ?? "N/A",
-        "imageURL": l.landImage ?? "",
+        "imageURL": l.imageURL ?? "", // Updated from vehicleImage to imageURL
         "landId": l.links != null ? Uri.parse(l.links).pathSegments.last : "",
       }).toList();
 
