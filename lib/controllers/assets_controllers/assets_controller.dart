@@ -269,7 +269,7 @@ class AssetController extends GetxController {
         "purchaseDate": v.purchaseDate?.toString(),
         "motDate": v.motDate?.toString(),
         "insuranceDate": v.insuranceDate?.toString(),
-        "imageURL": v.vehicleImage ?? "",
+        "imageURL": v.imageURL ?? "", // Updated from vehicleImage to imageURL
         "createdBy": v.createdBy ?? "N/A",
         "createdDate": v.createdDate?.toString(),
         "lastModifiedBy": v.lastModifiedBy ?? "N/A",

@@ -1,5 +1,4 @@
 import 'dart:io';
-import 'dart:math' as _logger;
 
 import 'package:dio/dio.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
@@ -11,7 +10,12 @@ import 'package:image/image.dart' as img;
 import 'package:http_parser/http_parser.dart';
 
 class BuildingService {
-  final Dio dio = Dio();
+  final Dio dio = Dio(BaseOptions(
+    validateStatus: (status) => status != null && status >= 200 && status < 600,
+    connectTimeout: const Duration(seconds: 30),
+    receiveTimeout: const Duration(seconds: 60),
+    sendTimeout: const Duration(seconds: 60),
+  ));
   final Logger _logger = Logger();
   final FlutterSecureStorage _secureStorage = const FlutterSecureStorage();
 
@@ -34,9 +38,49 @@ class BuildingService {
     required String leaseDate,
     required String leaseValue,
   }) async {
-    dio.options.contentType = Headers.jsonContentType;
-
     try {
+      _logger.i("Processing building image for update: ${buildingImage.path}");
+
+      // Upload the building image first
+      var imageUploadResponse = await uploadBuildingImage(imageFile: buildingImage);
+
+      // If image upload failed, return the error
+      if (!imageUploadResponse.isSuccess) {
+        _logger.e("Failed to upload building image: ${imageUploadResponse.message}");
+        return imageUploadResponse;
+      }
+
+      // Extract the image URL from the response
+      String? imageUrl;
+      if (imageUploadResponse.data is Map) {
+        // Try different possible keys where the URL might be stored
+        imageUrl = imageUploadResponse.data['url'] ??
+            imageUploadResponse.data['imageUrl'] ??
+            imageUploadResponse.data['data']?['url'] ??
+            imageUploadResponse.data['file'] ??
+            imageUploadResponse.data['file_url'] ??
+            imageUploadResponse.data['image_url'];
+
+        // Deep search for URL in nested maps
+        if (imageUrl == null) {
+          imageUrl = _findUrlInMap(imageUploadResponse.data);
+        }
+      }
+
+      // Use the imageUrl field if available
+      // imageUrl = imageUploadResponse.imageUrl ?? imageUrl;
+
+      if (imageUrl == null || imageUrl.isEmpty) {
+        _logger.e("Image upload was successful but no URL was returned");
+        return ApiResponse(
+          isSuccess: false,
+          statusCode: 500,
+          message: 'Image uploaded but URL was not provided by server',
+        );
+      }
+
+      _logger.i("Building image upload successful, URL: $imageUrl");
+
       // Retrieve the stored token
       String? accessToken = await _secureStorage.read(key: 'access_token');
       if (accessToken == null) {
@@ -57,40 +101,62 @@ class BuildingService {
         "ownerName": ownerName,
         "purchasePrice": purchasePrice,
         "purchaseDate": purchaseDate,
-        "imageURL": buildingImage.path.isNotEmpty ? buildingImage : null,
+        "imageURL": imageUrl, // Use the uploaded image URL
         "purposeOfUse": purposeOfUse,
         "councilTaxDate": councilTaxDate,
         "councilTaxValue": councilTaxValue,
         "lease_date": leaseDate,
         "leaseValue": leaseValue,
       };
+
+      _logger.d("Updating building with data: $updateData");
+
       var url = "https://api.ams.hexalyte.com/asset/assets/$buildingId";
-      print('Updating building with URL: $url');
+      _logger.i('Updating building with URL: $url');
+
       final response = await dio.put(
         url,
         data: updateData,
         options: Options(
           headers: {
             'Authorization': 'Bearer $accessToken',
+            'Content-Type': 'application/json',
           },
         ),
       );
+
+      _logger.i("Building updated successfully: ${response.statusCode}");
+      _logger.d("API Response Data (Update): ${response.data}");
+
+      // Verify the image URL was saved correctly
+      if (response.data is Map && response.data.containsKey('imageURL')) {
+        _logger.i("Confirmed image URL saved to database: ${response.data['imageURL']}");
+      } else {
+        _logger.w("Building updated, but couldn't confirm if image URL was saved");
+      }
 
       return ApiResponse(
         isSuccess: true,
         statusCode: response.statusCode,
         message: 'Building details updated successfully!',
+        data: response.data,
       );
     } on DioException catch (e) {
-      print("DioException in updateBuilding: ${e.response?.data}");
+      _logger.e("DioException in updateBuilding: ${e.message}");
+      if (e.response != null) {
+        _logger.e("Response data: ${e.response?.data}");
+      }
+
       return ApiResponse(
         isSuccess: false,
         statusCode: e.response?.statusCode ?? 500,
-        message: e.response?.data?['error_description'] ?? 'An error occurred',
+        message: e.response?.data?['message'] ??
+            e.response?.data?['error_description'] ??
+            'An error occurred',
       );
     } catch (e, stackTrace) {
-      print("Exception in updateBuilding: $e");
-      print("StackTrace: $stackTrace");
+      _logger.e("Exception in updateBuilding: $e");
+      _logger.e("StackTrace: $stackTrace");
 
       return ApiResponse(
         isSuccess: false,
@@ -115,53 +181,107 @@ class BuildingService {
     required String councilTax,
     required String councilTaxDate,
     required String councilTaxValue,
-    required String image,
+    String? image, // Made optional since we're uploading the file
     required String leaseValue,
     required String leaseDate,
     required String purchaseDate,
     required String purchasePrice,
   }) async {
-    _logger.i(buildingImage.path);
-    print(
-        'Building Details, required String image: $buildingName, $buildingType, $numberOfFloors, $totalArea, $buildingAddress, $buildingCity, , $ownerName, $purposeOfUse, $councilTax, $councilTaxDate, $councilTaxValue, ');
-
-    String? accessToken = await _secureStorage.read(key: 'access_token');
-    if (accessToken == null) {
-      return ApiResponse(
-        isSuccess: false,
-        statusCode: 401,
-        message: 'Unauthorized: No access token found',
-      );
-    }
-
     try {
+      _logger.i("Processing building image: ${buildingImage.path}");
+
+      // Upload the building image first
+      var imageUploadResponse = await uploadBuildingImage(imageFile: buildingImage);
+
+      // If image upload failed, return the error
+      if (!imageUploadResponse.isSuccess) {
+        _logger.e("Failed to upload building image: ${imageUploadResponse.message}");
+        return imageUploadResponse;
+      }
+
+      // Extract the image URL from the response
+      String? imageUrl;
+      if (imageUploadResponse.data is Map) {
+        // Try different possible keys where the URL might be stored
+        imageUrl = imageUploadResponse.data['url'] ??
+            imageUploadResponse.data['imageUrl'] ??
+            imageUploadResponse.data['data']?['url'] ??
+            imageUploadResponse.data['file'] ??
+            imageUploadResponse.data['file_url'] ??
+            imageUploadResponse.data['image_url'];
+
+        // Deep search for URL in nested maps
+        if (imageUrl == null) {
+          imageUrl = _findUrlInMap(imageUploadResponse.data);
+        }
+      }
+
+      // Use the imageUrl field if available
+      // imageUrl = imageUploadResponse.imageUrl ?? imageUrl;
+
+      if (imageUrl == null || imageUrl.isEmpty) {
+        _logger.e("Image upload was successful but no URL was returned");
+        return ApiResponse(
+          isSuccess: false,
+          statusCode: 500,
+          message: 'Image uploaded but URL was not provided by server',
+        );
+      }
+
+      _logger.i("Building image upload successful, URL: $imageUrl");
+
+      String? accessToken = await _secureStorage.read(key: 'access_token');
+      if (accessToken == null) {
+        return ApiResponse(
+          isSuccess: false,
+          statusCode: 401,
+          message: 'Unauthorized: No access token found',
+        );
+      }
+
+      // Create the building data including the image URL
+      final buildingData = {
+        "buildingId": buildingId,
+        "name": buildingName,
+        "buildingType": buildingType,
+        "numberOfFloors": numberOfFloors,
+        "totalArea": totalArea,
+        "address": buildingAddress,
+        "city": buildingCity,
+        "ownerName": ownerName,
+        "purchasePrice": purchasePrice,
+        "purchaseDate": purchaseDate,
+        "imageURL": imageUrl, // Use the uploaded image URL
+        "purposeOfUse": purposeOfUse,
+        "councilTax": councilTax,
+        "councilTaxDate": councilTaxDate,
+        "councilTaxValue": councilTaxValue,
+        "lease_date": leaseDate,
+        "leaseValue": leaseValue,
+      };
+
+      _logger.d("Creating building with data: $buildingData");
+
       final response = await dio.post(
         'https://api.ams.hexalyte.com/asset/assets',
-        data: {
-          "buildingId": buildingId,
-          "name": buildingName,
-          "buildingType": buildingType,
-          "numberOfFloors": numberOfFloors,
-          "totalArea": totalArea,
-          "address": buildingAddress,
-          "city": buildingCity,
-          "ownerName": ownerName,
-          "purchasePrice": purchasePrice,
-          "purchaseDate": purchaseDate,
-          "purposeOfUse": purposeOfUse,
-          "councilTax": councilTax,
-          "councilTaxDate": councilTaxDate,
-          "councilTaxValue": councilTaxValue,
-          "lease_date": leaseDate,
-          "leaseValue": leaseValue,
-          // "imageURL": buildingImage.path.isNotEmpty ?
-        },
+        data: buildingData,
         options: Options(
           headers: {
             'Authorization': 'Bearer $accessToken',
+            'Content-Type': 'application/json',
           },
         ),
       );
+
+      _logger.i("Building created successfully: ${response.statusCode}");
+      _logger.d("API Response Data (Add): ${response.data}");
+
+      // Verify the image URL was saved correctly
+      if (response.data is Map && response.data.containsKey('imageURL')) {
+        _logger.i("Confirmed image URL saved to database: ${response.data['imageURL']}");
+      } else {
+        _logger.w("Building created, but couldn't confirm if image URL was saved");
+      }
 
       return ApiResponse(
         isSuccess: true,
@@ -170,15 +290,21 @@ class BuildingService {
         data: response.data,
       );
     } on DioException catch (e) {
-      print("DioException in addBuilding: ${e.response?.data}");
+      _logger.e("DioException in addBuilding: ${e.message}");
+      if (e.response != null) {
+        _logger.e("Response data: ${e.response?.data}");
+      }
+
       return ApiResponse(
         isSuccess: false,
         statusCode: e.response?.statusCode ?? 500,
-        message: e.response?.data?['error_description'] ?? 'An error occurred',
+        message: e.response?.data?['message'] ??
+            e.response?.data?['error_description'] ??
+            'An error occurred',
       );
     } catch (e, stackTrace) {
-      print("Exception in addBuilding: $e");
-      print("StackTrace: $stackTrace");
+      _logger.e("Exception in addBuilding: $e");
+      _logger.e("StackTrace: $stackTrace");
 
       return ApiResponse(
         isSuccess: false,
@@ -233,7 +359,16 @@ class BuildingService {
         );
       }
 
-      // Verify file signature
+      // Verify file signature with bounds checking
+      if (imageBytes.length < 4) {
+        _logger.e("File too small to verify signature");
+        return ApiResponse(
+          isSuccess: false,
+          statusCode: 400,
+          message: 'Invalid image file: too small',
+        );
+      }
+
       bool isJpeg = imageBytes[0] == 0xFF && imageBytes[1] == 0xD8;
       bool isPng = imageBytes[0] == 0x89 && imageBytes[1] == 0x50 &&
           imageBytes[2] == 0x4E && imageBytes[3] == 0x47;
@@ -248,7 +383,18 @@ class BuildingService {
       }
 
       // Attempt to decode image
-      final decodedImage = img.decodeImage(imageBytes);
+      img.Image? decodedImage;
+      try {
+        decodedImage = img.decodeImage(imageBytes);
+      } catch (e) {
+        _logger.e("Error decoding image: $e");
+        return ApiResponse(
+          isSuccess: false,
+          statusCode: 400,
+          message: 'Unable to process image file',
+        );
+      }
+
       if (decodedImage == null) {
         _logger.e("Unable to decode image file");
         return ApiResponse(
@@ -260,11 +406,11 @@ class BuildingService {
 
       // Optional: Image dimension check
       if (decodedImage.width > 4096 || decodedImage.height > 4096) {
-        _logger.e("Image dimensions too large");
+        _logger.e("Image dimensions too large: ${decodedImage.width}x${decodedImage.height}");
         return ApiResponse(
           isSuccess: false,
           statusCode: 400,
-          message: 'Image dimensions exceed maximum allowed size',
+          message: 'Image dimensions exceed maximum allowed size (max: 4096x4096)',
         );
       }
 
@@ -296,51 +442,148 @@ class BuildingService {
         "image": multipartFile,
       });
 
-      // Perform upload
-      final response = await dio.post(
-        'https://api.ams.hexalyte.com/storage',
-        data: formData,
-        options: Options(
-          headers: {
-            'Authorization': 'Bearer $accessToken',
-            'Content-Type': 'multipart/form-data',
-          },
-        ),
-      );
+      // Perform upload with retry logic
+      Response? response;
+      int retries = 0;
+      const maxRetries = 2;
 
-      // Handle response
-      if (response.statusCode == 200) {
-        return ApiResponse(
-          isSuccess: true,
-          data: response.data,
-          statusCode: response.statusCode,
-          message: 'Building image uploaded successfully!',
+      while (retries <= maxRetries) {
+        try {
+          _logger.d("Uploading building image (attempt ${retries + 1})...");
 
-        );
+          response = await dio.post(
+            'https://api.ams.hexalyte.com/storage',
+            data: formData,
+            options: Options(
+              headers: {
+                'Authorization': 'Bearer $accessToken',
+                'Content-Type': 'multipart/form-data',
+              },
+            ),
+          );
+
+          // If we get here, the request was completed
+          break;
+        } on DioException catch (e) {
+          if (e.type == DioExceptionType.connectionTimeout ||
+              e.type == DioExceptionType.receiveTimeout ||
+              e.type == DioExceptionType.sendTimeout ||
+              e.type == DioExceptionType.connectionError) {
+
+            if (retries < maxRetries) {
+              retries++;
+              _logger.w("Connection issue during upload, retrying (${retries}/${maxRetries})...");
+              await Future.delayed(Duration(seconds: 2 * retries)); // Exponential backoff
+              continue;
+            }
+          }
+          // If not a retryable error or we've exhausted retries, rethrow
+          rethrow;
+        }
+      }
+
+      // Process response
+      if (response != null) {
+        final statusCode = response.statusCode ?? 500;
+        final responseData = response.data;
+
+        _logger.d("Upload response: [Status: $statusCode] $responseData");
+
+        if (statusCode >= 200 && statusCode < 300) {
+          _logger.i("Building image uploaded successfully");
+
+          // Extract URL from response
+          String? imageUrl;
+          if (responseData is Map) {
+            // Try different possible keys where the URL might be stored
+            imageUrl = responseData['url'] ??
+                responseData['imageUrl'] ??
+                responseData['data']?['url'] ??
+                responseData['file'] ??
+                responseData['file_url'] ??
+                responseData['image_url'];
+
+            // Deep search for URL in nested maps
+            if (imageUrl == null) {
+              imageUrl = _findUrlInMap(responseData);
+            }
+          }
+
+          _logger.i("Image URL extracted: $imageUrl");
+
+          return ApiResponse(
+            isSuccess: true,
+            data: responseData,
+            statusCode: statusCode,
+            message: 'Building image uploaded successfully!',
+            // imageUrl: imageUrl,
+          );
+        } else {
+          // Handle error response
+          String errorMessage = 'Failed to upload image';
+
+          if (responseData is Map) {
+            errorMessage = responseData['message'] ??
+                responseData['error'] ??
+                responseData['error_description'] ??
+                errorMessage;
+          }
+
+          _logger.e("Upload failed: $errorMessage [Status: $statusCode]");
+
+          return ApiResponse(
+            isSuccess: false,
+            statusCode: statusCode,
+            message: errorMessage,
+          );
+        }
       } else {
-        _logger.e("Upload failed with status code: ${response.statusCode}");
-        _logger.e("Response body: ${response.data}");
+        // This should not happen due to our retry logic, but handle it anyway
+        _logger.e("No response received after multiple attempts");
         return ApiResponse(
           isSuccess: false,
-          statusCode: response.statusCode ?? 400,
-          message: response.data?['message']
-              ?? response.data?['error_description']
-              ?? 'Building image upload failed',
+          statusCode: 500,
+          message: 'Failed to receive response from server',
         );
       }
     } on DioException catch (e) {
       _logger.e("DioException in uploadBuildingImage: ${e.message}");
       _logger.e("DioException type: ${e.type}");
-      _logger.e("DioException response: ${e.response?.data}");
-      _logger.e("DioException error: ${e.error}");
+      if (e.response != null) {
+        _logger.e("DioException response: ${e.response?.data}");
+      }
+
+      // Provide user-friendly error messages based on error type
+      String errorMessage;
+      switch (e.type) {
+        case DioExceptionType.connectionTimeout:
+        case DioExceptionType.sendTimeout:
+        case DioExceptionType.receiveTimeout:
+          errorMessage = 'Connection timed out. Please check your internet connection and try again.';
+          break;
+        case DioExceptionType.badResponse:
+          String? serverMessage;
+          if (e.response?.data is Map) {
+            serverMessage = e.response?.data['message'] ??
+                e.response?.data['error'] ??
+                e.response?.data['error_description'];
+          }
+          errorMessage = serverMessage ?? 'Server returned an error response';
+          break;
+        case DioExceptionType.connectionError:
+          errorMessage = 'Cannot connect to the server. Please check your internet connection.';
+          break;
+        case DioExceptionType.cancel:
+          errorMessage = 'Upload was cancelled';
+          break;
+        default:
+          errorMessage = 'Network error: ${e.message ?? 'Unknown error'}';
+      }
 
       return ApiResponse(
         isSuccess: false,
         statusCode: e.response?.statusCode ?? 500,
-        message: e.response?.data?['message']
-            ?? e.response?.data?['error_description']
-            ?? e.message
-            ?? 'An error occurred',
+        message: errorMessage,
       );
     } catch (e, stackTrace) {
       _logger.e("Exception in uploadBuildingImage: $e");
@@ -349,81 +592,194 @@ class BuildingService {
       return ApiResponse(
         isSuccess: false,
         statusCode: 500,
-        message: 'Unexpected error occurred',
+        message: 'Unexpected error occurred during upload',
       );
     }
   }
-  deleteBuilding({required String buildingId}) {
 
-    Future<ApiResponse> deleteBuilding({
-      required String buildingId,
-    }) async {
-      try {
-        // Retrieve the stored token
-        String? accessToken = await _secureStorage.read(key: 'access_token');
-        if (accessToken == null) {
-          return ApiResponse(
+  /// **Delete Building**
+  Future<ApiResponse> deleteBuilding({
+    required String buildingId,
+  }) async {
+    try {
+      _logger.i("Attempting to delete building with ID: $buildingId");
+
+      // Retrieve the access token
+      String? accessToken = await _secureStorage.read(key: 'access_token');
+
+      if (accessToken == null || accessToken.isEmpty) {
+        _logger.e("No access token available");
+        return ApiResponse(
             isSuccess: false,
             statusCode: 401,
-            message: 'Unauthorized: No access token found',
+            message: "Unauthorized: No token found"
+        );
+      }
+
+      var url = "https://api.ams.hexalyte.com/asset/assets/$buildingId";
+      _logger.i('Deleting building with URL: $url');
+
+      // Configure request options with timeout
+      final options = Options(
+        headers: {
+          'Authorization': 'Bearer $accessToken',
+        },
+        validateStatus: (status) => status != null && status >= 200 && status < 600,
+        sendTimeout: const Duration(seconds: 30),
+        receiveTimeout: const Duration(seconds: 30),
+      );
+
+      // Perform the delete operation with retry mechanism
+      Response? response;
+      int retries = 0;
+      const maxRetries = 2;
+
+      while (retries <= maxRetries) {
+        try {
+          _logger.d("Deleting building (attempt ${retries + 1})...");
+
+          response = await dio.delete(
+            url,
+            options: options,
+          );
+
+          // If we get here, the request was completed
+          break;
+        } on DioException catch (e) {
+          if (e.type == DioExceptionType.connectionTimeout ||
+              e.type == DioExceptionType.receiveTimeout ||
+              e.type == DioExceptionType.sendTimeout ||
+              e.type == DioExceptionType.connectionError) {
+
+            if (retries < maxRetries) {
+              retries++;
+              _logger.w("Connection issue during deletion, retrying (${retries}/${maxRetries})...");
+              await Future.delayed(Duration(seconds: 2 * retries)); // Exponential backoff
+              continue;
+            }
+          }
+          // If not a retryable error or we've exhausted retries, rethrow
+          rethrow;
+        }
+      }
+
+      // Process the response
+      if (response != null) {
+        final statusCode = response.statusCode ?? 500;
+        final responseData = response.data;
+
+        _logger.d("Delete response: [Status: $statusCode] $responseData");
+
+        if (statusCode >= 200 && statusCode < 300) {
+          _logger.i("Building deleted successfully");
+
+          return ApiResponse(
+            isSuccess: true,
+            statusCode: statusCode,
+            message: 'Building deleted successfully!',
+            data: responseData,
+          );
+        } else {
+          // Handle error response
+          String errorMessage = 'Failed to delete building';
+
+          if (responseData is Map) {
+            errorMessage = responseData['message'] ??
+                responseData['error'] ??
+                responseData['error_description'] ??
+                errorMessage;
+          }
+
+          _logger.e("Deletion failed: $errorMessage [Status: $statusCode]");
+
+          return ApiResponse(
+            isSuccess: false,
+            statusCode: statusCode,
+            message: errorMessage,
           );
         }
-
-        var url = "https://api.ams.hexalyte.com/asset/assets/$buildingId";
-        print('Deleting building with URL: $url');
-
-        final response = await dio.delete(
-          url,
-          options: Options(
-            headers: {
-              'Authorization': 'Bearer $accessToken',
-            },
-          ),
-        );
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-        return ApiResponse(
-          isSuccess: true,
-          statusCode: response.statusCode,
-          message: 'Building deleted successfully!',
-        );
-      } on DioException catch (e) {
-        _logger.e("DioException in deleteBuilding: ${e.response?.data}");
-        return ApiResponse(
-          isSuccess: false,
-          statusCode: e.response?.statusCode ?? 500,
-          message: e.response?.data?['error_description'] ?? 'An error occurred while deleting the building',
-        );
-      } catch (e, stackTrace) {
-        _logger.e("Exception in deleteBuilding: $e");
-        _logger.e("StackTrace: $stackTrace");
-
+      } else {
+        _logger.e("No response received after multiple attempts");
         return ApiResponse(
           isSuccess: false,
           statusCode: 500,
-          message: 'Unexpected error occurred during building deletion',
+          message: 'Failed to receive response from server',
         );
       }
+    } on DioException catch (e) {
+      _logger.e("DioException in deleteBuilding: ${e.message}");
+      _logger.e("DioException type: ${e.type}");
+      if (e.response != null) {
+        _logger.e("DioException response: ${e.response?.data}");
+      }
+
+      // Provide user-friendly error messages based on error type
+      String errorMessage;
+      switch (e.type) {
+        case DioExceptionType.connectionTimeout:
+        case DioExceptionType.sendTimeout:
+        case DioExceptionType.receiveTimeout:
+          errorMessage = 'Connection timed out. Please check your internet connection and try again.';
+          break;
+        case DioExceptionType.badResponse:
+          String? serverMessage;
+          if (e.response?.data is Map) {
+            serverMessage = e.response?.data['message'] ??
+                e.response?.data['error'] ??
+                e.response?.data['error_description'];
+          }
+          errorMessage = serverMessage ?? 'Server returned an error response';
+          break;
+        case DioExceptionType.connectionError:
+          errorMessage = 'Cannot connect to the server. Please check your internet connection.';
+          break;
+        case DioExceptionType.cancel:
+          errorMessage = 'Request was cancelled';
+          break;
+        default:
+          errorMessage = 'Network error: ${e.message ?? 'Unknown error'}';
+      }
+
+      return ApiResponse(
+        isSuccess: false,
+        statusCode: e.response?.statusCode ?? 500,
+        message: errorMessage,
+      );
+    } catch (e, stackTrace) {
+      _logger.e("Exception in deleteBuilding: $e");
+      _logger.e("StackTrace: $stackTrace");
+
+      return ApiResponse(
+        isSuccess: false,
+        statusCode: 500,
+        message: 'Unexpected error occurred during deletion',
+      );
     }
   }
+
+  // Helper method to search deeply for a URL in a map structure
+  String? _findUrlInMap(Map<dynamic, dynamic> map) {
+    for (var value in map.values) {
+      if (value is String &&
+          (value.startsWith('http://') || value.startsWith('https://')) &&
+          (value.endsWith('.jpg') || value.endsWith('.jpeg') || value.endsWith('.png'))) {
+        return value;
+      } else if (value is Map) {
+        final nestedResult = _findUrlInMap(value);
+        if (nestedResult != null) {
+          return nestedResult;
+        }
+      } else if (value is List) {
+        for (var item in value) {
+          if (item is Map) {
+            final nestedResult = _findUrlInMap(item);
+            if (nestedResult != null) {
+              return nestedResult;
+            }
+          }
+        }
+      }
+    }
+    return null;
+  }
 }
-
-
-

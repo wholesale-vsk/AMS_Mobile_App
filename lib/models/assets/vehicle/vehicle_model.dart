@@ -10,7 +10,7 @@ class Vehicle {
   final String motDate;
   final double mileage;
   final String insuranceDate;
-  final String vehicleImage;
+  String? imageURL; // Changed to nullable and mutable
   final String createdBy;
   final String createdDate;
   final String lastModifiedBy;
@@ -30,7 +30,7 @@ class Vehicle {
     required this.purchaseDate,
     required this.motDate,
     required this.insuranceDate,
-    required this.vehicleImage,
+    this.imageURL,
     required this.createdBy,
     required this.createdDate,
     required this.lastModifiedBy,
@@ -71,15 +71,15 @@ class Vehicle {
       purchaseDate: json['purchaseDate'] ?? 'N/A',
       motDate: json['motDate'] ?? 'N/A',
       insuranceDate: json['insuranceDate'] ?? 'N/A',
-      vehicleImage: json['imageURL'] ?? '',
+      imageURL: json['imageURL'], // Keep as nullable
       createdBy: json['createdBy'] ?? 'Unknown',
       createdDate: json['createdDate'] ?? 'N/A',
       lastModifiedBy: json['lastModifiedBy'] ?? 'Unknown',
       lastModifiedDate: json['lastModifiedDate'] ?? 'N/A',
       motExpiredDate: json['motExpiredDate'] ?? 'N/A',
       links: json['_links']?['self']?['href'] ?? 'N/A',
-      mileage: (json['mileage'] as num?)?.toDouble() ?? 0.0, // Fixed the field name from 'milage' to 'mileage'
-      id: json['id'] ?? extractedId, // Use the provided ID or extract from links
+      mileage: (json['mileage'] as num?)?.toDouble() ?? 0.0,
+      id: json['id'] ?? extractedId,
     );
   }
 
@@ -96,7 +96,7 @@ class Vehicle {
       'purchaseDate': purchaseDate,
       'motDate': motDate,
       'insuranceDate': insuranceDate,
-      'imageURL': vehicleImage,
+      'imageURL': imageURL,
       'createdBy': createdBy,
       'createdDate': createdDate,
       'lastModifiedBy': lastModifiedBy,

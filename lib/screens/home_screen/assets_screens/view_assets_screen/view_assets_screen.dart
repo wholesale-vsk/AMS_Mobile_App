@@ -284,7 +284,7 @@ class _AssetsViewScreenState extends State<AssetsViewScreen> {
               children: [
                 ClipRRect(
                   borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
-                  child: _buildAssetImage(asset['imageUrl'] ?? asset['imageURL']),
+                  child: _buildAssetImage(asset['imageURL'] ?? asset['imageURL']),
                 ),
                 // Category tag
                 Positioned(
