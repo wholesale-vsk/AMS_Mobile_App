@@ -235,7 +235,7 @@ class AssetController extends GetxController {
         "leaseValue": b.leaseValue.toString() ?? "N/A", // Handle null
         "lease_date": b.leaseDate.toString() ?? "N/A",
         "buildingId": b.link != null? Uri.parse(b.link).pathSegments.last : "",
-        "imageURL": b.buildingImage ?? "",
+        "imageURL": b.imageURL ?? "", // Updated from vehicleImage to imageURL
       }).toList();
 
       _logger.i("🏗 Buildings Loaded: ${buildingAssets.length}");

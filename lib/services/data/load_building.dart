@@ -1,14 +1,17 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:logger/logger.dart';
 import '../../models/assets/building/building_model.dart';
 
-class LoadBuildingService  {
+class LoadBuildingService {
   final FlutterSecureStorage _secureStorage;
   final Dio _dio;
+  final Logger _logger = Logger();
+  final String _imageBaseUrl = "http://149.102.154.118:9000";
 
-  LoadBuildingService ({FlutterSecureStorage? secureStorage, Dio? dio})
-      : _secureStorage = secureStorage ?? FlutterSecureStorage(),
+  LoadBuildingService({FlutterSecureStorage? secureStorage, Dio? dio})
+      : _secureStorage = secureStorage ?? const FlutterSecureStorage(),
         _dio = dio ?? Dio(BaseOptions(
           baseUrl: "https://api.ams.hexalyte.com", // ✅ Ensure no trailing slash
           headers: {'Content-Type': 'application/json'},
@@ -18,18 +21,16 @@ class LoadBuildingService  {
     // ✅ Enable debugging with Dio Interceptors
     _dio.interceptors.add(InterceptorsWrapper(
       onRequest: (options, handler) {
-        print("📤 Request: ${options.method} ${options.baseUrl}${options.path}");
-        print("🔑 Headers: ${options.headers}");
+        _logger.i("📤 Request: ${options.method} ${options.baseUrl}${options.path}");
+        _logger.d("🔑 Headers: ${options.headers}");
         handler.next(options);
       },
       onResponse: (response, handler) {
-        if (kDebugMode) {
-          print("✅ Response: ${response.statusCode}");
-        }
+        _logger.i("✅ Response: ${response.statusCode}");
         handler.next(response);
       },
       onError: (DioException e, handler) {
-        print("❌ Error: ${e.response?.statusCode} - ${e.message}");
+        _logger.e("❌ Error: ${e.response?.statusCode} - ${e.message}");
         handler.next(e);
       },
     ));
@@ -39,12 +40,13 @@ class LoadBuildingService  {
   /// - `page` = current page number (default: 1)
   /// - `size` = number of buildings per page (default: 20)
   Future<Map<String, dynamic>> fetchBuildings({int page = 1, int size = 100}) async {
-    print('🏗 Fetching Buildings - Page: $page, Size: $size');
+    _logger.i('🏗 Fetching Buildings - Page: $page, Size: $size');
 
     try {
       final String? accessToken = await _secureStorage.read(key: 'access_token');
 
       if (accessToken == null) {
+        _logger.e("❌ Access token missing. Please log in again.");
         throw Exception("❌ Access token missing. Please log in again.");
       }
 
@@ -66,10 +68,10 @@ class LoadBuildingService  {
         final int totalElements = int.tryParse(response.data['page']?['totalElements']?.toString() ?? "0") ?? 0;
         final int totalPages = int.tryParse(response.data['page']?['totalPages']?.toString() ?? "1") ?? 1;
 
-        print("📌 Total Buildings: $totalElements, Total Pages: $totalPages");
+        _logger.i("📌 Total Buildings: $totalElements, Total Pages: $totalPages");
 
         if (buildingsJson.isEmpty) {
-          print("⚠️ No buildings found on this page.");
+          _logger.w("⚠️ No buildings found on this page.");
           return {
             'totalElements': totalElements,
             'totalPages': totalPages,
@@ -78,8 +80,18 @@ class LoadBuildingService  {
           };
         }
 
-        // ✅ Convert JSON to List<Building>
-        List<Building> buildings = buildingsJson.map((json) => Building.fromJson(json)).toList();
+        // ✅ Convert JSON to List<Building> and process image URLs
+        List<Building> buildings = await Future.wait(buildingsJson.map((json) async {
+          Building building = Building.fromJson(json);
+
+          // Process the image URL if it exists
+          if (building.imageURL != null && building.imageURL!.isNotEmpty) {
+            building.imageURL = await getAuthenticatedImageUrl(building.imageURL);
+            _logger.d("🖼️ Processed building image URL: ${building.imageURL}");
+          }
+
+          return building;
+        }));
 
         return {
           'totalElements': totalElements,
@@ -88,7 +100,7 @@ class LoadBuildingService  {
           'buildings': buildings
         };
       } else {
-        print("❌ API Error: ${response.statusCode}, Response: ${response.data}");
+        _logger.e("❌ API Error: ${response.statusCode}, Response: ${response.data}");
         return {
           'totalElements': 0,
           'totalPages': 0,
@@ -99,26 +111,143 @@ class LoadBuildingService  {
     } on DioException catch (dioError) {
       if (dioError.type == DioExceptionType.connectionTimeout ||
           dioError.type == DioExceptionType.receiveTimeout) {
-        print("⏳ Timeout Error: ${dioError.message}");
+        _logger.e("⏳ Timeout Error: ${dioError.message}");
       } else if (dioError.type == DioExceptionType.badResponse) {
-        print("❌ API Response Error: ${dioError.response?.statusCode} - ${dioError.response?.data}");
+        _logger.e("❌ API Response Error: ${dioError.response?.statusCode} - ${dioError.response?.data}");
       } else {
-        print("❌ DioException: ${dioError.message}");
+        _logger.e("❌ DioException: ${dioError.message}");
       }
       return {
         'totalElements': 0,
         'totalPages': 0,
         'currentPage': page,
-        'buildings': []
+        'buildings': [],
+        'error': dioError.message
       };
     } catch (e) {
-      print("❌ Unexpected Error: $e");
+      _logger.e("❌ Unexpected Error: $e");
       return {
         'totalElements': 0,
         'totalPages': 0,
         'currentPage': page,
-        'buildings': []
+        'buildings': [],
+        'error': e.toString()
       };
     }
+  }
+
+  /// Process the image URL to ensure it's a full URL
+  String _processImageUrl(String imageUrl) {
+    // If it's already a full URL, return it as is
+    if (imageUrl.startsWith('http://') || imageUrl.startsWith('https://')) {
+      return imageUrl;
+    }
+
+    // Check if this is a local cache path mistakenly used as a URL
+    if (imageUrl.contains('data/user/0/com.example.hexalyte_ams/cache')) {
+      _logger.w("⚠️ Detected local cache path in URL: $imageUrl");
+      // Extract the image ID if possible
+      try {
+        final filename = imageUrl.split('/').last;
+        // If it's a scaled image, try to get the original ID
+        if (filename.startsWith('scaled_')) {
+          final imageId = filename.replaceAll('scaled_', '').replaceAll('.jpg', '');
+          return '$_imageBaseUrl/images/$imageId';
+        }
+      } catch (e) {
+        _logger.e("❌ Error processing cache path: $e");
+      }
+      // If we can't extract an ID, return empty to use default image
+      return '';
+    }
+
+    // Remove leading slash if present
+    final cleanPath = imageUrl.startsWith('/') ? imageUrl.substring(1) : imageUrl;
+
+    // Combine with base URL
+    return '$_imageBaseUrl/$cleanPath';
+  }
+
+  /// Get the full image URL with authentication if needed
+  Future<String?> getAuthenticatedImageUrl(String? imagePath) async {
+    if (imagePath == null || imagePath.isEmpty) {
+      return ''; // Return empty string for null or empty paths
+    }
+
+    // Check if this is a local cache path mistakenly used as a URL
+    if (imagePath.contains('data/user/0/com.example.hexalyte_ams/cache')) {
+      _logger.w("⚠️ Detected local cache path in URL: $imagePath");
+      // Extract the image ID if possible
+      try {
+        final filename = imagePath.split('/').last;
+        // If it's a scaled image, try to get the original ID
+        if (filename.startsWith('scaled_')) {
+          final imageId = filename.replaceAll('scaled_', '').replaceAll('.jpg', '');
+          imagePath = 'images/$imageId';
+        } else {
+          // Can't process this path properly
+          return '';
+        }
+      } catch (e) {
+        _logger.e("❌ Error processing cache path: $e");
+        return '';
+      }
+    }
+
+    // NEW CHECK: If it's just a path starting with /images, ensure we add the base URL
+    if (imagePath.startsWith('/images/') || imagePath == '/images') {
+      // Remove leading slash and add base URL
+      final cleanPath = imagePath.startsWith('/') ? imagePath.substring(1) : imagePath;
+      imagePath = '$_imageBaseUrl/$cleanPath';
+    }
+
+    // If it's already a full URL from our server, check if it has authentication
+    if (imagePath.startsWith('http://') || imagePath.startsWith('https://')) {
+      if (imagePath.contains(_imageBaseUrl) && !imagePath.contains('token=')) {
+        // It's our server but missing authentication - extract the path
+        try {
+          final uri = Uri.parse(imagePath);
+          imagePath = uri.path.startsWith('/') ? uri.path.substring(1) : uri.path;
+        } catch (e) {
+          _logger.e("❌ Error parsing image URL: $e");
+          return imagePath; // Return as is if we can't parse it
+        }
+      } else if (!imagePath.contains(_imageBaseUrl)) {
+        // It's from another server, return as is
+        return imagePath;
+      }
+    }
+
+    // For simple paths without protocol, add the base URL
+    if (!imagePath.startsWith('http://') && !imagePath.startsWith('https://')) {
+      // Remove leading slash if present
+      final cleanPath = imagePath.startsWith('/') ? imagePath.substring(1) : imagePath;
+
+      try {
+        // Get access token if needed for authenticated images
+        String? accessToken = await _secureStorage.read(key: 'access_token');
+
+        // Build the full URL (with token if available)
+        if (accessToken != null && accessToken.isNotEmpty) {
+          // For authenticated image access
+          return '$_imageBaseUrl/$cleanPath?token=$accessToken';
+        } else {
+          // For public image access
+          return '$_imageBaseUrl/$cleanPath';
+        }
+      } catch (e) {
+        _logger.e("❌ Error getting authenticated image URL: $e");
+        // Return the basic URL if there's an error
+        return '$_imageBaseUrl/$cleanPath';
+      }
+    }
+
+    // Already a full URL with authentication
+    return imagePath;
+  }
+
+  /// Get current access token - helper method for UI components
+  Future<String?> getAccessToken() async {
+    return await _secureStorage.read(key: 'access_token');
   }
 }
