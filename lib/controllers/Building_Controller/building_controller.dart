@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:hexalyte_ams/services/data/building_service.dart';
@@ -49,11 +51,11 @@ class BuildingController extends GetxController {
         totalArea: totalAreaController.text.trim(),
         buildingAddress: buildingAddressController.text.trim(),
         buildingCity: buildingCityController.text.trim(),
-        buildingProvince: buildingProvinceController.text.trim(),
+
         ownerName: ownerNameController.text.trim(),
         purchasePrice: purchasePriceController.text.trim(),
         purchaseDate: purchaseDateController.text.trim(),
-        buildingImage: getSelectedImagePath(buildingImageController),
+        buildingImage:File(buildingImageController.text.trim()),
         purposeOfUse: purposeOfUseController.text.trim(),
         councilTax: councilTaxController.text.trim(),
         councilTaxDate: councilTaxDateController.text.trim(),
@@ -95,17 +97,16 @@ class BuildingController extends GetxController {
         totalArea: totalAreaController.text.trim(),
         buildingAddress: buildingAddressController.text.trim(),
         buildingCity: buildingCityController.text.trim(),
-        buildingProvince: buildingProvinceController.text.trim(),
+
         ownerName: ownerNameController.text.trim(),
         purchasePrice: purchasePriceController.text.trim(),
         purchaseDate: purchaseDateController.text.trim(),
-        buildingImage: getSelectedImagePath(buildingImageController),
         purposeOfUse: purposeOfUseController.text.trim(),
-        councilTax: councilTaxController.text.trim(),
         councilTaxDate: councilTaxDateController.text.trim(),
         councilTaxValue: councilTaxValueController.text.trim(),
         leaseDate: leaseDateController.text.trim(),
         leaseValue: leaseValueController.text.trim(),
+        buildingImage: File(buildingImageController.text.trim()),
       );
       _logger.i('Response for test: $response');
 

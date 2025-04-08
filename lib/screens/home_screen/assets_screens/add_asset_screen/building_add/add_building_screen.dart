@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:logger/logger.dart';
 import 'dart:io';
 
 import '../../../../../controllers/Building_Controller/building_controller.dart';
@@ -9,7 +10,7 @@ import 'package:hexalyte_ams/utils/widgets/drop_down_field/custom_drop_down.dart
 
 class AddBuildingScreen extends StatelessWidget {
   final BuildingController buildingController = Get.put(BuildingController());
-
+  final Logger _logger = Logger();
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -412,7 +413,6 @@ class AddBuildingScreen extends StatelessWidget {
       ],
     ));
   }
-
   Future<void> _getImage(ImageSource source) async {
     final picker = ImagePicker();
     final pickedFile = await picker.pickImage(
@@ -423,7 +423,21 @@ class AddBuildingScreen extends StatelessWidget {
     );
 
     if (pickedFile != null) {
-      buildingController.buildingImageController.text = pickedFile.path;
+      final String extension = pickedFile.path
+          .split('.')
+          .last
+          .toLowerCase();
+
+      if (extension == 'png' || extension == 'jpg' || extension == 'jpeg') {
+        // Accept both PNG and JPEG formats
+        _logger.i("Selected Image: ${pickedFile.path}");
+        buildingController.buildingImageController.text = pickedFile.path;
+      } else {
+        // Inform user if an unsupported format is selected
+        _logger.w("Unsupported file format: ${pickedFile.path}");
+        Get.snackbar('Format Error', 'Please select a PNG or JPEG image');
+      }
     }
   }
+
 }
