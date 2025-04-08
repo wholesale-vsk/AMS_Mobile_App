@@ -15,7 +15,7 @@ class Building {
   final String link;
   final double leaseValue;
   final double purchasePrice;
-  final String buildingImage;
+  String? imageURL; // Changed to nullable and mutable
 
   final DateTime? constructionDate;
 
@@ -39,7 +39,7 @@ class Building {
     required this.link,
 
     this.constructionDate,
-    required this.buildingImage,
+    this.imageURL, // Add as optional parameter
   });
 
   factory Building.fromJson(Map<String, dynamic>? json) {
@@ -65,7 +65,7 @@ class Building {
       purposeOfUse: json['purposeOfUse']?.toString() ?? 'Unknown',
       purchasePrice: _parseDouble(json['purchasePrice']),
       link: json['_links']['self']['href'] ?? 'N/A',
-      buildingImage: json['imageURL'] ?? '', // ✅ If API uses lowercase "imageUrl"
+      imageURL: json['imageURL'] is String ? json['imageURL'] : "",
 
     );
   }

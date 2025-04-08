@@ -122,7 +122,7 @@ class _BuildingUpdatePageState extends State<BuildingUpdatePage>
       'leaseValue': building.leaseValue?.toString(),
       'purchaseDate': building.purchaseDate,
       'purchasePrice': building.purchasePrice?.toString(),
-      'buildingImage': building.buildingImage,
+
     };
   }
 
