@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:permission_handler/permission_handler.dart';
+import '../../../services/auth/auth_service.dart';
 import '../../../utils/theme/app_theme_management.dart';
 import '../../../utils/theme/responsive_size.dart';
 import '../home_screen.dart';
@@ -10,10 +12,47 @@ class AppSettings extends StatelessWidget {
   final RxBool enableLocationServices = true.obs;
   final RxBool shareDataWithThirdParties = false.obs;
   final RxBool profileVisibility = true.obs;
+  final AuthService _authService = Get.find<AuthService>();
 
   AppSettings({Key? key})
       : themeManager = Get.find<AppThemeManager>(),
         super(key: key);
+
+  // Location Services Toggle Handler
+  Future<bool> _handleLocationServicesToggle(bool currentValue) async {
+    if (!currentValue) {
+      // When turning on location services
+      var status = await Permission.location.request();
+
+      if (status.isGranted) {
+        // Permission granted
+        Get.snackbar(
+          'Location Services',
+          'Location access granted',
+          snackPosition: SnackPosition.BOTTOM,
+        );
+        return true;
+      } else {
+        // Permission denied
+        Get.snackbar(
+          'Location Services',
+          'Location permission denied',
+          snackPosition: SnackPosition.BOTTOM,
+          backgroundColor: Colors.red,
+          colorText: Colors.white,
+        );
+        return false;
+      }
+    } else {
+      // When turning off location services
+      Get.snackbar(
+        'Location Services',
+        'Location services disabled',
+        snackPosition: SnackPosition.BOTTOM,
+      );
+      return false;
+    }
+  }
 
   // Logout Function
   void logout() {
@@ -28,9 +67,23 @@ class AppSettings extends StatelessWidget {
             child: const Text('Cancel'),
           ),
           TextButton(
-            onPressed: () {
+            onPressed: () async {
+              // Close the dialog
               Get.back();
-              Get.offAllNamed('/login');
+
+              try {
+                // Call the logout method from AuthService
+                await _authService.logout();
+              } catch (e) {
+                // Handle any logout errors
+                Get.snackbar(
+                  'Logout Error',
+                  'Failed to logout. Please try again.',
+                  snackPosition: SnackPosition.BOTTOM,
+                  backgroundColor: Colors.red,
+                  colorText: Colors.white,
+                );
+              }
             },
             child: const Text('Logout', style: TextStyle(color: Colors.red)),
           ),
@@ -108,7 +161,6 @@ class AppSettings extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-
             SizedBox(height: ResponsiveSize.getHeight(size: 20)),
 
             _buildSectionWithIcon(
@@ -134,6 +186,7 @@ class AppSettings extends StatelessWidget {
               description: 'Allow app to access your location',
               value: enableLocationServices,
               isDarkMode: isDarkMode,
+              onToggle: _handleLocationServicesToggle,
             ),
             _buildSwitchSettingRounded(
               icon: Icons.share_outlined,
@@ -150,20 +203,6 @@ class AppSettings extends StatelessWidget {
               isDarkMode: isDarkMode,
             ),
 
-            // SizedBox(height: ResponsiveSize.getHeight(size: 20)),
-            // _buildSectionWithIcon(
-            //   'Support',
-            //   Icons.support_agent_outlined,
-            // ),
-            // _buildActionCard(
-            //   icon: Icons.contact_support_outlined,
-            //   label: 'Contact Support',
-            //   onTap: () {
-            //     // Open support page
-            //     Get.toNamed('/support');
-            //   },
-            //   isDarkMode: isDarkMode,
-            // ),
             _buildActionCard(
               icon: Icons.info_outline,
               label: 'About',
@@ -177,7 +216,7 @@ class AppSettings extends StatelessWidget {
                       children: [
                         Image.asset('assets/logo.png', height: 80),
                         const SizedBox(height: 16),
-                        const Text('App Version 1.0.0'),
+                        const Text('App Version 1.1.0'),
                         const SizedBox(height: 8),
                         const Text('© 2025 Hexalyte'),
                       ],
@@ -217,13 +256,18 @@ class AppSettings extends StatelessWidget {
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Icon(Icons.logout, size: 20),
+                const Icon(
+                    Icons.logout,
+                    size: 20,
+                    color: Colors.white // Ensures visibility on red background
+                ),
                 const SizedBox(width: 8),
                 const Text(
                   'Logout',
                   style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.white // Ensures visibility on red background
                   ),
                 ),
               ],
@@ -233,70 +277,6 @@ class AppSettings extends StatelessWidget {
       ),
     );
   }
-
-  // // Profile Section
-  // Widget _buildProfileSection({required bool isDarkMode}) {
-  //   return Container(
-  //     padding: EdgeInsets.all(ResponsiveSize.getHeight(size: 16)),
-  //     decoration: BoxDecoration(
-  //       color: isDarkMode
-  //           ? const Color(0xFF2A2A2A)
-  //           : Colors.white,
-  //       borderRadius: BorderRadius.circular(20),
-  //       boxShadow: [
-  //         BoxShadow(
-  //           color: Colors.black.withOpacity(0.05),
-  //           blurRadius: 10,
-  //           offset: const Offset(0, 4),
-  //         ),
-  //       ],
-  //     ),
-  //     child: Row(
-  //       children: [
-  //         const CircleAvatar(
-  //           radius: 32,
-  //           backgroundImage: AssetImage('assets/profile_avatar.png'),
-  //         ),
-  //         const SizedBox(width: 16),
-  //         Expanded(
-  //           child: Column(
-  //             crossAxisAlignment: CrossAxisAlignment.start,
-  //             children: [
-  //               Text(
-  //                 'John Doe',
-  //                 style: TextStyle(
-  //                   fontSize: 18,
-  //                   fontWeight: FontWeight.bold,
-  //                   color: themeManager.textColor,
-  //                 ),
-  //               ),
-  //               const SizedBox(height: 4),
-  //               Text(
-  //                 'john.doe@example.com',
-  //                 style: TextStyle(
-  //                   fontSize: 14,
-  //                   color: isDarkMode
-  //                       ? Colors.white70
-  //                       : Colors.black54,
-  //                 ),
-  //               ),
-  //             ],
-  //           ),
-  //         ),
-  //         IconButton(
-  //           icon: Icon(
-  //             Icons.edit_outlined,
-  //             color: themeManager.primaryColor,
-  //           ),
-  //           onPressed: () {
-  //             // Open profile edit screen
-  //             Get.toNamed('/profile/edit');
-  //           },
-  //         ),
-  //       ],
-  //     ),
-  //   );
-  // }
 
   // Section Title with Icon
   Widget _buildSectionWithIcon(String title, IconData iconData) {
@@ -333,6 +313,7 @@ class AppSettings extends StatelessWidget {
     required String description,
     required RxBool value,
     required bool isDarkMode,
+    Future<bool> Function(bool)? onToggle,
   }) {
     return Container(
       margin: EdgeInsets.only(bottom: ResponsiveSize.getHeight(size: 8)),
@@ -397,7 +378,16 @@ class AppSettings extends StatelessWidget {
             Obx(() {
               return Switch.adaptive(
                 value: value.value,
-                onChanged: (bool newValue) => value.value = newValue,
+                onChanged: (bool newValue) async {
+                  // Check if a custom toggle handler is provided
+                  if (onToggle != null) {
+                    bool result = await onToggle(value.value);
+                    value.value = result;
+                  } else {
+                    // Default behavior
+                    value.value = newValue;
+                  }
+                },
                 activeColor: themeManager.primaryColor,
               );
             }),

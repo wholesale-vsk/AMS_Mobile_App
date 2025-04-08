@@ -1,7 +1,7 @@
 import 'package:get/get.dart';
 
 import '../../models/assets/building/building_model.dart';
-import '../../services/data/load_Building.dart'; // Assuming this is the correct model path
+import '../../services/data/load_building.dart'; // Assuming this is the correct model path
 
 class LoadBuildingController extends GetxController {
   final LoadBuildingService _buildingService = LoadBuildingService();

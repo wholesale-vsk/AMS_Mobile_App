@@ -1,12 +1,13 @@
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import '../../models/assets/building/building_model.dart';
 
-class LoadBuildingService {
+class LoadBuildingService  {
   final FlutterSecureStorage _secureStorage;
   final Dio _dio;
 
-  LoadBuildingService({FlutterSecureStorage? secureStorage, Dio? dio})
+  LoadBuildingService ({FlutterSecureStorage? secureStorage, Dio? dio})
       : _secureStorage = secureStorage ?? FlutterSecureStorage(),
         _dio = dio ?? Dio(BaseOptions(
           baseUrl: "https://api.ams.hexalyte.com", // ✅ Ensure no trailing slash
@@ -22,7 +23,9 @@ class LoadBuildingService {
         handler.next(options);
       },
       onResponse: (response, handler) {
-        print("✅ Response: ${response.statusCode}");
+        if (kDebugMode) {
+          print("✅ Response: ${response.statusCode}");
+        }
         handler.next(response);
       },
       onError: (DioException e, handler) {

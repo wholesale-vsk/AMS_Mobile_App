@@ -6,6 +6,8 @@ import 'package:cached_network_image/cached_network_image.dart';
 import '../../../../routes/app_routes.dart';
 
 class AssetsViewScreen extends StatefulWidget {
+  const AssetsViewScreen({Key? key}) : super(key: key);
+
   @override
   _AssetsViewScreenState createState() => _AssetsViewScreenState();
 }
@@ -18,6 +20,17 @@ class _AssetsViewScreenState extends State<AssetsViewScreen> {
   void initState() {
     super.initState();
     _scrollController.addListener(_onScroll);
+
+    // Initial assets fetch
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      controller.fetchAllAssets();
+    });
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
   }
 
   void _onScroll() {
@@ -28,7 +41,7 @@ class _AssetsViewScreenState extends State<AssetsViewScreen> {
     }
   }
 
-  void deleteAsset(Map<String, dynamic> asset) {
+  void _deleteAsset(Map<String, dynamic> asset) {
     Get.defaultDialog(
       title: "Delete Asset",
       titleStyle: const TextStyle(fontWeight: FontWeight.bold),
@@ -42,19 +55,10 @@ class _AssetsViewScreenState extends State<AssetsViewScreen> {
       cancelTextColor: Colors.grey[700],
       backgroundColor: Colors.white,
       onConfirm: () {
+        // Call the delete method in the controller
         controller.deleteAsset(asset);
-        Get.back();
-        Get.back();
-        Get.snackbar(
-          "Asset Deleted",
-          "The asset has been successfully deleted.",
-          snackPosition: SnackPosition.TOP,
-          backgroundColor: Colors.green,
-          colorText: Colors.white,
-          borderRadius: 10,
-          margin: const EdgeInsets.all(10),
-          duration: const Duration(seconds: 2),
-        );
+        Get.back(); // Close the dialog
+        Get.back(); // Close the previous screen if needed
       },
       onCancel: () => Get.back(),
     );
@@ -98,7 +102,7 @@ class _AssetsViewScreenState extends State<AssetsViewScreen> {
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
-          // Add navigation to asset creation screen
+          // Navigation to asset creation screen
           Get.toNamed(AppRoutes.ADD_ASSET_SCREEN);
         },
         backgroundColor: Colors.blue,
@@ -280,7 +284,7 @@ class _AssetsViewScreenState extends State<AssetsViewScreen> {
               children: [
                 ClipRRect(
                   borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
-                  child: _buildAssetImage(asset['imageUrl'] ?? asset['imageURL']),
+                  child: _buildAssetImage(asset['imageURL'] ?? asset['imageURL']),
                 ),
                 // Category tag
                 Positioned(
@@ -324,7 +328,7 @@ class _AssetsViewScreenState extends State<AssetsViewScreen> {
                     child: PopupMenuButton<String>(
                       onSelected: (String result) {
                         if (result == 'delete') {
-                          deleteAsset(asset);
+                          _deleteAsset(asset);
                         }
                       },
                       icon: const Icon(Icons.more_vert, color: Colors.white, size: 20),
@@ -352,19 +356,14 @@ class _AssetsViewScreenState extends State<AssetsViewScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    asset['name'] ?? asset['vrn'] ??asset['type'] ?? 'Unknown Asset',
+                    asset['name'] ?? asset['vrn'] ?? asset['type'] ?? 'Unknown Asset',
                     style: const TextStyle(
                       fontWeight: FontWeight.bold,
                       fontSize: 16,
-
                     ),
-
-
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
-
-                  
                   const SizedBox(height: 4),
                   Row(
                     children: [
@@ -372,7 +371,7 @@ class _AssetsViewScreenState extends State<AssetsViewScreen> {
                       const SizedBox(width: 4),
                       Expanded(
                         child: Text(
-                          asset['vrn'] ?? asset['city'] ??asset['name'] ?? 'No Data',
+                          asset['vrn'] ?? asset['city'] ?? asset['name'] ?? 'No Data',
                           style: TextStyle(
                             color: Colors.grey[600],
                             fontSize: 13,
@@ -453,7 +452,7 @@ class _AssetsViewScreenState extends State<AssetsViewScreen> {
       'Land': AppRoutes.LAND_DETAILS_SCREEN,
       'Building': AppRoutes.BUILDING_DETAILS_SCREEN,
     };
-    print("asset onpress "+asset.toString());
+    debugPrint("asset onpress $asset");
     Get.toNamed(routeMap[asset['category']] ?? AppRoutes.VIEW_ALL_ASSETS_SCREEN, arguments: asset);
   }
 }

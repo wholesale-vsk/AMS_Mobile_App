@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:hexalyte_ams/services/data/building_service.dart';
@@ -49,11 +51,11 @@ class BuildingController extends GetxController {
         totalArea: totalAreaController.text.trim(),
         buildingAddress: buildingAddressController.text.trim(),
         buildingCity: buildingCityController.text.trim(),
-        buildingProvince: buildingProvinceController.text.trim(),
+
         ownerName: ownerNameController.text.trim(),
         purchasePrice: purchasePriceController.text.trim(),
         purchaseDate: purchaseDateController.text.trim(),
-        buildingImage: getSelectedImagePath(buildingImageController),
+        buildingImage:File(buildingImageController.text.trim()),
         purposeOfUse: purposeOfUseController.text.trim(),
         councilTax: councilTaxController.text.trim(),
         councilTaxDate: councilTaxDateController.text.trim(),
@@ -71,7 +73,7 @@ class BuildingController extends GetxController {
     } catch (e, stackTrace) {
       debugPrint("Exception in addBuilding: $e");
       debugPrint("StackTrace: $stackTrace");
-      Get.snackbar('Error', 'An unexpected error occurred.');
+
     } finally {
       isLoading(false);
     }
@@ -95,17 +97,16 @@ class BuildingController extends GetxController {
         totalArea: totalAreaController.text.trim(),
         buildingAddress: buildingAddressController.text.trim(),
         buildingCity: buildingCityController.text.trim(),
-        buildingProvince: buildingProvinceController.text.trim(),
+
         ownerName: ownerNameController.text.trim(),
         purchasePrice: purchasePriceController.text.trim(),
         purchaseDate: purchaseDateController.text.trim(),
-        buildingImage: getSelectedImagePath(buildingImageController),
         purposeOfUse: purposeOfUseController.text.trim(),
-        councilTax: councilTaxController.text.trim(),
         councilTaxDate: councilTaxDateController.text.trim(),
         councilTaxValue: councilTaxValueController.text.trim(),
         leaseDate: leaseDateController.text.trim(),
         leaseValue: leaseValueController.text.trim(),
+        buildingImage: File(buildingImageController.text.trim()),
       );
       _logger.i('Response for test: $response');
 
@@ -123,7 +124,48 @@ class BuildingController extends GetxController {
       isLoading(false);
     }
   }
+  /// **Delete Existing Building**
+  Future<void> deleteBuilding() async {
+    // Ensure a building ID is selected
+    if (buildingIdController.text.trim().isEmpty) {
+      Get.snackbar('Validation Error', 'Please select a building to delete.');
+      return;
+    }
 
+    // Show confirmation dialog
+    final confirmDelete = await Get.defaultDialog(
+      title: 'Confirm Deletion',
+      middleText: 'Are you sure you want to delete this building?',
+      textConfirm: 'Delete',
+      textCancel: 'Cancel',
+      onConfirm: () => Get.back(result: true),
+      onCancel: () => Get.back(result: false),
+    );
+
+    // Exit if not confirmed
+    if (confirmDelete != true) return;
+
+    isLoading(true);
+
+    try {
+      final response = await buildingService.deleteBuilding(
+        buildingId: buildingIdController.text.trim(),
+      );
+
+      if (response.isSuccess) {
+        Get.snackbar('Success', response.message ?? 'Building deleted successfully.');
+        clearForm();
+      } else {
+        Get.snackbar('Error', response.message ?? 'Failed to delete building.');
+      }
+    } catch (e, stackTrace) {
+      debugPrint("Exception in deleteBuilding: $e");
+      debugPrint("StackTrace: $stackTrace");
+      Get.snackbar('Error', 'An unexpected error occurred.');
+    } finally {
+      isLoading(false);
+    }
+  }
   /// **Populate Form for Editing**
   void populateFormForEditing(Map<String, dynamic> buildingData) {
     buildingIdController.text = buildingData['buildingId']?.toString() ?? '';
@@ -138,7 +180,7 @@ class BuildingController extends GetxController {
     purposeOfUseController.text = buildingData['purposeOfUse']?.toString() ?? '';
     councilTaxController.text = buildingData['councilTax']?.toString() ?? '';
     councilTaxDateController.text = buildingData['councilTaxDate']?.toString() ?? '';
-    councilTaxValueController.text = buildingData['councilTaxValue']?.toString() ?? '';
+    councilTaxValueController.text = buildingData[' councilTaxValue']?.toString() ?? '';
     leaseDateController.text = buildingData['lease_date']?.toString() ?? '';
     leaseValueController.text = buildingData['leaseValue']?.toString() ?? '';
     purchaseDateController.text = buildingData['purchaseDate']?.toString() ?? '';
@@ -166,7 +208,7 @@ class BuildingController extends GetxController {
       purposeOfUseController,
       councilTaxController,
       councilTaxDateController,
-      councilTaxValueController,
+      councilTaxController,
       leaseDateController,
       leaseValueController,
       purchaseDateController,
@@ -197,7 +239,7 @@ class BuildingController extends GetxController {
       purposeOfUseController,
       councilTaxController,
       councilTaxDateController,
-      councilTaxValueController,
+      councilTaxController,
       leaseDateController,
       leaseValueController,
       purchaseDateController,
@@ -211,4 +253,8 @@ class BuildingController extends GetxController {
 
     super.onClose();
   }
+}
+
+extension on BuildingService {
+  deleteBuilding({required String buildingId}) {}
 }

@@ -9,7 +9,7 @@ class Building {
   final String purchaseDate;
   final String purposeOfUse;
   final String councilTaxDate;
-  final double councilTaxValue;
+  final double councilTax;
   final double buildingValue;
   final String leaseDate;
   final String link;
@@ -30,7 +30,7 @@ class Building {
     required this.purchaseDate,
     required this.ownerName,
     required this.councilTaxDate,
-    required this.councilTaxValue,
+    required this.councilTax,
     required this.buildingValue,
     required this.leaseDate,
     required this.leaseValue,
@@ -58,14 +58,14 @@ class Building {
       purchaseDate: json['purchaseDate']?.toString() ?? 'N/A',
       constructionDate: _parseDate(json['constructionDate']),
       councilTaxDate: json['councilTaxDate']?.toString() ?? 'N/A',
-      councilTaxValue: _parseDouble(json['councilTaxValue']),
+      councilTax: _parseDouble(json['councilTaxValue']),
       buildingValue: _parseDouble(json['buildingValue']),
       leaseDate: json['lease_date']?.toString() ?? 'N/A',
       leaseValue: _parseDouble(json['leaseValue']),
       purposeOfUse: json['purposeOfUse']?.toString() ?? 'Unknown',
       purchasePrice: _parseDouble(json['purchasePrice']),
       link: json['_links']['self']['href'] ?? 'N/A',
-      buildingImage: json?['imageURL'] ?? '', // ✅ If API uses lowercase "imageUrl"
+      buildingImage: json['imageURL'] ?? '', // ✅ If API uses lowercase "imageUrl"
 
     );
   }

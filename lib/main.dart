@@ -4,10 +4,12 @@ import 'package:get/get.dart';
 import 'package:hexalyte_ams/controllers/assets_controllers/assets_controller.dart';
 import 'package:hexalyte_ams/controllers/network_controller/network_controller.dart';
 import 'package:hexalyte_ams/controllers/building_controller/building_controller.dart';
-import 'package:hexalyte_ams/controllers/image_picker_controller/image_picker_controller.dart';
 import 'package:hexalyte_ams/routes/app_routes.dart';
 import 'package:hexalyte_ams/services/firebase/firebase_api.dart';
 import 'package:hexalyte_ams/utils/theme/app_theme_management.dart';
+import 'package:hexalyte_ams/services/auth/auth_service.dart';
+
+import 'controllers/image_controller/image_controller.dart'; // Add this import
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -26,7 +28,8 @@ Future<void> main() async {
   Get.lazyPut(() => NetworkController(), fenix: true);
   Get.put(AppThemeManager());
   Get.put(AssetController());
-  Get.put(ImagePickerController()); // ✅ Register ImagePickerController
+  Get.put(ImagePickerController());
+  Get.put(AuthService()); // Add this line to register AuthService
 
   runApp(const MainApp());
 }

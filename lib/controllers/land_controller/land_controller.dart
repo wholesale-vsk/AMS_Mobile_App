@@ -1,7 +1,10 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:hexalyte_ams/services/data/land_service.dart';
 import 'package:flutter/foundation.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:logger/logger.dart';
 
 
@@ -24,10 +27,15 @@ class LandController extends GetxController {
   final TextEditingController landProvinceController = TextEditingController();
   final TextEditingController purchaseDateController = TextEditingController();
   final TextEditingController purchasePriceController = TextEditingController();
-  final TextEditingController landImageController = TextEditingController();
   final TextEditingController leaseDateController = TextEditingController();
+  final TextEditingController landImageController = TextEditingController();
+  // late final File landImageFileController = File('');
   final TextEditingController leaseValueController = TextEditingController();
 
+
+  Future<void> uploadImage() async {
+
+  }
 
 
   //:::::::::::::::::::::::::::::::::<< ADD LAND FUNCTION >>::::::::::::::::::::::::::::::::://
@@ -51,10 +59,10 @@ class LandController extends GetxController {
             purchaseDateController.text, isRequired: true),
         purchasePrice: _validateInput(
             purchasePriceController.text, defaultValue: '0'),
-        landImage: _validateInput(landImageController.text),
+
         leaseDate: _validateInput(leaseDateController.text, isRequired: true),
         leaseValue: _validateInput(leaseValueController.text, isRequired: true),
-
+        landImage: File(landImageController.text),
 
       );
 
@@ -75,6 +83,49 @@ class LandController extends GetxController {
     }
   }
 
+  /// **Delete Existing Land**
+  Future<void> deleteLand() async {
+    // Ensure a land ID is selected
+    if (landIdController.text.trim().isEmpty) {
+      Get.snackbar('Validation Error', 'Please select a land to delete.');
+      return;
+    }
+
+    // Show confirmation dialog
+    final confirmDelete = await Get.defaultDialog(
+      title: 'Confirm Deletion',
+      middleText: 'Are you sure you want to delete this land?',
+      textConfirm: 'Delete',
+      textCancel: 'Cancel',
+      onConfirm: () => Get.back(result: true),
+      onCancel: () => Get.back(result: false),
+    );
+
+    // Exit if not confirmed
+    if (confirmDelete != true) return;
+
+    isLoading(true);
+
+    try {
+      final response = await _landService.deleteLand(
+        landId: landIdController.text.trim(),
+      );
+
+      if (response.isSuccess) {
+        Get.snackbar('Success', response.message ?? 'Land deleted successfully.');
+        clearForm();
+      } else {
+        Get.snackbar('Error', response.message ?? 'Failed to delete land.');
+      }
+    } catch (e, stackTrace) {
+      debugPrint("Exception in deleteLand: $e");
+      debugPrint("StackTrace: $stackTrace");
+      Get.snackbar('Error', 'An unexpected error occurred.');
+    } finally {
+      isLoading(false);
+    }
+  }
+
   //:::::::::::::::::::::::::::::::::<< CLEAR FORM FUNCTION >>::::::::::::::::::::::::::::::::://
   void clearForm() {
     landIdController.clear();
@@ -86,7 +137,7 @@ class LandController extends GetxController {
     landProvinceController.clear();
     purchaseDateController.clear();
     purchasePriceController.clear();
-    // landImageController.clear(); // ❌ Removed to retain image
+    landImageController.clear(); // ❌ Removed to retain image
     leaseDateController.clear();
     leaseValueController.clear();
 

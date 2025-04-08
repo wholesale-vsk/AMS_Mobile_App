@@ -2,7 +2,7 @@ import 'package:get/get.dart';
 import 'package:hexalyte_ams/screens/home_screen/app_settigns/app_settings.dart';
 import 'package:hexalyte_ams/screens/home_screen/assets_screens/add_asset_screen/add_asset_screen.dart';
 import 'package:hexalyte_ams/screens/home_screen/assets_screens/add_asset_screen/add_land/add_land_screen.dart';
-import 'package:hexalyte_ams/screens/home_screen/assets_screens/add_asset_screen/add_building/add_building_screen.dart';
+
 import 'package:hexalyte_ams/screens/home_screen/assets_screens/add_asset_screen/add_vehicle/add_vehicle_screen.dart';
 import 'package:hexalyte_ams/screens/home_screen/assets_screens/view_assets_screen/building_details_screen/building_details_screen.dart';
 import 'package:hexalyte_ams/screens/home_screen/assets_screens/view_assets_screen/land_details_screen/land_details_screen.dart';
@@ -96,10 +96,10 @@ class AppRoutes {
     GetPage(name: UPDATE_BUILDING_SCREEN, page: () => BuildingUpdatePage (building: Get.arguments, buildingData: {}, asset: null,), transition: Transition.rightToLeft),
 
     GetPage(name: ASSETS_SELECT_FOR_REPORT_SCREEN, page: () => AssetsSelectForReports(), transition: Transition.rightToLeft),
-    GetPage(name: BUILDING_REPORT_SCREEN, page: () => BuildingReportScreen(), transition: Transition.rightToLeft),
-    GetPage(name: LAND_REPORT_SCREEN, page: () => LandReportScreen(), transition: Transition.rightToLeft),
+    // GetPage(name: BUILDING_REPORT_SCREEN, page: () => BuildingReportScreen(), transition: Transition.rightToLeft),
+    // GetPage(name: LAND_REPORT_SCREEN, page: () => LandReportScreen(), transition: Transition.rightToLeft),
     GetPage(name: VEHICLE_REPORT_SCREEN, page: () => VehicleReportScreen(), transition: Transition.rightToLeft),
-    GetPage(name: TOTAL_ASSETS_REPORT_SCREEN, page: () => TotalAssetsReportScreen(), transition: Transition.rightToLeft),
+    // GetPage(name: TOTAL_ASSETS_REPORT_SCREEN, page: () => TotalAssetsReportScreen(), transition: Transition.rightToLeft),
 
     GetPage(name: FAQ_SCREEN, page: () => FAQScreen(), transition: Transition.rightToLeft),
 

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 import 'dart:math';
 import 'package:flutter/material.dart';
@@ -9,12 +10,27 @@ import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
 import 'package:open_file/open_file.dart';
-import '../../../controllers/assets/asset_controller.dart';
-import '../assets_controllers/assets_controller.dart';
+
+import '../../models/assets/building/building_model.dart';
+import '../../models/assets/land/land_model.dart';
+import '../../models/assets/vehicle/vehicle_model.dart';
+
+import '../../services/data/load_building.dart';
+import '../../services/data/load_land.dart';
+import '../../services/data/load_vehicle.dart';
 
 class AssetReportController extends GetxController {
   final Logger _logger = Logger();
-  final AssetController assetController = Get.find<AssetController>();
+  Timer? autoRefreshTimer;
+
+  // Initialize services
+  final LoadVehicleService _vehicleService = Get.find<LoadVehicleService>();
+  final LoadBuildingService _buildingService = Get.find<LoadBuildingService>();
+  final LoadLandsService _landService = Get.find<LoadLandsService>();
+
+  // Reactive data storage
+  var assets = <Map<String, dynamic>>[].obs;
+  final List<String> categories = ['All', 'Building', 'Vehicle', 'Land'];
 
   // Selected filters
   var selectedAssetTypes = <String>[].obs;
@@ -27,6 +43,9 @@ class AssetReportController extends GetxController {
   var isGeneratingReport = false.obs;
   var reportProgress = 0.0.obs;
   var generatedReportPath = ''.obs;
+  var isLoading = false.obs;
+  var hasError = false.obs;
+  var errorMessage = ''.obs;
 
   // Report types
   final List<String> reportTypes = [
@@ -36,6 +55,8 @@ class AssetReportController extends GetxController {
     'Maintenance Report'
   ];
 
+  // Building types
+  // Building types
   // Property types - Initialize with sample data
   final buildingTypes = <String>[
     'RESIDENTIAL',
@@ -45,55 +66,313 @@ class AssetReportController extends GetxController {
     'MIXED USE'
   ].obs;
 
-  final selectedBuildingTypes = <String>[].obs;
+// Initialize with some defaults so users don't have to select manually
+  final selectedBuildingTypes = <String>[
+  ].obs;
+
+  // Vehicle types
+  final vehicleTypes = <String>[
+    'CAR',
+    'TRUCK',
+    'VAN',
+    'MOTORCYCLE',
+    'BUS'
+  ].obs;
+
+  final selectedVehicleTypes = <String>[].obs;
+
+  // Land types
+  final landTypes = <String>[
+    'RESIDENTIAL',
+    'COMMERCIAL',
+    'INDUSTRIAL',
+    'AGRICULTURAL',
+    'RECREATIONAL',
+
+  ].obs;
+
+// Initialize with some defaults so users have a starting point
+  final selectedLandTypes = <String>[
+
+  ].obs;
 
   @override
   void onInit() {
     super.onInit();
-    // Initialize with all asset types selected by default
-    selectedAssetTypes.value = assetController.categories
-        .where((category) => category != 'All')
-        .toList();
 
-    // Initialize with some building types selected
-    selectedBuildingTypes.value = ['RESIDENTIAL', 'COMMERCIAL'];
+    // Initialize with all asset types selected by default
+    selectedAssetTypes.value = categories.where((category) => category != 'All').toList();
+    selectedLandTypes.value = landTypes.toList();
+    _logger.i("🏢 Selected asset types: $selectedAssetTypes");
+
+    // // // Initialize with some building types selected
+    //  selectedBuildingTypes.value = ['RESIDENTIAL', 'COMMERCIAL', 'INDUSTRIAL', 'AGRICULTURAL'];
+    //  _logger.i("🏢 Selected building types: $selectedBuildingTypes");
+    //
+    //  // Initialize with some vehicle types selected
+    //  // selectedVehicleTypes.value = ['CAR', 'TRUCK'];
+    //
+    // // Initialize with some land types selected
+    // selectedLandTypes.value = ['RESIDENTIAL', 'COMMERCIAL', 'INDUSTRIAL', 'AGRICULTURAL'];
+    // _logger.i("🌳 Selected land types: $selectedLandTypes");
+
+
+    // Load data initially
+    loadAllAssets();
+    _logger.i("📌 Total Assets Loaded: ${assets.length}");
+
+    // Start auto refresh timer (every 30 minutes)
+    _startAutoRefresh();
+  }
+
+  @override
+  void onClose() {
+    autoRefreshTimer?.cancel();
+    super.onClose();
+  }
+
+  void _startAutoRefresh() {
+    autoRefreshTimer = Timer.periodic(Duration(minutes: 30), (timer) {
+      _logger.i("🔄 Auto refreshing assets...");
+      loadAllAssets();
+    });
+  }
+
+  /// Load all asset data from all services
+  Future<void> loadAllAssets() async {
+    try {
+      isLoading(true);
+      hasError(false);
+      errorMessage('');
+
+      _logger.i("🔄 Loading all assets for reporting...");
+
+      // Load data from all three services concurrently
+      final results = await Future.wait([
+        _loadBuildings(),
+        _loadVehicles(),
+        _loadLands(),
+      ]);
+
+      // Combine all assets into a single list
+      assets.value = results.expand((element) => element).toList();
+
+      _logger.i("✅ Loaded ${assets.length} assets for reporting");
+    } catch (e) {
+      _logger.e("❌ Error loading assets: $e");
+      hasError(true);
+      errorMessage("Failed to load asset data: ${e.toString()}");
+
+      Get.snackbar(
+        "Loading Error",
+        "Failed to load asset data: ${e.toString()}",
+        snackPosition: SnackPosition.TOP,
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+      );
+    } finally {
+      isLoading(false);
+    }
+  }
+
+  /// Load buildings data
+  Future<List<Map<String, dynamic>>> _loadBuildings() async {
+    try {
+      _logger.i("🏢 Loading building data...");
+      final response = await _buildingService.fetchBuildings();
+
+      List<Building> buildings = response['buildings'] ?? [];
+      _logger.i("🏢 Loaded ${buildings.length} buildings");
+
+      // Transform Building objects into standardized maps
+      return buildings.map((b) => {
+        "category": "Building",
+        "name": b.name?.trim() ?? "Unnamed Building",
+        "buildingType": b.buildingType ?? "N/A",
+        "numberOfFloors": b.numberOfFloors,
+        "totalArea": b.totalArea,
+        "address": b.address ?? "N/A",
+        "buildingAddress": b.address ?? "N/A",
+        "purposeOfUse": b.purposeOfUse ?? "N/A",
+        "councilTaxValue": b.councilTax,
+        "councilTaxDate": b.councilTaxDate,
+        "city": b.city ?? "N/A",
+        "buildingCity": b.city ?? "N/A",
+        "ownerName": b.ownerName ?? "N/A",
+        "purchasePrice": b.purchasePrice,
+        "purchaseDate": b.purchaseDate,
+        "leaseValue": b.leaseValue,
+        "leaseDate": b.leaseDate,
+
+      }).toList();
+    } catch (e) {
+      _logger.e("❌ Error loading buildings: $e");
+      return [];
+    }
+  }
+
+  /// Load vehicles data
+  Future<List<Map<String, dynamic>>> _loadVehicles() async {
+    try {
+      _logger.i("🚗 Loading vehicle data...");
+      final response = await _vehicleService.fetchVehicles();
+
+      List<Vehicle> vehicles = response['vehicles'] ?? [];
+      _logger.i("🚗 Loaded ${vehicles.length} vehicles");
+
+      // Transform Vehicle objects into standardized maps
+      return vehicles.map((v) => {
+        "id": v.id,
+        "category": "Vehicle",
+        "name": v.model ?? "Unnamed Vehicle",
+        "model": v.model ?? "N/A",
+        "vrn": v.vrn ?? "N/A",
+        "motValue": v.motValue,
+        "insuranceValue": v.insuranceValue,
+        "vehicleType": v.vehicleType ?? "N/A",
+        "vehicle_type": v.vehicleType ?? "N/A", // Keep both for backward compatibility
+        "ownerName": v.ownerName ?? "N/A",
+        "purchasePrice": v.purchasePrice,
+        "purchaseDate": v.purchaseDate,
+        "motDate": v.motDate,
+        "motExpiredDate": v.motExpiredDate,
+        "insuranceDate": v.insuranceDate,
+
+      }).toList();
+    } catch (e) {
+      _logger.e("❌ Error loading vehicles: $e");
+      return [];
+    }
+  }
+
+  /// Load lands data
+  Future<List<Map<String, dynamic>>> _loadLands() async {
+    try {
+      _logger.i("🌳 Loading land data...");
+      final response = await _landService.fetchLands();
+
+      List<Land> lands = response['lands'] ?? [];
+      _logger.i("🌳 Loaded ${lands.length} lands");
+
+      // Transform Land objects into standardized maps
+      return lands.map((l) => {
+
+        "category": "Land",
+        "name": l.name ?? "Unnamed Land",
+        "landType": l.landType ?? "N/A",
+        "landSize": l.landSize,
+        "address": l.address ?? "N/A",
+        "landAddress": l.address ?? "N/A",
+        "city": l.city ?? "N/A",
+        "landCity": l.city ?? "N/A",
+        "purchasePrice": l.purchasePrice,
+        "purchaseDate": l.purchaseDate,
+        "leaseValue": l.leaseValue,
+        "leaseDate": l.leaseDate,
+
+      }).toList();
+    } catch (e) {
+      _logger.e("❌ Error loading lands: $e");
+      return [];
+    }
+  }
+
+  /// Refresh all assets manually
+  Future<void> refreshAssets() async {
+    try {
+      _logger.i("🔄 Manually refreshing assets for reporting...");
+      await loadAllAssets();
+
+      Get.snackbar(
+        "Assets Refreshed",
+        "Successfully updated asset data",
+        snackPosition: SnackPosition.TOP,
+        backgroundColor: Colors.green,
+        colorText: Colors.white,
+        duration: Duration(seconds: 2),
+      );
+    } catch (e) {
+      _logger.e("❌ Error refreshing assets: $e");
+    }
   }
 
   void toggleAssetType(String assetType) {
-    if (assetType == null) return;
-
     if (selectedAssetTypes.contains(assetType)) {
       selectedAssetTypes.remove(assetType);
     } else {
       selectedAssetTypes.add(assetType);
     }
+    _logger.i("🔍 Asset types updated: $selectedAssetTypes");
+  }
+
+  void toggleVehicleType(String vehicleType) {
+    if (selectedVehicleTypes.contains(vehicleType)) {
+      selectedVehicleTypes.remove(vehicleType);
+    } else {
+      selectedVehicleTypes.add(vehicleType);
+    }
+    _logger.i("🚗 Vehicle types updated: $selectedVehicleTypes");
+  }
+
+  void toggleBuildingType(String? buildingType) {
+    if (buildingType == null) return;
+
+    if (selectedBuildingTypes.contains(buildingType)) {
+      selectedBuildingTypes.remove(buildingType);
+      _logger.i("🏢 Removed building type: $buildingType");
+    } else {
+      selectedBuildingTypes.add(buildingType);
+      _logger.i("🏢 Added building type: $buildingType");
+    }
+  }
+
+  void toggleLandType(String? landType) {
+    if (landType == null) return;
+
+    _logger.i("🌳 Attempting to toggle land type: $landType");
+    _logger.i("🌳 Current selected land types: $selectedLandTypes");
+
+    if (selectedLandTypes.contains(landType)) {
+      selectedLandTypes.remove(landType);
+      _logger.i("🌳 Removed land type: $landType");
+    } else {
+      selectedLandTypes.add(landType);
+      _logger.i("🌳 Added land type: $landType");
+    }
+
+    _logger.i("🌳 Updated selected land types: $selectedLandTypes");
   }
 
   void setDateRange(DateTime start, DateTime end) {
-    if (start != null) startDate.value = start;
-    if (end != null) endDate.value = end;
+    startDate.value = start;
+    endDate.value = end;
+    _logger.i("📅 Date range set: ${_formatDate(start)} to ${_formatDate(end)}");
   }
 
   void setReportType(String type) {
-    if (type != null) {
-      reportType.value = type;
-      _logger.i("📊 Report type set to: $type");
-    }
+    reportType.value = type;
+    _logger.i("📊 Report type set to: $type");
   }
 
   void toggleIncludeCharts() {
     includeCharts.value = !includeCharts.value;
+    _logger.i("📈 Include charts: ${includeCharts.value}");
+  }
+
+  // Helper function to get value from asset map
+  dynamic _getValue(Map<String, dynamic> asset, String key) {
+    if (asset.isEmpty) return null;
+    return asset[key];
   }
 
   // Get filtered assets based on selected types and date range
   List<Map<String, dynamic>> getFilteredAssets() {
     if (selectedAssetTypes.isEmpty) return [];
 
-    return assetController.assets.where((asset) {
-      if (asset == null) return false;
-
-      // Filter by asset type
+    return assets.where((asset) {
       final category = asset['category'];
+
+      // Filter by asset category
       if (category == null || !selectedAssetTypes.contains(category)) {
         return false;
       }
@@ -114,6 +393,30 @@ class AssetReportController extends GetxController {
           asset.containsKey('landType')) {
         String? landType = asset['landType'] as String?;
         if (landType == null || !selectedBuildingTypes.contains(landType)) {
+          return false;
+        }
+      }
+
+
+
+// Apply vehicle type filter for Vehicle assets
+      if (category == 'Vehicle' &&
+          selectedVehicleTypes.isNotEmpty &&
+          (asset.containsKey('vehicleType') || asset.containsKey('vehicle_type'))) {
+
+        // Get the vehicle type from either property name, handling potential nulls
+        String? vehicleType = asset['vehicleType'] as String? ?? asset['vehicle_type'] as String?;
+
+        // Convert to uppercase for consistent comparison
+        String? normalizedVehicleType = vehicleType?.toUpperCase();
+
+        // Check if the vehicle type is in our selected list
+        bool typeMatches = normalizedVehicleType != null &&
+            selectedVehicleTypes.contains(normalizedVehicleType);
+
+        if (!typeMatches) {
+          _logger.i("🚗 Vehicle type filter excluded: $vehicleType");
+          _logger.i("🚗 Selected vehicle types: $selectedVehicleTypes");
           return false;
         }
       }
@@ -141,7 +444,6 @@ class AssetReportController extends GetxController {
           return true;
         }
       }
-
       // Include assets without purchase date
       return true;
     }).toList();
@@ -153,7 +455,7 @@ class AssetReportController extends GetxController {
       Get.snackbar(
         "No Asset Types Selected",
         "Please select at least one asset type for the report",
-        snackPosition: SnackPosition.BOTTOM,
+        snackPosition: SnackPosition.TOP,
         backgroundColor: Colors.red,
         colorText: Colors.white,
       );
@@ -163,7 +465,7 @@ class AssetReportController extends GetxController {
     try {
       isGeneratingReport(true);
       reportProgress(0.1);
-      _logger.i("📊 Generating ${reportType.value}...");
+      _logger.i("📊 Starting report generation...");
 
       // Get filtered assets
       final filteredAssets = getFilteredAssets();
@@ -171,7 +473,7 @@ class AssetReportController extends GetxController {
         Get.snackbar(
           "No Data Found",
           "No assets match your selected filters",
-          snackPosition: SnackPosition.BOTTOM,
+          snackPosition: SnackPosition.TOP,
           backgroundColor: Colors.orange,
           colorText: Colors.white,
         );
@@ -180,17 +482,23 @@ class AssetReportController extends GetxController {
       }
 
       reportProgress(0.3);
+      _logger.e("📊 Creating PDF for ${filteredAssets.length} assets");
+      _logger.i("📊 Report type: ${reportType.value}");
+
 
       // Create PDF document based on report type
       final pdf = await _createPdfReport(filteredAssets, reportType.value);
+      _logger.i("✅ PDF created successfully");
 
       reportProgress(0.7);
+      _logger.i("📊 Saving report to device...");
 
       // Save the PDF
       final filePath = await _savePdfReport(pdf);
+      _logger.i("✅ PDF saved successfully: $filePath");
+      generatedReportPath.value = filePath;
 
       reportProgress(1.0);
-      generatedReportPath.value = filePath;
 
       // Show preview dialog
       _showReportPreview(filePath);
@@ -201,7 +509,7 @@ class AssetReportController extends GetxController {
       Get.snackbar(
         "Error",
         "Failed to generate report: ${e.toString()}",
-        snackPosition: SnackPosition.BOTTOM,
+        snackPosition: SnackPosition.TOP,
         backgroundColor: Colors.red,
         colorText: Colors.white,
       );
@@ -213,7 +521,7 @@ class AssetReportController extends GetxController {
   // Save the PDF to a location
   Future<String> _savePdfReport(pw.Document pdf) async {
     final String timestamp = DateFormat('yyyyMMdd_HHmmss').format(DateTime.now());
-    final String reportName = 'asset_report_$timestamp.pdf';
+    final String reportName = 'asset_report_${reportType.value.toLowerCase().replaceAll(' ', '_')}_$timestamp.pdf';
 
     // For simplicity, save to application documents directory
     final directory = await getApplicationDocumentsDirectory();
@@ -249,7 +557,14 @@ class AssetReportController extends GetxController {
         ];
         break;
       case 'Detailed Report':
-        columns = ['Asset Name', 'Category', 'Type', 'Purchase Date', 'Purchase Price', 'Location'];
+        columns = [
+          'Asset Name',
+          'Category',
+          'Type',
+          'Purchase Date',
+          'Purchase Price',
+          'Location'
+        ];
         rowBuilder = (asset) => [
           _getValue(asset, 'name') ?? _getValue(asset, 'model') ?? 'N/A',
           _getValue(asset, 'category') ?? 'N/A',
@@ -260,7 +575,13 @@ class AssetReportController extends GetxController {
         ];
         break;
       case 'Financial Analysis':
-        columns = ['Asset Name', 'Category', 'Purchase Price', 'Current Value', 'Depreciation'];
+        columns = [
+          'Asset Name',
+          'Category',
+          'Purchase Price',
+          'Current Value',
+          'Depreciation'
+        ];
         rowBuilder = (asset) => [
           _getValue(asset, 'name') ?? _getValue(asset, 'model') ?? 'N/A',
           _getValue(asset, 'category') ?? 'N/A',
@@ -270,12 +591,19 @@ class AssetReportController extends GetxController {
         ];
         break;
       case 'Maintenance Report':
-        columns = ['Asset Name', 'Category', 'Type', 'Last Maintenance', 'Status', 'Notes'];
+        columns = [
+          'Asset Name',
+          'Category',
+          'Type',
+          'Last Maintenance',
+          'Status',
+          'Notes'
+        ];
         rowBuilder = (asset) => [
           _getValue(asset, 'name') ?? _getValue(asset, 'model') ?? 'N/A',
           _getValue(asset, 'category') ?? 'N/A',
           _getTypeValue(asset),
-          _formatDate(_getValue(asset, 'lastMaintenance') ?? 'N/A'),
+          _formatDate(_getValue(asset, 'lastMaintenance') ?? _getMaintenanceDate(asset) ?? 'N/A'),
           _getMaintenanceStatus(asset),
           _getValue(asset, 'maintenanceNotes') ?? 'No notes',
         ];
@@ -289,6 +617,8 @@ class AssetReportController extends GetxController {
           _formatDate(_getValue(asset, 'purchaseDate')),
           _formatCurrency(_getValue(asset, 'purchasePrice')),
         ];
+        _logger.w("Unknown report type: $type, defaulting to Summary Report");
+        break;
     }
 
     // Add report pages
@@ -392,9 +722,22 @@ class AssetReportController extends GetxController {
       categoryCounts[category] = (categoryCounts[category] ?? 0) + 1;
     }
 
+    // Calculate total value by category
+    Map<String, double> categoryValues = {};
+    for (var asset in assets) {
+      String category = _getValue(asset, 'category') ?? 'Unknown';
+      var price = _getValue(asset, 'purchasePrice');
+      if (price != null && price != 'N/A') {
+        double? numValue = _parseNumber(price);
+        if (numValue != null) {
+          categoryValues[category] = (categoryValues[category] ?? 0) + numValue;
+        }
+      }
+    }
+
     // Simple bar chart - we'll simulate it with rectangles
     return pw.Container(
-      padding: pw.EdgeInsets.all(12),
+      padding: const pw.EdgeInsets.all(12),
       decoration: pw.BoxDecoration(
         borderRadius: pw.BorderRadius.circular(4),
         border: pw.Border.all(color: PdfColors.grey300),
@@ -426,7 +769,7 @@ class AssetReportController extends GetxController {
                       margin: pw.EdgeInsets.symmetric(horizontal: 8),
                       decoration: pw.BoxDecoration(
                         color: _getCategoryColor(entry.key),
-                        borderRadius: pw.BorderRadius.vertical(
+                        borderRadius: const pw.BorderRadius.vertical(
                           top: pw.Radius.circular(4),
                         ),
                       ),
@@ -444,6 +787,56 @@ class AssetReportController extends GetxController {
                       style: pw.TextStyle(
                         font: fontBold,
                         fontSize: 12,
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            }).toList(),
+          ),
+          pw.SizedBox(height: 30),
+          pw.Text(
+            'Asset Value Distribution (in \$)',
+            style: pw.TextStyle(
+              font: fontBold,
+              fontSize: 14,
+            ),
+          ),
+          pw.SizedBox(height: 20),
+          pw.Row(
+            crossAxisAlignment: pw.CrossAxisAlignment.end,
+            children: categoryValues.entries.map((entry) {
+              // Calculate bar height proportional to value
+              final maxHeight = 100.0;
+              final maxValue = categoryValues.values.reduce((a, b) => a > b ? a : b);
+              final barHeight = (entry.value / maxValue) * maxHeight;
+
+              return pw.Expanded(
+                child: pw.Column(
+                  children: [
+                    pw.Container(
+                      height: barHeight,
+                      margin: pw.EdgeInsets.symmetric(horizontal: 8),
+                      decoration: pw.BoxDecoration(
+                        color: _getCategoryColor(entry.key),
+                        borderRadius: pw.BorderRadius.vertical(
+                          top: pw.Radius.circular(4),
+                        ),
+                      ),
+                    ),
+                    pw.SizedBox(height: 5),
+                    pw.Text(
+                      entry.key,
+                      style: pw.TextStyle(
+                        font: font,
+                        fontSize: 10,
+                      ),
+                    ),
+                    pw.Text(
+                      '\$${NumberFormat('#,##0').format(entry.value)}',
+                      style: pw.TextStyle(
+                        font: fontBold,
+                        fontSize: 11,
                       ),
                     ),
                   ],
@@ -483,7 +876,7 @@ class AssetReportController extends GetxController {
               label,
               style: pw.TextStyle(
                 font: font,
-                fontSize: 10,
+                fontSize: 12,
                 color: PdfColors.grey700,
               ),
             ),
@@ -535,8 +928,8 @@ class AssetReportController extends GetxController {
               Expanded(
                 child: PdfPreview(
                   build: (format) => File(filePath).readAsBytes(),
-                  allowSharing: false,
-                  allowPrinting: false,
+                  allowSharing: true,
+                  allowPrinting: true,
                   canChangeOrientation: false,
                   canChangePageFormat: false,
                   canDebug: false,
@@ -562,6 +955,7 @@ class AssetReportController extends GetxController {
                       label: Text('Open'),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.blue,
+                        foregroundColor: Colors.white,
                       ),
                     ),
                     ElevatedButton.icon(
@@ -573,7 +967,24 @@ class AssetReportController extends GetxController {
                       icon: Icon(Icons.print),
                       label: Text('Print'),
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.white,
+                        backgroundColor: Colors.grey[200],
+                        foregroundColor: Colors.black87,
+                      ),
+                    ),
+                    ElevatedButton.icon(
+                      onPressed: () {
+                        // Save as feature would go here
+                        Get.snackbar(
+                          "File Saved",
+                          "Report saved at: $filePath",
+                          snackPosition: SnackPosition.BOTTOM,
+                        );
+                      },
+                      icon: Icon(Icons.save_alt),
+                      label: Text('Save As'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.green,
+                        foregroundColor: Colors.white,
                       ),
                     ),
                   ],
@@ -623,7 +1034,7 @@ class AssetReportController extends GetxController {
             mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
             children: [
               pw.Text(
-                'Vynix',
+                'Vynix Asset Management',
                 style: pw.TextStyle(
                   font: fontBold,
                   fontSize: 20,
@@ -681,7 +1092,7 @@ class AssetReportController extends GetxController {
         mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
         children: [
           pw.Text(
-            'Asset Management System',
+            'Vynix Asset Management System',
             style: pw.TextStyle(
               fontSize: 10,
               color: PdfColors.grey600,
@@ -724,7 +1135,9 @@ class AssetReportController extends GetxController {
               pw.Expanded(
                 child: _buildFilterItem(
                   'Asset Types',
-                  selectedAssetTypes.isNotEmpty ? selectedAssetTypes.join(', ') : 'None',
+                  selectedAssetTypes.isNotEmpty
+                      ? selectedAssetTypes.join(', ')
+                      : 'None',
                   font,
                   fontBold,
                 ),
@@ -765,11 +1178,35 @@ class AssetReportController extends GetxController {
             children: [
               pw.Expanded(
                 child: _buildFilterItem(
-                  'Property Types',
+                  'Building Types',
                   selectedBuildingTypes.isNotEmpty ? selectedBuildingTypes.join(', ') : 'All',
                   font,
                   fontBold,
                 ),
+              ),
+              pw.Expanded(
+                child: _buildFilterItem(
+                  'Vehicle Types',
+                  selectedVehicleTypes.isNotEmpty ? selectedVehicleTypes.join(', ') : 'All',
+                  font,
+                  fontBold,
+                ),
+              ),
+            ],
+          ),
+          pw.SizedBox(height: 10),
+          pw.Row(
+            children: [
+              pw.Expanded(
+                child: _buildFilterItem(
+                  'Land Types',
+                  selectedLandTypes.isNotEmpty ? selectedLandTypes.join(', ') : 'All',
+                  font,
+                  fontBold,
+                ),
+              ),
+              pw.Expanded(
+                child: pw.SizedBox(), // Empty space for balance
               ),
             ],
           ),
@@ -780,7 +1217,7 @@ class AssetReportController extends GetxController {
 
   pw.Widget _buildFilterItem(String label, String value, pw.Font font, pw.Font fontBold) {
     return pw.Padding(
-      padding: pw.EdgeInsets.symmetric(horizontal: 5, vertical: 3),
+      padding: const pw.EdgeInsets.symmetric(horizontal: 5, vertical: 3),
       child: pw.Column(
         crossAxisAlignment: pw.CrossAxisAlignment.start,
         children: [
@@ -859,17 +1296,12 @@ class AssetReportController extends GetxController {
     );
   }
 
-  // Helper functions
-  dynamic _getValue(Map<String, dynamic> asset, String key) {
-    return asset[key];
-  }
-
   String _getTypeValue(Map<String, dynamic> asset) {
     final category = asset['category'];
     if (category == 'Building') {
       return asset['buildingType'] ?? 'N/A';
     } else if (category == 'Vehicle') {
-      return asset['vehicle_type'] ?? asset['type'] ?? 'N/A';
+      return asset['vehicleType'] ?? asset['vehicle_type'] ?? asset['type'] ?? 'N/A';
     } else if (category == 'Land') {
       return asset['landType'] ?? 'N/A';
     }
@@ -878,14 +1310,36 @@ class AssetReportController extends GetxController {
 
   String _getLocationValue(Map<String, dynamic> asset) {
     final category = asset['category'];
-    if (category == 'Building' || category == 'Land') {
-      if (asset['address'] != null && asset['city'] != null) {
+    if (category == 'Building') {
+      if (asset['buildingAddress'] != null && asset['buildingCity'] != null) {
+        return '${asset['buildingAddress']}, ${asset['buildingCity']}';
+      } else if (asset['buildingAddress'] != null) {
+        return asset['buildingAddress'];
+      } else if (asset['buildingCity'] != null) {
+        return asset['buildingCity'];
+      } else if (asset['address'] != null && asset['city'] != null) {
         return '${asset['address']}, ${asset['city']}';
       } else if (asset['address'] != null) {
         return asset['address'];
       } else if (asset['city'] != null) {
         return asset['city'];
       }
+    } else if (category == 'Land') {
+      if (asset['landAddress'] != null && asset['landCity'] != null) {
+        return '${asset['landAddress']}, ${asset['landCity']}';
+      } else if (asset['landAddress'] != null) {
+        return asset['landAddress'];
+      } else if (asset['landCity'] != null) {
+        return asset['landCity'];
+      } else if (asset['address'] != null && asset['city'] != null) {
+        return '${asset['address']}, ${asset['city']}';
+      } else if (asset['address'] != null) {
+        return asset['address'];
+      } else if (asset['city'] != null) {
+        return asset['city'];
+      }
+    } else if (category == 'Vehicle') {
+      return asset['ownerName'] ?? 'N/A';
     }
     return 'N/A';
   }
@@ -902,6 +1356,7 @@ class AssetReportController extends GetxController {
       }
       return DateFormat('MM/dd/yyyy').format(dateTime);
     } catch (e) {
+      _logger.w("⚠️ Date parsing error: $e");
       return date.toString();
     }
   }
@@ -919,6 +1374,7 @@ class AssetReportController extends GetxController {
         return double.parse(sanitizedValue);
       }
     } catch (e) {
+      _logger.w("⚠️ Number parsing error: $e");
       return null;
     }
   }
@@ -929,29 +1385,84 @@ class AssetReportController extends GetxController {
     return '\$${NumberFormat('#,##0.00').format(numValue)}';
   }
 
-  String _getReportTypeDescription(String reportType) {
-    switch (reportType) {
-      case 'Summary Report':
-        return 'A brief overview of all assets with basic information';
-      case 'Detailed Report':
-        return 'Comprehensive breakdown of all asset properties and details';
-      case 'Financial Analysis':
-        return 'Analysis of asset values, purchase costs, and financial metrics';
-      case 'Maintenance Report':
-        return 'Status of vehicle maintenance, MOT dates, and service records';
-      default:
-        return '';
+  String? _getMaintenanceDate(Map<String, dynamic> asset) {
+    String category = asset['category'] ?? '';
+
+    if (category == 'Vehicle') {
+      // For vehicles, try to get service date, MOT date, or insurance date
+      return asset['serviceDate'] ?? asset['motDate'] ?? asset['insuranceDate'];
+    } else if (category == 'Building') {
+      // For buildings, try to get council tax date or lease date
+      return asset['councilTaxDate'] ?? asset['leaseDate'];
+    } else if (category == 'Land') {
+      // For land, try to get lease date
+      return asset['leaseDate'];
     }
+
+    return null;
   }
 
-  void toggleBuildingType(String? buildingType) {
-    if (buildingType == null) return;
+  // Get maintenance status for maintenance report
+  String _getMaintenanceStatus(Map<String, dynamic> asset) {
+    // For vehicles we can use MOT date to determine status
+    String category = _getValue(asset, 'category') ?? '';
 
-    if (selectedBuildingTypes.contains(buildingType)) {
-      selectedBuildingTypes.remove(buildingType);
-    } else {
-      selectedBuildingTypes.add(buildingType);
+    if (category == 'Vehicle') {
+      var motDate = _getValue(asset, 'motExpiredDate') ?? _getValue(asset, 'motDate');
+      if (motDate != null && motDate != 'N/A') {
+        try {
+          DateTime expiryDate = DateTime.parse(motDate.toString());
+          if (expiryDate.isBefore(DateTime.now())) {
+            return 'OVERDUE';
+          } else if (expiryDate.isBefore(DateTime.now().add(Duration(days: 30)))) {
+            return 'DUE SOON';
+          } else {
+            return 'VALID';
+          }
+        } catch (e) {
+          return 'UNKNOWN';
+        }
+      }
+    } else if (category == 'Building') {
+      // For buildings, we can check council tax date
+      var councilTaxDate = _getValue(asset, 'councilTaxDate');
+      if (councilTaxDate != null && councilTaxDate != 'N/A') {
+        try {
+          DateTime expiryDate = DateTime.parse(councilTaxDate.toString());
+          if (expiryDate.isBefore(DateTime.now())) {
+            return 'RENEWAL REQUIRED';
+          } else if (expiryDate.isBefore(DateTime.now().add(Duration(days: 60)))) {
+            return 'UPCOMING RENEWAL';
+          } else {
+            return 'CURRENT';
+          }
+        } catch (e) {
+          return 'UNKNOWN';
+        }
+      }
+      return 'NOT APPLICABLE';
+    } else if (category == 'Land') {
+      // For land, we can check lease date
+      var leaseDate = _getValue(asset, 'leaseDate');
+      if (leaseDate != null && leaseDate != 'N/A') {
+        try {
+          DateTime expiryDate = DateTime.parse(leaseDate.toString());
+          if (expiryDate.isBefore(DateTime.now())) {
+            return 'EXPIRED';
+          } else if (expiryDate.isBefore(DateTime.now().add(Duration(days: 90)))) {
+            return 'EXPIRING SOON';
+          } else {
+            return 'ACTIVE';
+          }
+        } catch (e) {
+          return 'UNKNOWN';
+        }
+      }
+      return 'FREEHOLD';
     }
+
+    // For other assets
+    return 'N/A';
   }
 
   // Calculate current value based on purchase date and depreciation
@@ -1012,30 +1523,45 @@ class AssetReportController extends GetxController {
     }
   }
 
-  // Get maintenance status for maintenance report
-  String _getMaintenanceStatus(Map<String, dynamic> asset) {
-    // For vehicles we can use MOT date to determine status
-    String category = _getValue(asset, 'category') ?? '';
-
-    if (category == 'Vehicle') {
-      var motDate = _getValue(asset, 'motExpiredDate') ?? _getValue(asset, 'motDate');
-      if (motDate != null && motDate != 'N/A') {
-        try {
-          DateTime expiryDate = DateTime.parse(motDate.toString());
-          if (expiryDate.isBefore(DateTime.now())) {
-            return 'OVERDUE';
-          } else if (expiryDate.isBefore(DateTime.now().add(Duration(days: 30)))) {
-            return 'DUE SOON';
-          } else {
-            return 'VALID';
-          }
-        } catch (e) {
-          return 'UNKNOWN';
-        }
-      }
+  String _getReportTypeDescription(String reportType) {
+    switch (reportType) {
+      case 'Summary Report':
+        return 'A brief overview of all assets with basic information';
+      case 'Detailed Report':
+        return 'Comprehensive breakdown of all asset properties and details';
+      case 'Financial Analysis':
+        return 'Analysis of asset values, purchase costs, and financial metrics';
+      case 'Maintenance Report':
+        return 'Status of maintenance, expiry dates, and service records';
+      default:
+        return '';
     }
+  }
 
-    // For other assets
-    return 'N/A';
+  // Export function for the reports - useful for sharing via email
+  Future<void> exportReport(String filePath) async {
+    // Implementation depends on your sharing mechanism
+    // This is a placeholder for future implementation
+    try {
+      // Implement email sending or other sharing mechanism
+      _logger.i("📤 Exporting report: $filePath");
+
+      // For now, just display a message
+      Get.snackbar(
+        "Export",
+        "Report ready for export: $filePath",
+        snackPosition: SnackPosition.BOTTOM,
+        duration: Duration(seconds: 3),
+      );
+    } catch (e) {
+      _logger.e("❌ Error exporting report: $e");
+      Get.snackbar(
+        "Export Error",
+        "Failed to export report: ${e.toString()}",
+        snackPosition: SnackPosition.TOP,
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+      );
+    }
   }
 }

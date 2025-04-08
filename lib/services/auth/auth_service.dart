@@ -42,6 +42,11 @@ class AuthService {
       // Store the access token securely
       await _secureStorage.write(key: 'access_token', value: response.data['access_token']);
 
+      // Store refresh token if present in the response
+      if (response.data['refresh_token'] != null) {
+        await _secureStorage.write(key: 'refresh_token', value: response.data['refresh_token']);
+      }
+
       return ApiResponse(
         isSuccess: true,
         statusCode: response.statusCode,
@@ -57,42 +62,46 @@ class AuthService {
       );
     }
   }
-}
 
-Future<void> logout() async {
-  try {
-    final FlutterSecureStorage _secureStorage = const FlutterSecureStorage();
+  Future<void> logout() async {
+    try {
+      final accessToken = await _secureStorage.read(key: 'access_token');
+      final refreshToken = await _secureStorage.read(key: 'refresh_token');
 
-    // 🔹 Step 1: Retrieve Access Token Before Deleting
-    String? accessToken = await _secureStorage.read(key: 'access_token');
-    print("Token Before Deletion: $accessToken");
+      if (accessToken != null) {
+        // Keycloak OpenID Connect logout endpoint
+        const logoutEndpoint = 'https://auth.hexalyte.com/realms/ams-cloud/protocol/openid-connect/logout';
 
-    // 🔹 Step 2: Delete Tokens Securely
-    await _secureStorage.delete(key: 'access_token');
-    await _secureStorage.delete(key: 'refresh_token');
+        try {
+          // Call Keycloak logout endpoint
+          await dio.post(
+            logoutEndpoint,
+            data: {
+              'client_id': 'ams-cloud-client',
+              'client_secret': 'waBBbeLmADRjFsrYnPSXsKWscY6HYE9o',
+              'refresh_token': refreshToken,
+            },
+            options: Options(
+              contentType: Headers.formUrlEncodedContentType,
+              headers: {
+                'Authorization': 'Bearer $accessToken',
+              },
+            ),
+          );
+        } catch (e) {
+          // Log logout endpoint error, but continue with local logout
+          print('Keycloak logout endpoint error: $e');
+        }
+      }
 
-    // 🔹 Step 3: Check Token After Deletion
-    String? tokenAfterDeletion = await _secureStorage.read(key: 'access_token');
-    print("Token After Deletion: $tokenAfterDeletion"); // Should be null
+      // Clear all stored tokens
+      await _secureStorage.deleteAll();
 
-    // 🔹 Step 4: Call Logout API (If backend supports it)
-    if (accessToken != null) {
-      var dio;
-      await dio.post(
-        '${AuthEnvironment.baseURL}/auth/logout',
-        options: Options(headers: {
-          'Authorization': 'Bearer $accessToken',
-          'Content-Type': 'application/json',
-        }),
-      );
+      // Navigate to login screen
+      Get.offAllNamed('/login');
+    } catch (e) {
+      print('Logout Error: $e');
+      Get.snackbar('Logout Failed', 'An error occurred while logging out.');
     }
-
-    // 🔹 Step 5: Navigate User to Login Screen
-    Get.offAllNamed('/login');
-
-    print('User successfully logged out.');
-  } catch (e) {
-    print('Logout Error: $e');
-    Get.snackbar('Logout Failed', 'An error occurred while logging out.');
   }
 }

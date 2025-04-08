@@ -74,12 +74,12 @@ class BuildingDetailsScreen extends StatelessWidget {
               color: Colors.black.withOpacity(0.5),
               shape: BoxShape.circle,
             ),
-            child: IconButton(
-              icon: const Icon(Icons.share, color: Colors.white),
-              onPressed: () {
-                // Share functionality
-              },
-            ),
+            // child: IconButton(
+            //   icon: const Icon(Icons.share, color: Colors.white),
+            //   onPressed: () {
+            //     // Share functionality
+            //   },
+            // ),
           ),
         ],
       ),
@@ -368,6 +368,9 @@ class BuildingDetailsScreen extends StatelessWidget {
               backgroundColor: primaryColor,
               icon: const Icon(Icons.edit, color: Colors.white),
               label: const Text("Edit Building"),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
             )
           : null, // Hide button if no building data
     );
