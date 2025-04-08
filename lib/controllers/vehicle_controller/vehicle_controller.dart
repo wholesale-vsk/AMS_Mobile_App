@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:hexalyte_ams/services/data/vehicle_service.dart';
@@ -46,7 +48,6 @@ class VehicleController extends GetxController {
         registrationNumber: _validateInput(registrationNumberController.text),
         vehicleModel: _validateInput(vehicleModelController.text),
         vehicleType: _validateInput(vehicleTypeController.text),
-        vehicleImage: _validateInput(vehicleImageController.text),
         motDate: _validateInput(motDateController.text),
         motExpiredDate: _validateInput(motExpiredDateController.text),
         insuranceDate: _validateInput(insuranceDateController.text),
@@ -56,6 +57,7 @@ class VehicleController extends GetxController {
         motValue: _validateInput(motValueController.text, defaultValue: '0'),
         ownerName: _validateInput(ownerNameController.text),
         purchaseDate: _validateInput(purchaseDateController.text),
+        vehicleImage: File(vehicleImageController.text),
       );
 
       _logger.i('Response for test: $response');
@@ -92,7 +94,7 @@ class VehicleController extends GetxController {
         registrationNumber: _validateInput(registrationNumberController.text),
         vehicleModel: _validateInput(vehicleModelController.text),
         vehicleType: _validateInput(vehicleTypeController.text),
-        vehicleImage: _validateInput(vehicleImageController.text),
+
         motDate: _validateInput(motDateController.text),
         motExpiredDate: _validateInput(motExpiredDateController.text),
         insuranceDate: _validateInput(insuranceDateController.text),
@@ -102,7 +104,8 @@ class VehicleController extends GetxController {
         purchasePrice: double.tryParse(_validateInput(purchasePriceController.text, defaultValue: '0')) ?? 0.0, // Changed to double to match service
         motValue: _validateInput(motValueController.text, defaultValue: '0'),
         ownerName: _validateInput(ownerNameController.text),
-        vehicleId: _validateInput(vehicleIdController.text),
+        vehicleId: _validateInput(vehicleIdController.text), vehicleImage: '',
+        // vehicleImage: File(vehicleImageController.text),
       );
 
       _logger.i('Response for update: $response');
@@ -123,49 +126,49 @@ class VehicleController extends GetxController {
       isLoading.value = false;
     }
   }
-  /// **Delete Existing Vehicle**
-  Future<void> deleteVehicle() async {
-    // Ensure a vehicle ID is selected
-    if (vehicleIdController.text.trim().isEmpty) {
-      Get.snackbar('Validation Error', 'Please select a vehicle to delete.');
-      return;
-    }
-
-    // Show confirmation dialog
-    final confirmDelete = await Get.defaultDialog(
-      title: 'Confirm Deletion',
-      middleText: 'Are you sure you want to delete this vehicle?',
-      textConfirm: 'Delete',
-      textCancel: 'Cancel',
-      onConfirm: () => Get.back(result: true),
-      onCancel: () => Get.back(result: false),
-    );
-
-    // Exit if not confirmed
-    if (confirmDelete != true) return;
-
-    isLoading(true);
-
-    try {
-      final response = await _vehicleService.deleteVehicle(
-        vehicleId: vehicleIdController.text.trim(),
-      );
-
-      if (response.isSuccess) {
-        Get.snackbar('Success', response.message ?? 'Vehicle deleted successfully.');
-        clearForm();
-        await fetchVehicles(); // Refresh the list
-      } else {
-        Get.snackbar('Error', response.message ?? 'Failed to delete vehicle.');
-      }
-    } catch (e, stackTrace) {
-      debugPrint("Exception in deleteVehicle: $e");
-      debugPrint("StackTrace: $stackTrace");
-      Get.snackbar('Error', 'An unexpected error occurred.');
-    } finally {
-      isLoading(false);
-    }
-  }
+  // /// **Delete Existing Vehicle**
+  // Future<void> deleteVehicle() async {
+  //   // Ensure a vehicle ID is selected
+  //   if (vehicleIdController.text.trim().isEmpty) {
+  //     Get.snackbar('Validation Error', 'Please select a vehicle to delete.');
+  //     return;
+  //   }
+  //
+  //   // Show confirmation dialog
+  //   final confirmDelete = await Get.defaultDialog(
+  //     title: 'Confirm Deletion',
+  //     middleText: 'Are you sure you want to delete this vehicle?',
+  //     textConfirm: 'Delete',
+  //     textCancel: 'Cancel',
+  //     onConfirm: () => Get.back(result: true),
+  //     onCancel: () => Get.back(result: false),
+  //   );
+  //
+  //   // Exit if not confirmed
+  //   if (confirmDelete != true) return;
+  //
+  //   isLoading(true);
+  //
+  //   try {
+  //     // final response = await _vehicleService.deleteVehicle(
+  //       vehicleId: vehicleIdController.text.trim(),
+  //     );
+  //
+  //     if (response.isSuccess) {
+  //       Get.snackbar('Success', response.message ?? 'Vehicle deleted successfully.');
+  //       clearForm();
+  //       await fetchVehicles(); // Refresh the list
+  //     } else {
+  //       Get.snackbar('Error', response.message ?? 'Failed to delete vehicle.');
+  //     }
+  //   } catch (e, stackTrace) {
+  //     debugPrint("Exception in deleteVehicle: $e");
+  //     debugPrint("StackTrace: $stackTrace");
+  //     Get.snackbar('Error', 'An unexpected error occurred.');
+  //   } finally {
+  //     isLoading(false);
+  //   }
+  // }
 
   /// **CLEAR FORM AFTER SUCCESS**
   void clearForm() {

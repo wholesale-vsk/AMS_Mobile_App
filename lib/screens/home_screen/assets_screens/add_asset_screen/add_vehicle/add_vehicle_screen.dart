@@ -4,6 +4,7 @@ import 'package:hexalyte_ams/controllers/vehicle_controller/vehicle_controller.d
 
 import 'package:hexalyte_ams/utils/widgets/calander/calender_field.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:logger/logger.dart';
 import 'dart:io';
 
 import '../../../../../controllers/image_controller/image_controller.dart';
@@ -11,6 +12,7 @@ import '../../../../../controllers/image_controller/image_controller.dart';
 class AddVehicleScreen extends StatelessWidget {
   final VehicleController vehicleController = Get.put(VehicleController());
   final ImagePickerController imagePickerController = Get.put(ImagePickerController());
+  final Logger _logger = Logger();
 
   @override
   Widget build(BuildContext context) {
@@ -426,6 +428,7 @@ class AddVehicleScreen extends StatelessWidget {
 
     if (pickedFile != null && vehicleController.vehicleImageController != null) {
       vehicleController.vehicleImageController!.text = pickedFile.path;
+      _logger.i('Selected image: ${pickedFile.path}');
     }
   }
 }
