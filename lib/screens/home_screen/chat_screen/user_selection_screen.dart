@@ -4,66 +4,73 @@ import '../home_screen.dart';
 import 'chat_screen.dart';
 
 class UserSelectionScreen extends StatefulWidget {
+  const UserSelectionScreen({super.key});
+
   @override
-  _UserSelectionScreenState createState() => _UserSelectionScreenState();
+  State<UserSelectionScreen> createState() => _UserSelectionScreenState();
 }
 
 class _UserSelectionScreenState extends State<UserSelectionScreen> {
   final List<Map<String, dynamic>> users = [
     {
+      "id": "1",
       "name": "John Doe",
+      "role": "Manager",
       "status": "Hey there! I am using this chat app.",
       "image": "https://randomuser.me/api/portraits/men/1.jpg",
-      "isOnline": true
+      "isOnline": true,
+      "lastSeen": null,
     },
     {
+      "id": "2",
       "name": "Emma Watson",
+      "role": "Officer",
       "status": "Feeling excited today!",
       "image": "https://randomuser.me/api/portraits/women/2.jpg",
-      "isOnline": false
+      "isOnline": false,
+      "lastSeen": DateTime.now().subtract(const Duration(hours: 2)),
     },
     {
+      "id": "3",
       "name": "Michael Brown",
+      "role": "Director",
       "status": "Available for a chat.",
       "image": "https://randomuser.me/api/portraits/men/3.jpg",
-      "isOnline": true
+      "isOnline": true,
+      "lastSeen": null,
     },
     {
+      "id": "4",
       "name": "Sophia Martinez",
+      "role": "Admin Officer",
       "status": "Work hard, play hard!",
       "image": "https://randomuser.me/api/portraits/women/4.jpg",
-      "isOnline": false
+      "isOnline": false,
+      "lastSeen": DateTime.now().subtract(const Duration(minutes: 30)),
     },
     {
+      "id": "5",
       "name": "Chris Evans",
+      "role": "Control Officer",
       "status": "Loving the new Flutter update.",
       "image": "https://randomuser.me/api/portraits/men/5.jpg",
-      "isOnline": true
+      "isOnline": true,
+      "lastSeen": null,
     },
   ];
-
-  @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (users.isNotEmpty) {
-        Get.to(() => ChatScreen(user: users[0])); // Auto-open first user's chat
-      }
-    });
-  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.grey[100],
       appBar: AppBar(
-        title: const Text("Select a Chat", style: TextStyle(fontWeight: FontWeight.bold)),
+        title: const Text("Select a Chat",
+            style: TextStyle(fontWeight: FontWeight.bold)),
         backgroundColor: Colors.white,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.black), // 🔙 Back button
-          onPressed: () => Get.offAll(() => HomeScreen()),
-          // Go back to the previous screen
+          icon: const Icon(Icons.arrow_back, color: Colors.black),
+          onPressed: () => Get.offAll(() => HomeScreen()), // ✅ Removed const
         ),
       ),
       body: Padding(
@@ -104,7 +111,8 @@ class _UserSelectionScreenState extends State<UserSelectionScreen> {
                             backgroundColor: Colors.white,
                             child: CircleAvatar(
                               radius: 7,
-                              backgroundColor: user["isOnline"] ? Colors.green : Colors.red,
+                              backgroundColor:
+                                  user["isOnline"] ? Colors.green : Colors.red,
                             ),
                           ),
                         )
@@ -117,19 +125,36 @@ class _UserSelectionScreenState extends State<UserSelectionScreen> {
                         children: [
                           Text(
                             user["name"],
-                            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                            style: const TextStyle(
+                                fontSize: 16, fontWeight: FontWeight.w600),
                           ),
                           const SizedBox(height: 5),
                           Text(
                             user["status"],
-                            style: TextStyle(fontSize: 14, color: Colors.grey[600]),
+                            style: TextStyle(
+                              fontSize: 14,
+                              color: Colors.grey
+                                  .shade600, // ✅ Fixed deprecated withOpacity
+                            ),
                             overflow: TextOverflow.ellipsis,
                             maxLines: 1,
+                          ),
+                          const SizedBox(height: 3),
+                          Text(
+                            user["isOnline"]
+                                ? "Online"
+                                : "Last seen ${_formatLastSeen(user["lastSeen"])}",
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Colors.grey
+                                  .shade500, // ✅ Fixed deprecated withOpacity
+                            ),
                           ),
                         ],
                       ),
                     ),
-                    const Icon(Icons.arrow_forward_ios, size: 18, color: Colors.grey),
+                    const Icon(Icons.arrow_forward_ios,
+                        size: 18, color: Colors.grey),
                   ],
                 ),
               ),
@@ -138,5 +163,17 @@ class _UserSelectionScreenState extends State<UserSelectionScreen> {
         ),
       ),
     );
+  }
+
+  String _formatLastSeen(DateTime? lastSeen) {
+    if (lastSeen == null) return 'unknown';
+
+    final now = DateTime.now();
+    final difference = now.difference(lastSeen);
+
+    if (difference.inMinutes < 1) return 'just now';
+    if (difference.inMinutes < 60) return '${difference.inMinutes}m ago';
+    if (difference.inHours < 24) return '${difference.inHours}h ago';
+    return '${difference.inDays}d ago';
   }
 }
